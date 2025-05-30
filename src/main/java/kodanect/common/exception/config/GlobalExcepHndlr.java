@@ -32,6 +32,7 @@ public class GlobalExcepHndlr {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound() {
+        log.warn("404 Not Found: Requested resource not found.");
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.fail(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."));
@@ -39,7 +40,6 @@ public class GlobalExcepHndlr {
 
     /**
      * 500 예외 처리
-     *
      * 처리되지 않은 런타임 예외에 대해 500 응답 반환
      */
     @ExceptionHandler(Exception.class)
