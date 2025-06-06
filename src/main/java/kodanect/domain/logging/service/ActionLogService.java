@@ -2,21 +2,20 @@ package kodanect.domain.logging.service;
 
 import kodanect.domain.logging.dto.ActionLogPayload;
 
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
- * 이용 로그 저장 서비스 인터페이스
+ * 액션 로그 처리 서비스 인터페이스
  *
- * - 클라이언트 UX 로그 및 메타 정보를 비동기로 기록
+ * 클라이언트에서 수신한 로그를 큐에 적재
  */
 public interface ActionLogService {
 
     /**
-     * 클라이언트 UX 로그와 요청 정보를 기반으로 로그 저장
+     * 액션 로그 리스트를 큐에 비동기 적재
      *
-     * @param payload 클라이언트 UX 로그 데이터
-     * @param request 요청 메타데이터(IP, User-Agent 등 포함)
+     * @param payloads 클라이언트 요청 로그 리스트
      */
-    void saveLog(ActionLogPayload payload, HttpServletRequest request);
+    void enqueueLogs(List<ActionLogPayload> payloads);
 
 }

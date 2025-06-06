@@ -1,23 +1,23 @@
 package kodanect.domain.logging.dto;
 
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.util.Map;
+import javax.validation.constraints.NotBlank;
 
 /**
- * 클라이언트에서 전달한 UX 로그 데이터 요청 DTO
+ * 클라이언트에서 수집한 액션 로그 요청 데이터
  *
- * - 다양한 형태의 UX 로그 데이터를 key-value 형태로 전달받기 위한 구조
+ * 행동 유형과 대상 요소 포함
  */
-@NoArgsConstructor
 @Getter
-@Setter
+@Builder
 public class ActionLogPayload {
 
-    /**
-     * 클라이언트가 전달하는 유동적인 UX 로그 데이터
-     */
-    private Map<String, Object> data;
+    @NotBlank
+    private String type;
+
+    @NotBlank
+    private String target;
+
 }

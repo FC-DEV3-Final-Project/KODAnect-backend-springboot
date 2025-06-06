@@ -6,11 +6,9 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * 이용 로그 기록을 위한 JPA 엔티티 클래스
+ * 액션 로그 엔티티
  *
- * - DB 테이블: tb25_940_action_log
- * - URL, CRUD 코드, IP, 로그 내용 등의 사용자 액션을 저장
- * - 시스템 로그성 데이터 기록 목적
+ * 사용자 행위 로그를 DB에 저장하기 위한 매핑 클래스
  */
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -22,21 +20,22 @@ public class ActionLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_seq")
     private Integer logSeq;
 
-    @Column(nullable = false, length = 600)
+    @Column(name = "url_name", nullable = false, length = 600)
     private String urlName;
 
-    @Column(length = 10)
+    @Column(name = "crud_code", length = 10)
     private String crudCode;
 
-    @Column(length = 60)
+    @Column(name = "ip_addr", length = 60)
     private String ipAddr;
 
-    @Column(length = 3000)
+    @Column(name = "log_text", length = 3000)
     private String logText;
 
-    @Column(insertable = false, updatable = false)
+    @Column(name = "write_time", nullable = false, insertable = false, updatable = false)
     private LocalDateTime writeTime;
 
 }
