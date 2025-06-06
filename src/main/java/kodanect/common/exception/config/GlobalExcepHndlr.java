@@ -4,6 +4,7 @@ import kodanect.common.response.ApiResponse;
 import kodanect.domain.donation.exception.BadRequestException;
 import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.ValidationFailedException;
+import kodanect.domain.logging.exception.ActionLogConversionException;
 import kodanect.domain.remembrance.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
@@ -257,7 +258,16 @@ public class GlobalExcepHndlr {
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, msg));
     }
 
-
-
+    /**
+     * 500 예외 처리
+     *
+     * 액션 로그 직렬화 실패
+     */
+    @ExceptionHandler(ActionLogConversionException.class)
+    public ResponseEntity<ApiResponse<Void>> handleActionLogConversion(ActionLogConversionException ex) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "로그 데이터를 저장하는 도중 오류가 발생했습니다."));
+    }
 
 }
