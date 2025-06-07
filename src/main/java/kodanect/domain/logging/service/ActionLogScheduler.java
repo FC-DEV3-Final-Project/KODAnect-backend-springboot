@@ -26,6 +26,8 @@ public class ActionLogScheduler {
 
     private static final int ONE_MINUTE_MILLIS = 60 * 1000;
     private static final int FIVE_MINUTES_MILLIS = 5 * 60 * 1000;
+    private static final int THIRTY_MINUTES_MILLIS = 30 * 60 * 1000;
+
     private static final int READ_THRESHOLD = 100;
     private static final int OTHER_THRESHOLD = 10;
 
@@ -62,6 +64,26 @@ public class ActionLogScheduler {
                 ActionLog entity = ActionLogMapper.toEntityFromList(entry.getKey(), entry.getValue());
                 entities.add(entity);
             }
+        }
+
+        if (!entities.isEmpty()) {
+            actionLogRepository.saveAll(entities);
+        }
+    }
+
+    /**
+     * 잔여 로그를 30분 주기로 강제 저장
+     *
+     * 임계치에 도달하지 않은 사용자 로그를 포함하여 전체 버퍼를 비우고 저장
+     */
+    @Scheduled(fixedDelay = THIRTY_MINUTES_MILLIS)
+    public void flushAllLogsForcefully() {
+        Map<UserActionKey, List<ActionLogContext>> allLogs = actionLogBuffer.drainAll();
+        List<ActionLog> entities = new ArrayList<>();
+
+        for (Map.Entry<UserActionKey, List<ActionLogContext>> entry : allLogs.entrySet()) {
+            ActionLog entity = ActionLogMapper.toEntityFromList(entry.getKey(), entry.getValue());
+            entities.add(entity);
         }
 
         if (!entities.isEmpty()) {

@@ -59,4 +59,30 @@ public class ActionLogBuffer {
         return result;
     }
 
+    /**
+     * 모든 로그 큐를 비워서 추출
+     *
+     * 임계 수량과 상관없이 전체 사용자 로그를 꺼내어 반환하고,
+     * 버퍼에서 해당 로그들을 제거함
+     *
+     * @return 추출된 로그 리스트 (key 기준으로 묶임)
+     */
+    public Map<UserActionKey, List<ActionLogContext>> drainAll() {
+        Map<UserActionKey, List<ActionLogContext>> result = new HashMap<>();
+
+        for (Map.Entry<UserActionKey, Queue<ActionLogContext>> entry : buffer.entrySet()) {
+            Queue<ActionLogContext> queue = entry.getValue();
+            List<ActionLogContext> drained = new ArrayList<>();
+
+            while (!queue.isEmpty()) {
+                drained.add(queue.poll());
+            }
+
+            if (!drained.isEmpty()) {
+                result.put(entry.getKey(), drained);
+            }
+        }
+        return result;
+    }
+
 }
