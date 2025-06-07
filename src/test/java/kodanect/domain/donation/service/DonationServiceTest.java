@@ -55,6 +55,7 @@ public class DonationServiceTest {
 
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.hasNext()).isTrue();
+
     }
 
     @Test

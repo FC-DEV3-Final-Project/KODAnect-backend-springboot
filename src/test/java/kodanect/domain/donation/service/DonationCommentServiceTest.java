@@ -103,7 +103,7 @@ public class DonationCommentServiceTest {
 
         when(commentRepository.findById(commentSeq)).thenReturn(Optional.of(comment));
 
-        service.modifyDonationComment(commentSeq, requestDto);
+        service.modifyDonationComment(comment.getStory().getStorySeq(), commentSeq, requestDto);
 
         assertEquals("수정된 작성자", comment.getCommentWriter());
         assertEquals("수정된 내용", comment.getContents());
@@ -129,7 +129,7 @@ public class DonationCommentServiceTest {
 
         when(commentRepository.findById(commentSeq)).thenReturn(Optional.of(comment));
 
-        service.deleteDonationComment(commentSeq, dto);
+        service.deleteDonationComment(storySeq, commentSeq, dto);
 
         assertEquals(0, story.getComments().size());
 

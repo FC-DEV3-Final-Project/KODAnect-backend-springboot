@@ -18,7 +18,7 @@ public interface DonationRepository extends JpaRepository<DonationStory, Long> {
      */
     @Query("""
             SELECT new kodanect.domain.donation.dto.response.DonationStoryListDto(
-                d.storySeq, d.storyTitle, d.storyWriter, d.readCount, d.writeTime)
+                d.storySeq, d.storyTitle, d.storyWriter, d.readCount, d.writeTime, SIZE(d.comments))
             FROM DonationStory d ORDER BY d.storySeq DESC
             """)
     List<DonationStoryListDto> findSliceDonationStoriesWithOffset(Pageable pageable);
@@ -28,7 +28,7 @@ public interface DonationRepository extends JpaRepository<DonationStory, Long> {
      */
     @Query("""
             SELECT new kodanect.domain.donation.dto.response.DonationStoryListDto(
-                d.storySeq, d.storyTitle, d.storyWriter, d.readCount, d.writeTime)
+                d.storySeq, d.storyTitle, d.storyWriter, d.readCount, d.writeTime, SIZE(d.comments))
             FROM DonationStory d
             WHERE d.storyTitle LIKE %:keyword% OR d.storyContents LIKE %:keyword%
             ORDER BY d.storySeq DESC

@@ -629,7 +629,7 @@ class DonationControllerTest {
                 .build();
 
         doNothing().when(donationCommentService)
-                .modifyDonationComment(eq(commentSeq), any(DonationStoryCommentModifyRequestDto.class));
+                .modifyDonationComment(eq(storySeq), eq(commentSeq), any(DonationStoryCommentModifyRequestDto.class));
         given(messageSourceAccessor.getMessage("donation.comment.update.success"))
                 .willReturn("스토리 댓글이 성공적으로 수정되었습니다.");
 
@@ -655,7 +655,7 @@ class DonationControllerTest {
                 .build();
 
         doThrow(new IllegalArgumentException("donation.error.passcode.mismatch"))
-                .when(donationCommentService).modifyDonationComment(eq(commentSeq), any());
+                .when(donationCommentService).modifyDonationComment(eq(storySeq), eq(commentSeq), any());
         given(messageSourceAccessor.getMessage("donation.error.passcode.mismatch"))
                 .willReturn("비밀번호가 일치하지 않습니다.");
 
@@ -679,7 +679,7 @@ class DonationControllerTest {
                 .build();
 
         doNothing().when(donationCommentService)
-                .deleteDonationComment(eq(commentSeq), any(VerifyCommentPasscodeDto.class));
+                .deleteDonationComment(eq(storySeq), eq(commentSeq), any(VerifyCommentPasscodeDto.class));
         given(messageSourceAccessor.getMessage("donation.comment.delete.success"))
                 .willReturn("스토리 댓글이 성공적으로 삭제되었습니다.");
 
@@ -702,7 +702,7 @@ class DonationControllerTest {
                 .build();
 
         doThrow(new RuntimeException("DB 오류"))
-                .when(donationCommentService).deleteDonationComment(eq(commentSeq), any(VerifyCommentPasscodeDto.class));
+                .when(donationCommentService).deleteDonationComment(eq(storySeq), eq(commentSeq), any(VerifyCommentPasscodeDto.class));
         given(messageSourceAccessor.getMessage("error.internal"))
                 .willReturn("서버 내부 오류가 발생했습니다.");
         given(messageSourceAccessor.getMessage(eq("error.internal"), anyString()))

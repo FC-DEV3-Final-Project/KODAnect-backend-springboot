@@ -26,8 +26,8 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping()
-public class DonationController {
+@RequestMapping("/donationLetters")
+public class    DonationController {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
 
@@ -38,14 +38,14 @@ public class DonationController {
     /**
      * 기증 스토리 전체 목록 조회 (더보기 방식 페이징 포함)
      */
-    @GetMapping("/donationLetters")
+    @GetMapping
     public ResponseEntity<ApiResponse<Slice<DonationStoryListDto>>> getAllDonationList(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "20") int limit
     ) {
         Pageable pageable = new OffsetBasedPageRequest(offset, limit, Sort.by("storySeq").descending());
         Slice<DonationStoryListDto> slice = donationService.findStoriesWithOffset(pageable);
-
+//
 
         String message = messageSourceAccessor.getMessage("board.list.get.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, slice));
@@ -54,7 +54,7 @@ public class DonationController {
     /**
      * 기증 스토리 검색 (제목/내용 기준, 페이징 포함)
      */
-    @GetMapping("/donationLetters/search")
+    @GetMapping("/search")
     public ResponseEntity<ApiResponse<Slice<DonationStoryListDto>>> searchDonationStories(
             @RequestParam("type") String type,
             @RequestParam("keyword") String keyword,
@@ -73,7 +73,7 @@ public class DonationController {
     /**
      * 기증 스토리 작성 폼에 필요한 데이터 반환
      */
-    @GetMapping("/donationLetters/new")
+    @GetMapping("/new")
     public ResponseEntity<ApiResponse<DonationStoryWriteFormDto>> getDonationWriteForm() {
         DonationStoryWriteFormDto formDto = donationService.loadDonationStoryFormData();
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "폼 데이터 로드 성공", formDto));
@@ -82,7 +82,7 @@ public class DonationController {
     /**
      * 기증 스토리 등록
      */
-    @PostMapping(value = "/donationLetters", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> createStory(@ModelAttribute @Valid DonationStoryCreateRequestDto requestDto) {
         donationService.createDonationStory(requestDto);
         String message = messageSourceAccessor.getMessage("donation.create.success");
@@ -92,7 +92,7 @@ public class DonationController {
     /**
      * 특정 기증 스토리 상세 조회
      */
-    @GetMapping("/donationLetters/{storySeq}")
+    @GetMapping("{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
         DonationStoryDetailDto detailDto = donationService.findDonationStory(storySeq);
         String message = messageSourceAccessor.getMessage("article.detail.success");
@@ -102,7 +102,7 @@ public class DonationController {
     /**
      * 기증 스토리 수정 인증
      */
-    @PostMapping("/donationLetters/{storySeq}/verifyPwd")
+    @PostMapping("/{storySeq}/verifyPwd")
     public ResponseEntity<ApiResponse<Map<String, Object>>> verifyStoryPassword(
             @PathVariable Long storySeq,
             @RequestBody VerifyStoryPasscodeDto passCodeDto) {
@@ -115,7 +115,7 @@ public class DonationController {
     /**
      * 기증 스토리 수정
      */
-    @PatchMapping(value = "/donationLetters/{storySeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/{storySeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> modifyStory(
             @PathVariable Long storySeq,
             @ModelAttribute @Valid DonationStoryModifyRequestDto requestDto) {
@@ -128,7 +128,7 @@ public class DonationController {
     /**
      * 기증 스토리 삭제
      */
-    @DeleteMapping("/donationLetters/{storySeq}")
+    @DeleteMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> deleteStory(
             @PathVariable Long storySeq,
             @RequestBody VerifyStoryPasscodeDto storyPasscodeDto) {
@@ -141,7 +141,7 @@ public class DonationController {
     /**
      * 댓글 작성(등록)
      */
-    @PostMapping("/donationLetters/{storySeq}/comments")
+    @PostMapping("/{storySeq}/comments")
     public ResponseEntity<ApiResponse<Void>> createComment(
             @PathVariable Long storySeq,
             @RequestBody @Valid DonationCommentCreateRequestDto requestDto) {
@@ -156,13 +156,13 @@ public class DonationController {
     /**
      * 댓글 수정
      */
-    @PatchMapping("/donationLetters/{storySeq}/comments/{commentSeq}")
+    @PatchMapping("/{storySeq}/comments/{commentSeq}")
     public ResponseEntity<ApiResponse<Void>> modifyComment(
             @PathVariable Long storySeq,
             @PathVariable Long commentSeq,
             @RequestBody DonationStoryCommentModifyRequestDto requestDto) {
 
-        donationCommentService.modifyDonationComment(commentSeq, requestDto);
+        donationCommentService.modifyDonationComment(storySeq, commentSeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.comment.update.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
@@ -171,13 +171,13 @@ public class DonationController {
     /**
      * 댓글 삭제
      */
-    @DeleteMapping("/donationLetters/{storySeq}/comments/{commentSeq}")
+    @DeleteMapping("/{storySeq}/comments/{commentSeq}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long storySeq,
             @PathVariable Long commentSeq,
             @RequestBody VerifyCommentPasscodeDto commentPassword) {
 
-        donationCommentService.deleteDonationComment(commentSeq, commentPassword);
+        donationCommentService.deleteDonationComment(storySeq, commentSeq, commentPassword);
         String message = messageSourceAccessor.getMessage("donation.comment.delete.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,message));
     }

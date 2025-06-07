@@ -15,10 +15,10 @@ public interface DonationCommentService {
     void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto);
 
     // 기증 스토리 댓글 수정
-    void modifyDonationComment(Long commentSeq, DonationStoryCommentModifyRequestDto requestDto);
+    void modifyDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto);
 
     // 기증 스토리 댓글 삭제
-    void deleteDonationComment(Long commentSeq, VerifyCommentPasscodeDto commentDto);
+    void deleteDonationComment(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentDto);
 
     // 비밀번호 유효성 검사
     boolean validatePassword(String password);

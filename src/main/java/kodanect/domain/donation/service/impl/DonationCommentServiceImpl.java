@@ -25,14 +25,16 @@ public class DonationCommentServiceImpl implements DonationCommentService {
 
     private final DonationCommentRepository commentRepository;
     private final DonationRepository storyRepository;
-    private final CaptchaService captchaService;
     private final MessageResolver messageResolver;
 
     /**
      * 댓글 등록
      */
     @Transactional
-    public void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto) {
+    public void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto)
+            throws NotFoundException,BadRequestException
+    {
+
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.notfound")));
 
@@ -48,12 +50,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         if (!validatePassword(requestDto.getCommentPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
         }
-
-        // 캡차 검증 (추후 적용 시 true로 수정)
-        if (false /* !captchaService.verifyCaptcha(requestDto.getCaptchaToken()) */) {
-            throw new BadRequestException(messageResolver.get("donation.error.captcha.failed"));
-        }
-
         // 댓글 생성 및 연관 관계 설정
         DonationStoryComment comment = DonationStoryComment.builder()
                 .commentWriter(requestDto.getCommentWriter())
@@ -71,7 +67,9 @@ public class DonationCommentServiceImpl implements DonationCommentService {
      * 댓글 수정
      */
     @Transactional
-    public void modifyDonationComment(Long commentSeq, DonationStoryCommentModifyRequestDto requestDto) {
+    public void modifyDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto) {
+        DonationStory story = storyRepository.findById(storySeq)
+                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
                 .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.comment.error.notfound")));
 
@@ -101,7 +99,9 @@ public class DonationCommentServiceImpl implements DonationCommentService {
      * 댓글 삭제
      */
     @Transactional
-    public void deleteDonationComment(Long commentSeq, VerifyCommentPasscodeDto commentDto) {
+    public void deleteDonationComment(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentDto) {
+        DonationStory story = storyRepository.findById(storySeq)
+                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
                 .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.comment.error.notfound")));
 
@@ -111,7 +111,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         }
 
         // 연관된 스토리에서도 댓글 제거
-        DonationStory story = storyComment.getStory();
+        story = storyComment.getStory();
         if (story != null) {
             story.removeComment(storyComment);
         }

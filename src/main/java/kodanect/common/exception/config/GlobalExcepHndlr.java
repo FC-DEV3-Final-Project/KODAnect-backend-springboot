@@ -52,22 +52,22 @@ public class GlobalExcepHndlr {
      * 잘못된 입력 발생 시 400 응답 반환
      * */
     @ExceptionHandler({
-        InvalidDonateSeqException.class,
-        InvalidEmotionTypeException.class,
-        InvalidPaginationRangeException.class,
-        InvalidReplySeqException.class,
-        InvalidSearchDateFormatException.class,
-        InvalidSearchDateRangeException.class,
-        MissingReplyContentException.class,
-        MissingReplyPasswordException.class,
-        MissingReplyWriterException.class,
-        MissingSearchDateParameterException.class,
-        ReplyIdMismatchException.class,
-        ReplyPostMismatchException.class
+                InvalidDonateSeqException.class,
+                InvalidEmotionTypeException.class,
+                InvalidPaginationRangeException.class,
+                InvalidReplySeqException.class,
+                InvalidSearchDateFormatException.class,
+                InvalidSearchDateRangeException.class,
+                MissingReplyContentException.class,
+                MissingReplyPasswordException.class,
+                MissingReplyWriterException.class,
+                MissingSearchDateParameterException.class,
+                ReplyIdMismatchException.class,
+                ReplyPostMismatchException.class
     })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
     }
 
     /**
@@ -82,7 +82,7 @@ public class GlobalExcepHndlr {
                 .body(ApiResponse.fail(HttpStatus.FORBIDDEN, "비밀번호가 일치하지 않습니다."));
     }
     /**
-     * @Valided 유효성 검사 실패 예외 처리
+     * @Valid 유효성 검사 실패 예외 처리
      */
     @ExceptionHandler(ValidationFailedException.class)
     public ResponseEntity<ApiResponse<Void>> validationFailedException(MethodArgumentNotValidException ex) {
@@ -256,8 +256,5 @@ public class GlobalExcepHndlr {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, msg));
     }
-
-
-
 
 }
