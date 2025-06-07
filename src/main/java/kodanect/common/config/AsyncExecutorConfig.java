@@ -23,6 +23,7 @@ public class AsyncExecutorConfig {
     private static final int LOG_EXECUTOR_CORE_POOL_SIZE = 2;
     private static final int LOG_EXECUTOR_MAX_POOL_SIZE = 2;
     private static final int LOG_EXECUTOR_QUEUE_CAPACITY = 100;
+    private static final int LOG_EXECUTOR_AWAIT_TERMINATION_SECONDS = 5;
 
     /**
      * 로그 비동기 처리 전용 Executor Bean
@@ -45,7 +46,7 @@ public class AsyncExecutorConfig {
         executor.setTaskDecorator(new MdcTaskDecorator());
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(5);
+        executor.setAwaitTerminationSeconds(LOG_EXECUTOR_AWAIT_TERMINATION_SECONDS);
         executor.initialize();
         return executor;
     }

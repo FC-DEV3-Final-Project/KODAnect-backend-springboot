@@ -35,8 +35,9 @@ public enum CrudCode {
      * 매칭되는 코드가 없으면 X 반환
      */
     public static CrudCode fromType(String type) {
-        if (type == null)
+        if (type == null) {
             return X;
+        }
 
         String lowerType = type.toLowerCase();
         for (CrudCode code : values()) {

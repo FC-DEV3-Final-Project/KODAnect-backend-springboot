@@ -8,10 +8,10 @@ package kodanect.domain.logging.exception;
 public class ActionLogConversionException extends RuntimeException {
 
     public ActionLogConversionException(String message, Throwable cause) {
-      super(message, cause);
+        super(message, cause);
     }
 
     public ActionLogConversionException() {
-      super("Failed to convert log data to JSON string.");
+        super("Failed to convert log data to JSON string.");
     }
 }

@@ -24,16 +24,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ActionLogScheduler {
 
-    private final ActionLogBuffer actionLogBuffer;
-    private final ActionLogRepository actionLogRepository;
-
+    private static final int ONE_MINUTE_MILLIS = 60 * 1000;
+    private static final int FIVE_MINUTES_MILLIS = 5 * 60 * 1000;
     private static final int READ_THRESHOLD = 100;
     private static final int OTHER_THRESHOLD = 10;
+
+    private final ActionLogBuffer actionLogBuffer;
+    private final ActionLogRepository actionLogRepository;
 
     /**
      * READ 로그를 1분 주기로 확인하여 임계치 이상이면 저장
      */
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = ONE_MINUTE_MILLIS)
     public void flushReadLogs() {
         flush(CrudCode.R, READ_THRESHOLD);
     }
@@ -41,7 +43,7 @@ public class ActionLogScheduler {
     /**
      * 기타 로그(C/U/D/X)를 5분 주기로 확인하여 임계치 이상이면 저장
      */
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = FIVE_MINUTES_MILLIS)
     public void flushOtherLogs() {
         for (CrudCode code : List.of(CrudCode.C, CrudCode.U, CrudCode.D, CrudCode.X)) {
             flush(code, OTHER_THRESHOLD);
