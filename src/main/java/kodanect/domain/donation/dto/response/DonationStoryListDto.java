@@ -1,6 +1,7 @@
 package kodanect.domain.donation.dto.response;
 
 
+import kodanect.common.util.CursorIdentifiable;
 import kodanect.domain.donation.entity.DonationStory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DonationStoryListDto {
+public class DonationStoryListDto implements CursorIdentifiable<Long> {
 
     private Long storySeq;
 
@@ -31,5 +32,10 @@ public class DonationStoryListDto {
                 .readCount(story.getReadCount() != null ? story.getReadCount() : 0)
                 .writeTime(story.getWriteTime() != null ? story.getWriteTime() : LocalDateTime.now())
                 .build();
+    }
+
+    @Override
+    public Long getCursorId(){
+        return storySeq;
     }
 }

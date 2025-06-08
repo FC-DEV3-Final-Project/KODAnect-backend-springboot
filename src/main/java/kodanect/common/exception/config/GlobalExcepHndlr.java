@@ -7,8 +7,6 @@ import kodanect.domain.remembrance.exception.InvalidPaginationRangeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -51,20 +49,21 @@ public class GlobalExcepHndlr {
      * 잘못된 입력 발생 시 400 응답 반환
      * */
     @ExceptionHandler({
-                InvalidDonateSeqException.class,
-                InvalidEmotionTypeException.class,
-                InvalidPaginationRangeException.class,
-                InvalidReplySeqException.class,
-                InvalidSearchDateFormatException.class,
-                InvalidSearchDateRangeException.class,
-                MissingReplyContentException.class,
-                MissingReplyPasswordException.class,
-                MissingReplyWriterException.class,
-                MissingSearchDateParameterException.class,
-                ReplyIdMismatchException.class,
-                ReplyPostMismatchException.class,
-    })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
-            return ResponseEntity
+        InvalidDonateSeqException.class,
+        InvalidEmotionTypeException.class,
+        InvalidPaginationRangeException.class,
+        InvalidReplySeqException.class,
+        InvalidSearchDateFormatException.class,
+        InvalidSearchDateRangeException.class,
+        MissingReplyContentException.class,
+        MissingReplyPasswordException.class,
+        MissingReplyWriterException.class,
+        MissingSearchDateParameterException.class,
+        ReplyIdMismatchException.class,
+        ReplyPostMismatchException.class,
+    })
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
+        return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
     }
@@ -136,14 +135,14 @@ public class GlobalExcepHndlr {
 
 
     @ExceptionHandler({
-            BadRequestException.class,
-            InvalidDeleteOriginalImageException.class,
-            InvalidPaginationFormatException.class,
-            MissingPaginationParameterException.class,
-            NotFoundAreaCode.class,
-            NotFoundException.class,
-            ValidationFailedException.class,
-            PasscodeMismatchException.class
+        BadRequestException.class,
+        InvalidDeleteOriginalImageException.class,
+        InvalidPaginationFormatException.class,
+        MissingPaginationParameterException.class,
+        NotFoundAreaCode.class,
+        NotFoundException.class,
+        ValidationFailedException.class,
+        PasscodeMismatchException.class
     })
     public ResponseEntity<ApiResponse<Void>> handleDonationClientError(RuntimeException ex) {
         String msg;
@@ -159,8 +158,8 @@ public class GlobalExcepHndlr {
     }
 
     @ExceptionHandler({
-            DonationNotFoundException.class,
-            DonationCommentNotFoundException.class
+        DonationNotFoundException.class,
+        DonationCommentNotFoundException.class
     })
     public ResponseEntity<ApiResponse<Void>> handleNotFoundException(RuntimeException ex) {
         String msg;

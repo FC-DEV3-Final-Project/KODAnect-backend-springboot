@@ -1,7 +1,7 @@
 package kodanect.domain.donation.controller;
 
 import kodanect.common.response.ApiResponse;
-import kodanect.domain.donation.dto.OffsetBasedPageRequest;
+import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.donation.dto.request.*;
 import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
@@ -11,9 +11,6 @@ import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +24,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/donationLetters")
-public class    DonationController {
+public class  DonationController {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
 
@@ -39,37 +36,32 @@ public class    DonationController {
      * 기증 스토리 전체 목록 조회 (더보기 방식 페이징 포함)
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Slice<DonationStoryListDto>>> getAllDonationList(
-            @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "20") int limit
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryListDto, Long>>> getAllDonationList(
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        Pageable pageable = new OffsetBasedPageRequest(offset, limit, Sort.by("storySeq").descending());
-        Slice<DonationStoryListDto> slice = donationService.findStoriesWithOffset(pageable);
-//
+        CursorPaginationResponse<DonationStoryListDto, Long> response = donationService.findStoriesWithCursor(cursor, size);
 
         String message = messageSourceAccessor.getMessage("board.list.get.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, slice));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, response));
     }
 
     /**
-     * 기증 스토리 검색 (제목/내용 기준, 페이징 포함)
+     * 기증 스토리 검색 (제목/내용 기준, 커서 기반 페이징 포함)
      */
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Slice<DonationStoryListDto>>> searchDonationStories(
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryListDto, Long>>> searchDonationStories(
             @RequestParam("type") String type,
             @RequestParam("keyword") String keyword,
-            @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "20") int limit
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        Pageable pageable = new OffsetBasedPageRequest(offset, limit, Sort.by("storySeq").descending());
-        Slice<DonationStoryListDto> slice = donationService.findDonationStorySearchResult(pageable, type, keyword);
+        CursorPaginationResponse<DonationStoryListDto, Long> response =
+                donationService.findSearchStoriesWithCursor(type, keyword, cursor, size);
 
-
-
-        String message = messageSourceAccessor.getMessage("board.list.get.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, slice));
+        String message = messageSourceAccessor.getMessage("article.detailSuccess");
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, response));
     }
-
     /**
      * 기증 스토리 작성 폼에 필요한 데이터 반환
      */
@@ -92,13 +84,12 @@ public class    DonationController {
     /**
      * 특정 기증 스토리 상세 조회
      */
-    @GetMapping("{storySeq}")
+    @GetMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
-        DonationStoryDetailDto detailDto = donationService.findDonationStory(storySeq);
-        String message = messageSourceAccessor.getMessage("article.detail.success");
+        DonationStoryDetailDto detailDto = donationService.findDonationStoryWithTopComments(storySeq);
+        String message = messageSourceAccessor.getMessage("board.read.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, detailDto));
     }
-
     /**
      * 기증 스토리 수정 인증
      */

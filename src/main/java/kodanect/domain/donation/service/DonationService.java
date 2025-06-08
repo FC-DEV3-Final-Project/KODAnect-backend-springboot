@@ -1,21 +1,20 @@
 package kodanect.domain.donation.service;
 
+import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.donation.dto.request.DonationStoryCreateRequestDto;
 import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
 import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
 import kodanect.domain.donation.dto.response.DonationStoryListDto;
 import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 
 public interface DonationService {
 
-    // 더보기 방식 기증 스토리 목록 조회
-    Slice<DonationStoryListDto> findStoriesWithOffset(Pageable pageable);
+    CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size);
 
-    // 검색 조건에 따른 기증 스토리 목록 조회 (더보기 방식)
-    Slice<DonationStoryListDto> findDonationStorySearchResult(Pageable pageable, String type, String keyword);
+    CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size);
+
+    DonationStoryDetailDto findDonationStoryWithTopComments(Long storySeq);
 
     // 스토리 작성 폼 데이터 로드
     DonationStoryWriteFormDto loadDonationStoryFormData();
@@ -37,4 +36,7 @@ public interface DonationService {
 
     // 비밀번호 유효성 검사
     boolean validatePassword(String password);
+
+
+
 }

@@ -1,7 +1,8 @@
 package kodanect.domain.donation.service.impl;
 
+import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.CursorFormatter;
 import kodanect.common.util.MessageResolver;
-import kodanect.domain.donation.dto.OffsetBasedPageRequest;
 import kodanect.domain.donation.dto.request.DonationStoryCreateRequestDto;
 import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
@@ -15,9 +16,8 @@ import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,33 +40,26 @@ public class DonationServiceImpl implements DonationService {
     private final MessageResolver messageResolver;
 
     @Override
-    @Transactional(readOnly = true)
-    public Slice<DonationStoryListDto> findStoriesWithOffset(Pageable pageable) {
-        // +1 해서 hasNext 판단을 위함
-        int limit = pageable.getPageSize();
-        int offset = (int) pageable.getOffset();
-
-        // 정렬도 유지 (한개 더 가져오기 - hasNext 반별을 위해)
-        Pageable plusOnePageable = new OffsetBasedPageRequest(offset, limit + 1, pageable.getSort());
-        //다음 데이터 담기
-        List<DonationStoryListDto> result = donationRepository.findSliceDonationStoriesWithOffset(plusOnePageable);
-
-        boolean hasNext = result.size() > limit;
-        //limit만큼 보내야 하기에 1개 잘라냄
-        List<DonationStoryListDto> content = hasNext ? result.subList(0, limit) : result;
-
-        return new SliceImpl<>(content, pageable, hasNext);
+    public CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size) {
+        Pageable pageable = PageRequest.of(0, size + 1);
+        List<DonationStoryListDto> results = donationRepository.findByCursor(cursor, pageable);
+        return CursorFormatter.cursorFormat(results, size); // 이 한 줄이면 충분
     }
+    @Override
+    public CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size) {
+        Pageable pageable = PageRequest.of(0, size + 1); // size+1개 조회해서 hasNext 판단
 
-    /** 검색 기능 (제목/내용/전체) */
-    @Transactional(readOnly = true)
-    public Slice<DonationStoryListDto> findDonationStorySearchResult(Pageable pageable, String type, String keyword) {
-        return switch (type) {
-            case "storyTitle" -> donationRepository.findByTitleContaining(pageable, keyword);
-            case "storyContents" -> donationRepository.findByContentsContaining(pageable, keyword);
-            case "All" -> donationRepository.findByTitleOrContentsContaining(pageable, keyword);
-            default ->  new SliceImpl<>(List.of(), pageable, false);
-        };
+        List<DonationStoryListDto> results;
+
+        if ("title".equalsIgnoreCase(type)) {
+            results = donationRepository.findByTitleCursor(keyword, cursor, pageable);
+        } else if ("contents".equalsIgnoreCase(type)) {
+            results = donationRepository.findByContentsCursor(keyword, cursor, pageable);
+        } else {
+            results = donationRepository.findByTitleOrContentsCursor(keyword, cursor, pageable);
+        }
+
+        return CursorFormatter.cursorFormat(results, size);
     }
 
     /** 스토리 작성 폼 데이터 반환 */
@@ -110,8 +103,15 @@ public class DonationServiceImpl implements DonationService {
     /** 스토리 상세 조회 및 조회수 증가 */
     @Transactional
     public DonationStoryDetailDto findDonationStory(Long storySeq) {
-        DonationStory story = findStoryOrThrow(storySeq);
+        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
         story.increaseReadCount();
+        return DonationStoryDetailDto.fromEntity(story);
+    }
+
+    @Transactional
+    public DonationStoryDetailDto findDonationStoryWithTopComments(Long storySeq) {
+        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
+        story.increaseReadCount(); // 조회수 증가
         return DonationStoryDetailDto.fromEntity(story);
     }
 
@@ -131,7 +131,7 @@ public class DonationServiceImpl implements DonationService {
     /** 스토리 수정 */
     @Transactional
     public void modifyDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
-        DonationStory story = findStoryOrThrow(storySeq);
+        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
 
         String storedFileName = story.getFileName();
         String originalFileName = story.getOrgFileName();
@@ -155,7 +155,7 @@ public class DonationServiceImpl implements DonationService {
     /** 스토리 삭제 */
     @Transactional
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
-        DonationStory story = findStoryOrThrow(storySeq);
+        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
 
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
@@ -167,6 +167,9 @@ public class DonationServiceImpl implements DonationService {
     public boolean validatePassword(String password) {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,16}$");
     }
+
+
+
 
     /** 요청 필드 유효성 검증 */
     private void validateStoryRequest(AreaCode areaCode, String title, String password) {
@@ -215,10 +218,10 @@ public class DonationServiceImpl implements DonationService {
         }
     }
 
-    /** ID로 스토리 조회 또는 예외 발생 */
-    private DonationStory findStoryOrThrow(Long storySeq) {
-        return donationRepository.findWithCommentsById(storySeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.notfound")));
+
+    private DonationStory findStoryWithTopCommentsOrThrow(Long storySeq) {
+        return donationRepository.findWithTop3CommentsById(storySeq)
+                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
     }
 
     public void deleteFile(String fileName) {

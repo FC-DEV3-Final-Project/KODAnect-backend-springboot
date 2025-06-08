@@ -11,6 +11,7 @@ import kodanect.domain.donation.dto.response.DonationStoryListDto;
 import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.BadRequestException;
+import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.NotFoundException;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.impl.DonationServiceImpl;
@@ -19,6 +20,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -41,21 +43,24 @@ public class DonationServiceTest {
     }
 
     @Test
-    public void findStoriesWithOffset_정상_조회() {
-        Pageable pageable = new OffsetBasedPageRequest(0, 2, Sort.by("storySeq").descending());
+    public void findStoriesWithCursor_정상_조회() {
+        Long cursor = null;
+        int size = 2;
+        Pageable pageable = PageRequest.of(0, size + 1); // 커서 기반은 size+1로 조회
+
         List<DonationStoryListDto> mockList = List.of(
                 new DonationStoryListDto(1L, "제목1", "작성자1", 10, null),
                 new DonationStoryListDto(2L, "제목2", "작성자2", 20, null),
-                new DonationStoryListDto(3L, "제목3", "작성자3", 30, null)
+                new DonationStoryListDto(3L, "제목3", "작성자3", 30, null) // size + 1개로 더보기 확인
         );
 
-        when(donationRepository.findSliceDonationStoriesWithOffset(any())).thenReturn(mockList);
+        when(donationRepository.findByCursor(cursor, pageable)).thenReturn(mockList);
 
-        var result = donationService.findStoriesWithOffset(pageable);
+        var result = donationService.findStoriesWithCursor(cursor, size);
 
-        assertThat(result.getContent()).hasSize(2);
-        assertThat(result.hasNext()).isTrue();
-
+        assertThat(result.getContent()).hasSize(2); // 실제 응답은 요청 size만큼만 제공
+        assertThat(result.isHasNext()).isTrue();    // 다음 페이지 존재 여부 확인
+        assertThat(result.getNextCursor()).isEqualTo(2L); // 마지막으로 반환된 storySeq
     }
 
     @Test
@@ -84,55 +89,86 @@ public class DonationServiceTest {
 
     @Test
     public void findDonationStory_정상조회_조회수증가() {
+        // given
         DonationStory story = DonationStory.builder()
-                .storySeq(1L).storyTitle("제목").storyPasscode("abcd1234")
-                .storyContents("내용").readCount(0).areaCode(AreaCode.AREA100)
-                .writeTime(LocalDateTime.now()).delFlag("N")
+                .storySeq(1L)
+                .storyTitle("제목")
+                .storyPasscode("abcd1234")
+                .storyContents("내용")
+                .readCount(0)
+                .areaCode(AreaCode.AREA100)
+                .writeTime(LocalDateTime.now())
+                .delFlag("N")
                 .build();
 
-        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
+        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
+
+        // when
         DonationStoryDetailDto dto = donationService.findDonationStory(1L);
+
+        // then
         assertThat(dto.getTitle()).isEqualTo("제목");
-        assertThat(story.getReadCount()).isEqualTo(1);
+        assertThat(story.getReadCount()).isEqualTo(1); // 조회수 증가 확인
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void findDonationStory_존재하지않음_예외() {
-        when(donationRepository.findWithCommentsById(99L)).thenReturn(Optional.empty());
+        // given
+        when(donationRepository.findWithTop3CommentsById(99L)).thenReturn(Optional.empty());
         when(messageResolver.get(any())).thenReturn("찾을 수 없음");
-        donationService.findDonationStory(99L); // 예외 발생
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(DonationNotFoundException.class, () ->
+                donationService.findDonationStory(99L));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void verifyPasswordWithPassword_불일치_예외() {
+        // given
         DonationStory story = DonationStory.builder().storySeq(1L).storyPasscode("abcd1234").build();
         when(donationRepository.findById(1L)).thenReturn(Optional.of(story));
         when(messageResolver.get(any())).thenReturn("비밀번호 불일치");
 
         VerifyStoryPasscodeDto passcode = new VerifyStoryPasscodeDto("wrongpass");
-        donationService.verifyPasswordWithPassword(1L, passcode); // 예외 발생
+
+        // when & then
+        org.junit.jupiter.api.Assertions.assertThrows(BadRequestException.class, () ->
+                donationService.verifyPasswordWithPassword(1L, passcode));
     }
 
     @Test
     public void deleteDonationStory_성공() {
+        // given
         DonationStory story = DonationStory.builder().storySeq(1L).storyPasscode("abcd1234").build();
-        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
+        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
 
+        // when
         donationService.deleteDonationStory(1L, new VerifyStoryPasscodeDto("abcd1234"));
 
+        // then
         verify(donationRepository).delete(story);
     }
 
     @Test
     public void modifyDonationStory_성공() {
-        DonationStory story = DonationStory.builder().storySeq(1L).storyTitle("기존제목").areaCode(AreaCode.AREA100).build();
-        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
+        // given
+        DonationStory story = DonationStory.builder()
+                .storySeq(1L)
+                .storyTitle("기존제목")
+                .areaCode(AreaCode.AREA100)
+                .build();
+
+        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
 
         DonationStoryModifyRequestDto dto = DonationStoryModifyRequestDto.builder()
-                .storyTitle("수정된제목").areaCode(AreaCode.AREA200).build();
+                .storyTitle("수정된제목")
+                .areaCode(AreaCode.AREA200)
+                .build();
 
+        // when
         donationService.modifyDonationStory(1L, dto);
 
+        // then
         assertThat(story.getStoryTitle()).isEqualTo("수정된제목");
         assertThat(story.getAreaCode()).isEqualTo(AreaCode.AREA200);
     }

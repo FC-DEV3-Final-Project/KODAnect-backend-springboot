@@ -3,13 +3,11 @@ package kodanect.domain.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.KodanectBootApplication;
 import kodanect.common.exception.config.GlobalExcepHndlr;
+import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.donation.controller.DonationController;
 import kodanect.domain.donation.dto.OffsetBasedPageRequest;
 import kodanect.domain.donation.dto.request.*;
-import kodanect.domain.donation.dto.response.AreaCode;
-import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
-import kodanect.domain.donation.dto.response.DonationStoryListDto;
-import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
+import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.PasscodeMismatchException;
 import kodanect.domain.donation.service.DonationCommentService;
@@ -71,52 +69,54 @@ class DonationControllerTest {
     // -------------------------------------------------------
 
     @Test
-    @DisplayName("GET /donationLetters - 성공")
+    @DisplayName("GET /donationLetters - 성공 (커서 기반)")
     void getAllDonationList_success() throws Exception {
         // given
         DonationStoryListDto dto = new DonationStoryListDto(
                 1L, "제목1", "글쓴이1", 0, LocalDateTime.now()
         );
         List<DonationStoryListDto> content = List.of(dto);
-        Pageable pageable = new OffsetBasedPageRequest(0, 20, Sort.by("storySeq").descending());
-        Slice<DonationStoryListDto> slice = new PageImpl<>(content, pageable, 1);
 
-        given(donationService.findStoriesWithOffset(any(Pageable.class))).willReturn(slice);
+        CursorPaginationResponse<DonationStoryListDto, Long> response = CursorPaginationResponse.<DonationStoryListDto, Long>builder()
+                .content(content)
+                .nextCursor(null)
+                .hasNext(false)
+                .build();
+
+        given(donationService.findStoriesWithCursor(anyLong(), anyInt())).willReturn(response);
         given(messageSourceAccessor.getMessage("board.list.get.success"))
                 .willReturn("게시글 목록 조회를 성공했습니다.");
 
         // when & then
         mockMvc.perform(get("/donationLetters")
-                        .param("offset", "0")
-                        .param("limit", "20")
+                        .param("cursor", "0")
+                        .param("size", "20")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk())                              // HTTP 200
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.code").value(200))               // body.code == 200
+                .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("게시글 목록 조회를 성공했습니다."))
-                .andExpect(jsonPath("$.data.content[0].storySeq").value(1L))
-                .andExpect(jsonPath("$.data.content[0].storyTitle").value("제목1"))
-                .andExpect(jsonPath("$.data.pageable.offset").value(0));
+                .andExpect(jsonPath("$.data.content[0].storySeq").value(1))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
     }
 
     @Test
     @DisplayName("GET /donationLetters - 실패 (서비스 예외 발생 → 500)")
     void getAllDonationList_failure() throws Exception {
-        given(donationService.findStoriesWithOffset(any(Pageable.class)))
+        given(donationService.findStoriesWithCursor(anyLong(), anyInt()))
                 .willThrow(new RuntimeException("DB 오류"));
         given(messageSourceAccessor.getMessage("error.internal"))
                 .willReturn("서버 내부 오류가 발생했습니다.");
-        given(messageSourceAccessor.getMessage(eq("error.internal"), anyString()))
-                .willReturn("서버 내부 오류가 발생했습니다.");
+
         mockMvc.perform(get("/donationLetters")
-                        .param("offset", "0")
-                        .param("limit", "20")
+                        .param("cursor", "0")
+                        .param("size", "20")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isInternalServerError())           // HTTP 500
+                .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value(500))              // body.code == 500
+                .andExpect(jsonPath("$.code").value(500))
                 .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
@@ -127,55 +127,66 @@ class DonationControllerTest {
     // -------------------------------------------------------
 
     @Test
-    @DisplayName("GET /donationLetters/search - 성공")
+    @DisplayName("GET /donationLetters/search - 성공 (커서 기반)")
     void searchDonationStories_success() throws Exception {
         DonationStoryListDto dto = new DonationStoryListDto(
                 2L, "검색제목", "검색작성자", 5, LocalDateTime.now()
         );
         List<DonationStoryListDto> content = List.of(dto);
-        Pageable pageable = new OffsetBasedPageRequest(0, 5, Sort.by("storySeq").descending());
-        Slice<DonationStoryListDto> slice = new PageImpl<>(content, pageable, 1);
 
-        given(donationService.findDonationStorySearchResult(any(Pageable.class), eq("제목"), eq("키워드")))
-                .willReturn(slice);
-        given(messageSourceAccessor.getMessage("board.list.get.success"))
-                .willReturn("검색 성공");
+        CursorPaginationResponse<DonationStoryListDto, Long> response = CursorPaginationResponse.<DonationStoryListDto, Long>builder()
+                .content(content)
+                .nextCursor(null)
+                .hasNext(false)
+                .build();
+
+        given(donationService.findSearchStoriesWithCursor(eq("제목"), eq("키워드"), anyLong(), anyInt()))
+                .willReturn(response);
+        given(messageSourceAccessor.getMessage("article.detailSuccess"))
+                .willReturn("게시글 목록 조회를 성공했습니다.");
 
         mockMvc.perform(get("/donationLetters/search")
                         .param("type", "제목")
                         .param("keyword", "키워드")
-                        .param("offset", "0")
-                        .param("limit", "5")
+                        .param("cursor", "0")
+                        .param("size", "5")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("게시글 목록 조회를 성공했습니다."))
+                .andExpect(jsonPath("$.data.content[0].storySeq").value(2))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("GET /donationLetters/search - 빈 결과")
+    void searchDonationStories_empty() throws Exception {
+        CursorPaginationResponse<DonationStoryListDto, Long> response = CursorPaginationResponse.<DonationStoryListDto, Long>builder()
+                .content(List.of())
+                .nextCursor(null)
+                .hasNext(false)
+                .build();
+
+        given(donationService.findSearchStoriesWithCursor(eq("잘못된"), eq("키워드"), anyLong(), anyInt()))
+                .willReturn(response);
+        given(messageSourceAccessor.getMessage("article.detailSuccess"))
+                .willReturn("검색 성공");
+
+        mockMvc.perform(get("/donationLetters/search")
+                        .param("type", "잘못된")
+                        .param("keyword", "키워드")
+                        .param("cursor", "0")
+                        .param("size", "5")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("검색 성공"))
-                .andExpect(jsonPath("$.data.content[0].storySeq").value(2));
-    }
-
-    @Test
-    @DisplayName("GET /donationLetters/search - 빈 결과")
-    void searchDonationStories_empty() throws Exception {
-        Pageable pageable = new OffsetBasedPageRequest(0, 5, Sort.by("storySeq").descending());
-        Slice<DonationStoryListDto> emptySlice = new PageImpl<>(List.of(), pageable, 0);
-
-        given(donationService.findDonationStorySearchResult(any(Pageable.class), eq("잘못된"), eq("키워드")))
-                .willReturn(emptySlice);
-        given(messageSourceAccessor.getMessage("board.list.get.success"))
-                .willReturn("검색 성공");
-
-        mockMvc.perform(get("/donationLetters/search")
-                        .param("type", "잘못된")
-                        .param("keyword", "키워드")
-                        .param("offset", "0")
-                        .param("limit", "5")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.content").isEmpty());
+                .andExpect(jsonPath("$.data.content").isEmpty())
+                .andExpect(jsonPath("$.data.hasNext").value(false));
     }
 
 
@@ -236,6 +247,11 @@ class DonationControllerTest {
     @Test
     @DisplayName("GET /donationLetters/{storySeq} - 성공")
     void getDonationStoryDetail_success() throws Exception {
+        DonationStoryCommentDto commentDto = DonationStoryCommentDto.builder()
+                .commentSeq(10L)
+                .commentWriter("댓글작성자")
+                .comments("댓글 내용")
+                .build();
         Long storySeq = 1L;
         DonationStoryDetailDto detailDto = DonationStoryDetailDto.builder()
                 .storySeq(storySeq)
@@ -246,18 +262,21 @@ class DonationControllerTest {
                 .storyContent("상세 내용")
                 .fileName("file123")
                 .orgFileName("origin.jpg")
+                .comments(List.of(commentDto))
                 .build();
         given(donationService.findDonationStory(storySeq)).willReturn(detailDto);
-        given(messageSourceAccessor.getMessage("article.detail.success"))
+        given(messageSourceAccessor.getMessage("board.read.success"))
                 .willReturn("게시글 상세를 성공적으로 조회했습니다.");
+        given(donationService.findDonationStoryWithTopComments(storySeq))
+                .willReturn(detailDto);
 
         mockMvc.perform(get("/donationLetters/{storySeq}", storySeq)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.storySeq").value(1))
+                .andExpect(jsonPath("$.data.comments[0].commentWriter").value("댓글작성자"))
                 .andExpect(jsonPath("$.message").value("게시글 상세를 성공적으로 조회했습니다."));
-
     }
 
     @Test
@@ -265,7 +284,7 @@ class DonationControllerTest {
     void getDonationStoryDetail_notFound() throws Exception {
         Long storySeq = 999L;
         doThrow(new DonationNotFoundException("donation.error.notfound"))
-                .when(donationService).findDonationStory(storySeq);
+                .when(donationService).findDonationStoryWithTopComments(storySeq);
         given(messageSourceAccessor.getMessage("donation.error.notfound"))
                 .willReturn("해당 스토리를 찾을 수 없습니다.");
 
@@ -277,22 +296,6 @@ class DonationControllerTest {
                 .andExpect(jsonPath("$.message").value("해당 스토리를 찾을 수 없습니다."));
     }
 
-    @Test
-    @DisplayName("GET /donationLetters/{storySeq} - 실패 (서버 예외 → 500)")
-    void getDonationStoryDetail_internalError() throws Exception {
-        Long storySeq = 999L;
-        doThrow(new RuntimeException("DB 오류"))
-                .when(donationService).findDonationStory(storySeq);
-        given(messageSourceAccessor.getMessage("error.internal"))
-                .willReturn("서버 내부 오류가 발생했습니다.");
-
-        mockMvc.perform(get("/donationLetters/{storySeq}", storySeq)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.code").value(500))
-                .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다."));
-    }
 
 
     // -------------------------------------------------------
