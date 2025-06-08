@@ -35,7 +35,8 @@ public class ActionLog {
     @Column(name = "log_text", length = 3000)
     private String logText;
 
-    @Column(name = "write_time", nullable = false, insertable = false, updatable = false)
-    private LocalDateTime writeTime;
+    @Column(name = "write_time", nullable = false, updatable = false)
+    @Builder.Default
+    private LocalDateTime writeTime = LocalDateTime.now();
 
 }

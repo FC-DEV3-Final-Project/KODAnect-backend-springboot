@@ -35,7 +35,7 @@ public class ActionLogScheduler {
     private final ActionLogRepository actionLogRepository;
 
     /**
-     * READ 로그를 1분 주기로 확인하여 임계치 이상이면 저장
+     * READ 로그를 5분 주기로 확인하여 임계치 이상이면 저장
      */
     @Scheduled(fixedDelay = FIVE_MINUTES_MILLIS)
     public void flushReadLogs() {
@@ -43,7 +43,7 @@ public class ActionLogScheduler {
     }
 
     /**
-     * 기타 로그(C/U/D/X)를 5분 주기로 확인하여 임계치 이상이면 저장
+     * 기타 로그(C/U/D/X)를 10분 주기로 확인하여 임계치 이상이면 저장
      */
     @Scheduled(fixedDelay = TEN_MINUTES_MILLIS)
     public void flushOtherLogs() {

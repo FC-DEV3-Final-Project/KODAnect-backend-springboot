@@ -2,6 +2,8 @@ package kodanect.domain.logging.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import kodanect.domain.logging.entity.ActionLog;
 import kodanect.domain.logging.exception.ActionLogConversionException;
 import kodanect.domain.logging.model.ActionLogContext;
@@ -16,7 +18,9 @@ import java.util.List;
  */
 public class ActionLogMapper {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     private ActionLogMapper() {
         throw new UnsupportedOperationException("Utility class");
