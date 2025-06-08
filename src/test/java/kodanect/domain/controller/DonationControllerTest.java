@@ -11,6 +11,7 @@ import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
 import kodanect.domain.donation.dto.response.DonationStoryListDto;
 import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
 import kodanect.domain.donation.exception.DonationNotFoundException;
+import kodanect.domain.donation.exception.PasscodeMismatchException;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import org.junit.jupiter.api.DisplayName;
@@ -325,7 +326,7 @@ class DonationControllerTest {
         Long storySeq = 1L;
         VerifyStoryPasscodeDto reqDto = new VerifyStoryPasscodeDto("wrongPwd");
 
-        doThrow(new IllegalArgumentException("donation.error.delete.password_mismatch"))
+        doThrow(new PasscodeMismatchException("donation.error.delete.password_mismatch"))
                 .when(donationService).verifyPasswordWithPassword(eq(storySeq), any(VerifyStoryPasscodeDto.class));
         given(messageSourceAccessor.getMessage("donation.error.delete.password_mismatch"))
                 .willReturn("비밀번호가 일치하지 않습니다.");
@@ -336,9 +337,7 @@ class DonationControllerTest {
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("비밀번호가 일치하지 않습니다."))
-        // 실패 시 data.result는 기본적으로 없으므로 검사하지 않음
-        ;
+                .andExpect(jsonPath("$.message").value("비밀번호가 일치하지 않습니다."));
     }
 
     @Test
@@ -377,7 +376,6 @@ class DonationControllerTest {
                 .storyWriter("수정작성자")
                 .storyContents("수정내용")
                 .file(file)
-                .captchaToken("token")
                 .build();
 
         doNothing().when(donationService).modifyDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
@@ -394,7 +392,6 @@ class DonationControllerTest {
                         .param("storyTitle", reqDto.getStoryTitle())
                         .param("storyWriter", reqDto.getStoryWriter())
                         .param("storyContents", reqDto.getStoryContents())
-                        .param("captchaToken", reqDto.getCaptchaToken())
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 // 컨트롤러가 ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, ...)) 형태로 반환하므로
@@ -414,7 +411,6 @@ class DonationControllerTest {
                 .storyWriter("수정작성자")
                 .storyContents("수정내용")
                 .file(null)
-                .captchaToken("token")
                 .build();
 
         doNothing().when(donationService).modifyDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
@@ -430,7 +426,6 @@ class DonationControllerTest {
                         .param("storyTitle", reqDto.getStoryTitle())
                         .param("storyWriter", reqDto.getStoryWriter())
                         .param("storyContents", reqDto.getStoryContents())
-                        .param("captchaToken", reqDto.getCaptchaToken())
                         .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -493,7 +488,7 @@ class DonationControllerTest {
         Long storySeq = 1L;
         VerifyStoryPasscodeDto reqDto = new VerifyStoryPasscodeDto("wrongPwd");
 
-        doThrow(new IllegalArgumentException("donation.error.delete.password_mismatch"))
+        doThrow(new PasscodeMismatchException("donation.error.delete.password_mismatch"))
                 .when(donationService).deleteDonationStory(eq(storySeq), any(VerifyStoryPasscodeDto.class));
         given(messageSourceAccessor.getMessage("donation.error.delete.password_mismatch"))
                 .willReturn("비밀번호가 일치하지 않습니다.");
@@ -549,7 +544,6 @@ class DonationControllerTest {
                 .commentWriter("댓글작성자")
                 .commentPasscode("abcd1234")
                 .contents("댓글내용")
-                .captchaToken("token")
                 .build();
 
         doNothing().when(donationCommentService)
@@ -574,7 +568,6 @@ class DonationControllerTest {
                 .commentWriter("")            // 빈 작성자 → 검증 실패
                 .commentPasscode("abcd1234")
                 .contents("댓글내용")
-                .captchaToken("token")
                 .build();
         given(messageSourceAccessor.getMessage("donation.error.required.writer"))
                 .willReturn("작성자는 필수 입력값입니다.");
@@ -597,7 +590,6 @@ class DonationControllerTest {
                 .commentWriter("댓글작성자")
                 .commentPasscode("abcd1234")
                 .contents("댓글내용")
-                .captchaToken("token")
                 .build();
 
         doThrow(new RuntimeException("예상치 못한 에러"))
@@ -625,7 +617,6 @@ class DonationControllerTest {
                 .commentWriter("수정작성자")
                 .commentPasscode("abcd1234")
                 .commentContents("수정댓글")
-                .captchaToken("token")
                 .build();
 
         doNothing().when(donationCommentService)
@@ -649,12 +640,11 @@ class DonationControllerTest {
         Long commentSeq = 2L;
         DonationStoryCommentModifyRequestDto reqDto = DonationStoryCommentModifyRequestDto.builder()
                 .commentWriter("수정작성자")
-                .commentPasscode("wrongpass")
+                .commentPasscode("dwqdwqdq")
                 .commentContents("수정댓글")
-                .captchaToken("token")
                 .build();
 
-        doThrow(new IllegalArgumentException("donation.error.passcode.mismatch"))
+        doThrow(new PasscodeMismatchException("donation.error.passcode.mismatch"))
                 .when(donationCommentService).modifyDonationComment(eq(storySeq), eq(commentSeq), any());
         given(messageSourceAccessor.getMessage("donation.error.passcode.mismatch"))
                 .willReturn("비밀번호가 일치하지 않습니다.");

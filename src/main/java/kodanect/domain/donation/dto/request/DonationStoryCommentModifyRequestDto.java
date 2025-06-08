@@ -19,7 +19,5 @@ public class DonationStoryCommentModifyRequestDto {
     private String commentContents;
     @NotBlank(message="donation.comment.verify.passcode.blank")
     private String commentPasscode;
-    @NotBlank(message="donation.captcha.token.blank")
-    private String captchaToken;
 
 }

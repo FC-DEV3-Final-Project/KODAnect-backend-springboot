@@ -28,7 +28,5 @@ public class DonationStoryCreateRequestDto {
     private String storyWriter;
     private String storyContents;
 
-    @NotBlank(message="donation.captcha.token.blank")
-    private String captchaToken; // hCaptcha가 전달한 캡차 인증 값
     private MultipartFile file;
 }

@@ -158,7 +158,7 @@ public class DonationServiceImpl implements DonationService {
         DonationStory story = findStoryOrThrow(storySeq);
 
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
-            throw new BadRequestException(messageResolver.get("donation.error.delete.password_mismatch"));
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
         donationRepository.delete(story);
     }

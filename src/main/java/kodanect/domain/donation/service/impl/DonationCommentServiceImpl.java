@@ -7,8 +7,7 @@ import kodanect.domain.donation.dto.request.VerifyCommentPasscodeDto;
 import kodanect.domain.donation.dto.response.DonationStoryCommentDto;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.entity.DonationStoryComment;
-import kodanect.domain.donation.exception.BadRequestException;
-import kodanect.domain.donation.exception.NotFoundException;
+import kodanect.domain.donation.exception.*;
 import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationCommentService;
@@ -32,11 +31,11 @@ public class DonationCommentServiceImpl implements DonationCommentService {
      */
     @Transactional
     public void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto)
-            throws NotFoundException,BadRequestException
+            throws NotFoundException,BadRequestException, DonationCommentNotFoundException
     {
 
         DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
 
         // 작성자 필수 검증
         if (requestDto.getCommentWriter() == null || requestDto.getCommentWriter().isBlank()) {
@@ -45,7 +44,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
 
         // 비밀번호 필수 및 형식 검증
         if (requestDto.getCommentPasscode() == null || requestDto.getCommentPasscode().isBlank()) {
-            throw new BadRequestException(messageResolver.get("donation.error.required.passcode"));
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.required.passcode"));
         }
         if (!validatePassword(requestDto.getCommentPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
@@ -83,13 +82,9 @@ public class DonationCommentServiceImpl implements DonationCommentService {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
         }
         if (!storyComment.getCommentPasscode().equals(requestDto.getCommentPasscode())) {
-            throw new BadRequestException(messageResolver.get("donation.error.passcode.mismatch"));
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.passcode.mismatch"));
         }
 
-        // 캡차 검증 (추후 적용 시 true로 수정)
-        if (false /* !captchaService.verifyCaptcha(requestDto.getCaptchaToken()) */) {
-            throw new BadRequestException(messageResolver.get("donation.error.captcha.failed"));
-        }
 
         // 댓글 내용 수정
         storyComment.modifyDonationStoryComment(requestDto);
@@ -101,13 +96,13 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     @Transactional
     public void deleteDonationComment(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentDto) {
         DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.delete.not_found")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
                 .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.comment.error.notfound")));
 
         // 비밀번호 일치 여부 확인
         if (!commentDto.getCommentPasscode().equals(storyComment.getCommentPasscode())) {
-            throw new BadRequestException(messageResolver.get("donation.error.delete.password_mismatch"));
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
 
         // 연관된 스토리에서도 댓글 제거

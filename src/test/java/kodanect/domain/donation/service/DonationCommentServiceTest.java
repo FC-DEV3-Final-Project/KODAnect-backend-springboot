@@ -51,7 +51,6 @@ public class DonationCommentServiceTest {
                 .commentWriter("홍길동")
                 .commentPasscode("abcd1234")
                 .contents("좋은 글 감사합니다.")
-                .captchaToken("dummy")
                 .build();
 
         when(donationRepository.findById(storySeq)).thenReturn(Optional.of(story));
@@ -75,7 +74,6 @@ public class DonationCommentServiceTest {
                 .commentWriter("")  // 빈 값
                 .commentPasscode("abcd1234")
                 .contents("내용")
-                .captchaToken("dummy")
                 .build();
 
         when(donationRepository.findById(storySeq)).thenReturn(Optional.of(story));
@@ -86,22 +84,28 @@ public class DonationCommentServiceTest {
     @Test
     public void 댓글_수정_성공() {
         Long commentSeq = 1L;
+        Long storySeq = 1L;
+
+        DonationStory story = DonationStory.builder()
+                .storySeq(storySeq)
+                .comments(new ArrayList<>()).build();
 
         DonationStoryComment comment = DonationStoryComment.builder()
                 .commentSeq(commentSeq)
                 .commentWriter("기존 작성자")
                 .commentPasscode("abcd1234")
                 .contents("기존 내용")
+                .story(story)
                 .build();
 
         DonationStoryCommentModifyRequestDto requestDto = DonationStoryCommentModifyRequestDto.builder()
                 .commentWriter("수정된 작성자")
                 .commentContents("수정된 내용")
                 .commentPasscode("abcd1234")
-                .captchaToken("dummy")
                 .build();
 
         when(commentRepository.findById(commentSeq)).thenReturn(Optional.of(comment));
+        when(donationRepository.findById(storySeq)).thenReturn(Optional.of(story));
 
         service.modifyDonationComment(comment.getStory().getStorySeq(), commentSeq, requestDto);
 
@@ -128,7 +132,7 @@ public class DonationCommentServiceTest {
         VerifyCommentPasscodeDto dto = new VerifyCommentPasscodeDto("abcd1234");
 
         when(commentRepository.findById(commentSeq)).thenReturn(Optional.of(comment));
-
+        when(donationRepository.findById(storySeq)).thenReturn(Optional.of(story));
         service.deleteDonationComment(storySeq, commentSeq, dto);
 
         assertEquals(0, story.getComments().size());

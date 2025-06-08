@@ -67,7 +67,7 @@ public class DonationServiceTest {
     @Test
     public void createDonationStory_정상등록_파일없음() {
         DonationStoryCreateRequestDto dto = new DonationStoryCreateRequestDto(
-                AreaCode.AREA100, "제목", "abcd1234", "작성자", "내용", null, null
+                AreaCode.AREA100, "제목", "abcd1234", "작성자", "내용", null
         );
         donationService.createDonationStory(dto);
         verify(donationRepository).save(any(DonationStory.class));
@@ -76,7 +76,7 @@ public class DonationServiceTest {
     @Test(expected = BadRequestException.class)
     public void createDonationStory_비밀번호형식오류_예외() {
         DonationStoryCreateRequestDto dto = new DonationStoryCreateRequestDto(
-                AreaCode.AREA100, "제목", "1234", "작성자", "내용", null, null
+                AreaCode.AREA100, "제목", "1234", "작성자", "내용", null
         );
         when(messageResolver.get(any())).thenReturn("비밀번호 형식 오류");
         donationService.createDonationStory(dto); // 예외 발생
