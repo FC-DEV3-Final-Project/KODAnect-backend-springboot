@@ -85,7 +85,11 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
 
     @Override
     public void updateReply(Integer donateSeq, Integer replySeq, MemorialReplyUpdateRequest memorialReplyUpdateRequest)
-            throws  InvalidDonateSeqException,
+            throws  ReplyPostMismatchException,
+                    ReplyIdMismatchException,
+                    InvalidDonateSeqException,
+                    MissingReplyPasswordException,
+                    ReplyPasswordMismatchException,
                     MissingReplyContentException,
                     MemorialReplyNotFoundException,
                     MemorialNotFoundException,
@@ -185,7 +189,7 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
 
     }
 
-    public CursorReplyPaginationResponse<MemorialReplyResponse> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
+    public CursorReplyPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
             throws  MemorialNotFoundException,
                     InvalidDonateSeqException
     {
