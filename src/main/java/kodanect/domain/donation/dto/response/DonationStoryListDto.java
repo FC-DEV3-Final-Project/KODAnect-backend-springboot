@@ -1,6 +1,7 @@
 package kodanect.domain.donation.dto.response;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import kodanect.common.util.CursorIdentifiable;
 import kodanect.domain.donation.entity.DonationStory;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,7 @@ public class DonationStoryListDto implements CursorIdentifiable<Long> {
     }
 
     @Override
+    @JsonIgnore
     public Long getCursorId(){
         return storySeq;
     }

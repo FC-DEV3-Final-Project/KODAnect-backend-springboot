@@ -96,7 +96,7 @@ public class DonationServiceImpl implements DonationService {
                 .fileName(storedFileName)
                 .orgFileName(originalFileName)
                 .build();
-
+        log.debug("storedFileName = {}, originalFileName = {}", storedFileName, storedFileName);
         donationRepository.save(story);
     }
 
@@ -220,7 +220,7 @@ public class DonationServiceImpl implements DonationService {
 
 
     private DonationStory findStoryWithTopCommentsOrThrow(Long storySeq) {
-        return donationRepository.findWithTop3CommentsById(storySeq)
+        return donationRepository.findWithCommentsById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
     }
 

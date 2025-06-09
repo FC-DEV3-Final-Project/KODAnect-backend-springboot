@@ -101,7 +101,7 @@ public class DonationServiceTest {
                 .delFlag("N")
                 .build();
 
-        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
+        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
 
         // when
         DonationStoryDetailDto dto = donationService.findDonationStory(1L);
@@ -114,7 +114,7 @@ public class DonationServiceTest {
     @Test
     public void findDonationStory_존재하지않음_예외() {
         // given
-        when(donationRepository.findWithTop3CommentsById(99L)).thenReturn(Optional.empty());
+        when(donationRepository.findWithCommentsById(99L)).thenReturn(Optional.empty());
         when(messageResolver.get(any())).thenReturn("찾을 수 없음");
 
         // when & then
@@ -140,7 +140,7 @@ public class DonationServiceTest {
     public void deleteDonationStory_성공() {
         // given
         DonationStory story = DonationStory.builder().storySeq(1L).storyPasscode("abcd1234").build();
-        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
+        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
 
         // when
         donationService.deleteDonationStory(1L, new VerifyStoryPasscodeDto("abcd1234"));
@@ -158,7 +158,7 @@ public class DonationServiceTest {
                 .areaCode(AreaCode.AREA100)
                 .build();
 
-        when(donationRepository.findWithTop3CommentsById(1L)).thenReturn(Optional.of(story));
+        when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
 
         DonationStoryModifyRequestDto dto = DonationStoryModifyRequestDto.builder()
                 .storyTitle("수정된제목")
