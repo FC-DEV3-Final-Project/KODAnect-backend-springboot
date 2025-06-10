@@ -1,5 +1,6 @@
 package kodanect.domain.heaven.dto;
 
+import kodanect.common.util.CursorIdentifiable;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter @ToString
 @Builder
-public class HeavenResponse {
+public class HeavenResponse implements CursorIdentifiable<Integer> {
 
     /* 편지 일련번호 */
     private int letterSeq;
@@ -30,4 +31,9 @@ public class HeavenResponse {
 
     /* 생성 일시 */
     private LocalDateTime writeTime;
+
+    @Override
+    public Integer getCursorId() {
+        return letterSeq;
+    }
 }

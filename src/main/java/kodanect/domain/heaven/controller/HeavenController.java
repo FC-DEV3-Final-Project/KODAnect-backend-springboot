@@ -1,6 +1,7 @@
 package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.ApiResponse;
+import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/heavenLetters")
@@ -23,8 +23,26 @@ public class HeavenController {
 
     /* 게시물 전체 조회 (페이징) */
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HeavenResponse>>> getHeavenList() {
-        List<HeavenResponse> heavenList = heavenService.getHeavenList();
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<HeavenResponse, Integer>>> getHeavenList(
+            @RequestParam(required = false) Integer cursor,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenList(cursor, size);
+
+        String message = messageSourceAccessor.getMessage("heaven.list.get.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenList));
+    }
+
+    /* 검색을 통한 게시물 전체 조회 (페이징) */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<HeavenResponse, Integer>>> searchHeavenList(
+            @RequestParam(value = "type") String searchType,
+            @RequestParam String keyword,
+            @RequestParam(required = false) Integer cursor,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenListSearchResult(searchType, keyword, cursor, size);
 
         String message = messageSourceAccessor.getMessage("heaven.list.get.success");
 
