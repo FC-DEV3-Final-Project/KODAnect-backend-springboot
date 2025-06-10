@@ -32,7 +32,7 @@ public class MemorialController {
         /* 게시글 리스트 조회 */
 
         String successMessage = messageSourceAccessor.getMessage("board.read.success", new Object[] {});
-        CursorPaginationResponse<MemorialResponse> memorialResponses = memorialService.getMemorialList(cursor, size);
+        CursorPaginationResponse<MemorialResponse> memorialResponses = memorialService. getMemorialList(cursor, size);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, successMessage,memorialResponses));
     }
 
