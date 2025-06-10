@@ -29,7 +29,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     /**
      * 댓글 등록
      */
-    @Transactional
     public void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto)
             throws NotFoundException,BadRequestException, DonationCommentNotFoundException
     {
@@ -65,8 +64,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     /**
      * 댓글 수정
      */
-    @Transactional
-    public void modifyDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto) {
+    public void updateDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto) {
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
@@ -85,15 +83,12 @@ public class DonationCommentServiceImpl implements DonationCommentService {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.passcode.mismatch"));
         }
 
-
         // 댓글 내용 수정
         storyComment.modifyDonationStoryComment(requestDto);
     }
-
     /**
      * 댓글 삭제
      */
-    @Transactional
     public void deleteDonationComment(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentDto) {
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.delete.not_found")));
@@ -121,12 +116,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,16}$");
     }
 
-    /**
-     * 특정 게시글의 댓글 목록 조회
-     */
-    @Transactional(readOnly = true)
-    public List<DonationStoryCommentDto> getCommentsByStoryId(Long storySeq, Pageable pageable) {
-        return commentRepository.findCommentsByStoryId(storySeq, pageable);
-    }
+
 
 }

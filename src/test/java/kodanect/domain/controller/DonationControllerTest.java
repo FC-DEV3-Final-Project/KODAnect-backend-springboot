@@ -264,7 +264,7 @@ class DonationControllerTest {
                 .orgFileName("origin.jpg")
                 .comments(List.of(commentDto))
                 .build();
-        given(donationService.findDonationStory(storySeq)).willReturn(detailDto);
+        given(donationService.findDonationStoryWithTopComments(storySeq)).willReturn(detailDto);
         given(messageSourceAccessor.getMessage("board.read.success"))
                 .willReturn("게시글 상세를 성공적으로 조회했습니다.");
         given(donationService.findDonationStoryWithTopComments(storySeq))
@@ -381,7 +381,7 @@ class DonationControllerTest {
                 .file(file)
                 .build();
 
-        doNothing().when(donationService).modifyDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
+        doNothing().when(donationService).updateDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
         given(messageSourceAccessor.getMessage("donation.update.success"))
                 .willReturn("스토리가 성공적으로 수정되었습니다.");
 
@@ -405,7 +405,7 @@ class DonationControllerTest {
     }
     @Test
     @DisplayName("PATCH /donationLetters/{storySeq} - 사진 제거 성공")
-    void modifyStory_removeImage_success() throws Exception {
+    void updateStory_removeImage_success() throws Exception {
         Long storySeq = 1L;
 
         DonationStoryModifyRequestDto reqDto = DonationStoryModifyRequestDto.builder()
@@ -416,7 +416,7 @@ class DonationControllerTest {
                 .file(null)
                 .build();
 
-        doNothing().when(donationService).modifyDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
+        doNothing().when(donationService).updateDonationStory(eq(storySeq), any(DonationStoryModifyRequestDto.class));
         given(messageSourceAccessor.getMessage("donation.update.success"))
                 .willReturn("스토리가 성공적으로 수정되었습니다.");
 
@@ -623,7 +623,7 @@ class DonationControllerTest {
                 .build();
 
         doNothing().when(donationCommentService)
-                .modifyDonationComment(eq(storySeq), eq(commentSeq), any(DonationStoryCommentModifyRequestDto.class));
+                .updateDonationComment(eq(storySeq), eq(commentSeq), any(DonationStoryCommentModifyRequestDto.class));
         given(messageSourceAccessor.getMessage("donation.comment.update.success"))
                 .willReturn("스토리 댓글이 성공적으로 수정되었습니다.");
 
@@ -648,7 +648,7 @@ class DonationControllerTest {
                 .build();
 
         doThrow(new PasscodeMismatchException("donation.error.passcode.mismatch"))
-                .when(donationCommentService).modifyDonationComment(eq(storySeq), eq(commentSeq), any());
+                .when(donationCommentService).updateDonationComment(eq(storySeq), eq(commentSeq), any());
         given(messageSourceAccessor.getMessage("donation.error.passcode.mismatch"))
                 .willReturn("비밀번호가 일치하지 않습니다.");
 

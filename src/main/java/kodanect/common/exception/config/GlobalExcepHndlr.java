@@ -193,7 +193,28 @@ public class GlobalExcepHndlr {
                 .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
     }
 
+    /**
+     * 400 예외 처리: @RequestBody @Valid 검증 실패 시 MethodArgumentNotValidException 처리
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
+        // 가장 첫 번째 에러 메시지 키를 가져옴
+        String defaultMsgKey = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        String resolvedMsg;
 
+        try {
+            // 키를 메시지 소스에서 해석
+            resolvedMsg = messageSourceAccessor.getMessage(defaultMsgKey);
+        }
+        catch (Exception e) {
+            // 메시지 소스에서 못 찾으면 그냥 키 문자열 그대로 사용
+            resolvedMsg = defaultMsgKey;
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, resolvedMsg));
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
@@ -217,26 +238,5 @@ public class GlobalExcepHndlr {
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, msg));
     }
 
-    /**
-     * 400 예외 처리: @RequestBody @Valid 검증 실패 시 MethodArgumentNotValidException 처리
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
-        // 가장 첫 번째 에러 메시지 키를 가져옴
-        String defaultMsgKey = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        String resolvedMsg;
 
-        try {
-            // 키를 메시지 소스에서 해석
-            resolvedMsg = messageSourceAccessor.getMessage(defaultMsgKey);
-        }
-        catch (Exception e) {
-            // 메시지 소스에서 못 찾으면 그냥 키 문자열 그대로 사용
-            resolvedMsg = defaultMsgKey;
-        }
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, resolvedMsg));
-    }
 }

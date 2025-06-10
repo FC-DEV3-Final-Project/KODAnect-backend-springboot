@@ -15,7 +15,7 @@ public interface DonationCommentService {
     void createDonationStoryComment(Long storySeq, DonationCommentCreateRequestDto requestDto);
 
     // 기증 스토리 댓글 수정
-    void modifyDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto);
+    void updateDonationComment(Long storySeq, Long commentSeq, DonationStoryCommentModifyRequestDto requestDto);
 
     // 기증 스토리 댓글 삭제
     void deleteDonationComment(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentDto);
@@ -23,6 +23,5 @@ public interface DonationCommentService {
     // 비밀번호 유효성 검사
     boolean validatePassword(String password);
 
-    public List<DonationStoryCommentDto> getCommentsByStoryId(Long storySeq, Pageable pageable);
 
 }

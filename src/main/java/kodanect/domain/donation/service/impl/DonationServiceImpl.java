@@ -16,6 +16,10 @@ import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,23 +48,29 @@ public class DonationServiceImpl implements DonationService {
     public CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size) {
         Pageable pageable = PageRequest.of(0, size + 1);
         List<DonationStoryListDto> results = donationRepository.findByCursor(cursor, pageable);
-        return CursorFormatter.cursorFormat(results, size); // 이 한 줄이면 충분
+
+        long totalCount = donationRepository.countAll();
+        return CursorFormatter.cursorFormat(results, size, totalCount); // 이 한 줄이면 충분
     }
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size) {
         Pageable pageable = PageRequest.of(0, size + 1); // size+1개 조회해서 hasNext 판단
 
         List<DonationStoryListDto> results;
+        long totalCount = 0;
 
         if ("title".equalsIgnoreCase(type)) {
             results = donationRepository.findByTitleCursor(keyword, cursor, pageable);
+            totalCount = donationRepository.countByTitle(keyword);
         } else if ("contents".equalsIgnoreCase(type)) {
             results = donationRepository.findByContentsCursor(keyword, cursor, pageable);
+            totalCount = donationRepository.countByContents(keyword);
         } else {
             results = donationRepository.findByTitleOrContentsCursor(keyword, cursor, pageable);
+            totalCount = donationRepository.countByTitleAndContents(keyword);
         }
 
-        return CursorFormatter.cursorFormat(results, size);
+        return CursorFormatter.cursorFormat(results, size, totalCount);
     }
 
     /** 스토리 작성 폼 데이터 반환 */
@@ -72,12 +83,24 @@ public class DonationServiceImpl implements DonationService {
     }
 
     /** 스토리 등록 처리 */
-    @Transactional
     public void createDonationStory(DonationStoryCreateRequestDto requestDto) {
         validateStoryRequest(requestDto.getAreaCode(), requestDto.getStoryTitle(), requestDto.getStoryPasscode());
 
         String storedFileName = null;
         String originalFileName = null;
+
+        List<String> orgFileNames = new ArrayList<>();
+
+        Document doc = Jsoup.parse(requestDto.getStoryContents());
+        Elements imgTags = doc.select("img");
+
+        for(Element img : imgTags){
+            String src = img.attr("src");
+            String orgFileName = src.substring(src.lastIndexOf("/") + 1);
+            orgFileNames.add(orgFileName);
+        }
+
+        String joinedNames = String.join("," ,orgFileNames);
 
         if (requestDto.getFile() != null && !requestDto.getFile().isEmpty()) {
             String[] result = saveFileIfExists(requestDto.getFile());
@@ -101,14 +124,6 @@ public class DonationServiceImpl implements DonationService {
     }
 
     /** 스토리 상세 조회 및 조회수 증가 */
-    @Transactional
-    public DonationStoryDetailDto findDonationStory(Long storySeq) {
-        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
-        story.increaseReadCount();
-        return DonationStoryDetailDto.fromEntity(story);
-    }
-
-    @Transactional
     public DonationStoryDetailDto findDonationStoryWithTopComments(Long storySeq) {
         DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
         story.increaseReadCount(); // 조회수 증가
@@ -127,10 +142,8 @@ public class DonationServiceImpl implements DonationService {
             throw new BadRequestException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
     }
-
     /** 스토리 수정 */
-    @Transactional
-    public void modifyDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
+    public void updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
         DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
 
         String storedFileName = story.getFileName();
@@ -153,7 +166,6 @@ public class DonationServiceImpl implements DonationService {
     }
 
     /** 스토리 삭제 */
-    @Transactional
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
         DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
 
@@ -167,8 +179,6 @@ public class DonationServiceImpl implements DonationService {
     public boolean validatePassword(String password) {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,16}$");
     }
-
-
 
 
     /** 요청 필드 유효성 검증 */
@@ -224,7 +234,7 @@ public class DonationServiceImpl implements DonationService {
                 .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
     }
 
-    public void deleteFile(String fileName) {
+    private void deleteFile(String fileName) {
         try {
             Path path = Paths.get(uploadDir, fileName);
             Files.deleteIfExists(path);

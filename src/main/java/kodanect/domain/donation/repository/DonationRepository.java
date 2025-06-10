@@ -70,23 +70,17 @@ public interface DonationRepository extends JpaRepository<DonationStory, Long> {
         List<DonationStoryListDto> findByTitleOrContentsCursor(@Param("keyword") String keyword,
                                                            @Param("cursor") Long cursor,
                                                            Pageable pageable);
-    /**
-     * 제목 검색 시 일치하는 게시글 개수 반환 (hasNext 판단용)
-     */
-    @Query("SELECT COUNT(d) FROM DonationStory d WHERE d.storyTitle LIKE %:keyword%")
-    long countByTitleContaining(@Param("keyword") String keyword);
 
-    /**
-     * 내용 검색 시 일치하는 게시글 개수 반환 (hasNext 판단용)
-     */
-    @Query("SELECT COUNT(d) FROM DonationStory d WHERE d.storyContents LIKE %:keyword%")
-    long countByContentsContaining(@Param("keyword") String keyword);
+    @Query(value =  "SELECT COUNT(*) FROM tb25_420_donation_story", nativeQuery=true)
+    long countAll();
 
-    /**
-     * 제목 또는 내용 검색 시 일치하는 게시글 개수 반환 (hasNext 판단용)
-     */
-    @Query("SELECT COUNT(d) FROM DonationStory d WHERE d.storyTitle LIKE %:keyword% OR d.storyContents LIKE %:keyword%")
-    long countByTitleOrContentsContaining(@Param("keyword") String keyword);
+    @Query(value = "SELECT COUNT(*) FROM tb25_420_donation_story WHERE story_title LIKE CONCAT('%', :keyword, '%')", nativeQuery = true)
+    long countByTitle(@Param("keyword") String keyword);
 
+    @Query(value = "SELECT COUNT(*) FROM tb25_420_donation_story WHERE story_contents LIKE CONCAT('%', :keyword, '%')", nativeQuery = true)
+    long countByContents(@Param("keyword") String keyword);
+
+    @Query(value = "SELECT COUNT(*) FROM tb25_420_donation_story WHERE story_title LIKE CONCAT('%',:keyword, '%') OR story_contents LIKE CONCAT('%', :keyword, '%')", nativeQuery = true)
+    long countByTitleAndContents(@Param("keyword") String keyword);
 
 }

@@ -104,7 +104,7 @@ public class DonationServiceTest {
         when(donationRepository.findWithCommentsById(1L)).thenReturn(Optional.of(story));
 
         // when
-        DonationStoryDetailDto dto = donationService.findDonationStory(1L);
+        DonationStoryDetailDto dto = donationService.findDonationStoryWithTopComments(1L);
 
         // then
         assertThat(dto.getTitle()).isEqualTo("제목");
@@ -119,7 +119,7 @@ public class DonationServiceTest {
 
         // when & then
         org.junit.jupiter.api.Assertions.assertThrows(DonationNotFoundException.class, () ->
-                donationService.findDonationStory(99L));
+                donationService.findDonationStoryWithTopComments(99L));
     }
 
     @Test
@@ -166,7 +166,7 @@ public class DonationServiceTest {
                 .build();
 
         // when
-        donationService.modifyDonationStory(1L, dto);
+        donationService.updateDonationStory(1L, dto);
 
         // then
         assertThat(story.getStoryTitle()).isEqualTo("수정된제목");

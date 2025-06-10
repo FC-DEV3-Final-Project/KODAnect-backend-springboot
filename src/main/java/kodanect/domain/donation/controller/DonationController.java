@@ -96,7 +96,7 @@ public class  DonationController {
     @PostMapping("/{storySeq}/verifyPwd")
     public ResponseEntity<ApiResponse<Map<String, Object>>> verifyStoryPassword(
             @PathVariable Long storySeq,
-            @RequestBody VerifyStoryPasscodeDto passCodeDto) {
+            @RequestBody @Valid VerifyStoryPasscodeDto passCodeDto) {
 
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
         String message = messageSourceAccessor.getMessage("donation.password.match");
@@ -111,7 +111,7 @@ public class  DonationController {
             @PathVariable Long storySeq,
             @ModelAttribute @Valid DonationStoryModifyRequestDto requestDto) {
 
-        donationService.modifyDonationStory(storySeq, requestDto);
+        donationService.updateDonationStory(storySeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.update.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
     }
@@ -122,7 +122,7 @@ public class  DonationController {
     @DeleteMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> deleteStory(
             @PathVariable Long storySeq,
-            @RequestBody VerifyStoryPasscodeDto storyPasscodeDto) {
+            @RequestBody @Valid VerifyStoryPasscodeDto storyPasscodeDto) {
 
         donationService.deleteDonationStory(storySeq, storyPasscodeDto);
         String message = messageSourceAccessor.getMessage("donation.delete.success");
@@ -151,9 +151,9 @@ public class  DonationController {
     public ResponseEntity<ApiResponse<Void>> modifyComment(
             @PathVariable Long storySeq,
             @PathVariable Long commentSeq,
-            @RequestBody DonationStoryCommentModifyRequestDto requestDto) {
+            @RequestBody  @Valid DonationStoryCommentModifyRequestDto requestDto) {
 
-        donationCommentService.modifyDonationComment(storySeq, commentSeq, requestDto);
+        donationCommentService.updateDonationComment(storySeq, commentSeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.comment.update.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
@@ -166,7 +166,7 @@ public class  DonationController {
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long storySeq,
             @PathVariable Long commentSeq,
-            @RequestBody VerifyCommentPasscodeDto commentPassword) {
+            @RequestBody @Valid VerifyCommentPasscodeDto commentPassword) {
 
         donationCommentService.deleteDonationComment(storySeq, commentSeq, commentPassword);
         String message = messageSourceAccessor.getMessage("donation.comment.delete.success");

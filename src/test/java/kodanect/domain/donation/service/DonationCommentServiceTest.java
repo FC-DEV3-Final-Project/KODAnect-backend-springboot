@@ -107,7 +107,7 @@ public class DonationCommentServiceTest {
         when(commentRepository.findById(commentSeq)).thenReturn(Optional.of(comment));
         when(donationRepository.findById(storySeq)).thenReturn(Optional.of(story));
 
-        service.modifyDonationComment(comment.getStory().getStorySeq(), commentSeq, requestDto);
+        service.updateDonationComment(comment.getStory().getStorySeq(), commentSeq, requestDto);
 
         assertEquals("수정된 작성자", comment.getCommentWriter());
         assertEquals("수정된 내용", comment.getContents());

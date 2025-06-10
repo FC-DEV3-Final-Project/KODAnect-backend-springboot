@@ -14,6 +14,7 @@ public interface DonationService {
 
     CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size);
 
+    // 기증 스토리 상세 조회
     DonationStoryDetailDto findDonationStoryWithTopComments(Long storySeq);
 
     // 스토리 작성 폼 데이터 로드
@@ -22,14 +23,13 @@ public interface DonationService {
     // 기증 스토리 등록
     void createDonationStory(DonationStoryCreateRequestDto requestDto);
 
-    // 기증 스토리 상세 조회
-    DonationStoryDetailDto findDonationStory(Long storySeq);
+
 
     // 비밀번호 검증
     void verifyPasswordWithPassword(Long storySeq, VerifyStoryPasscodeDto verifyPassword);
 
     // 기증 스토리 수정
-    void modifyDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto);
+    void updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto);
 
     // 기증 스토리 삭제
     void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto);
