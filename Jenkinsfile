@@ -8,6 +8,10 @@ pipeline {
         SLACK_TOKEN = credentials('slack-token')
         IMAGE_NAME = 'kodanect'
 
+        SENTRY_AUTH_TOKEN = credentials('sentry-auth-token')
+        SENTRY_DSN = credentials('sentry-dsn')
+        SENTRY_ENVIRONMENT = 'prod'
+
         CI_FAILED = 'false'
         CD_FAILED = 'false'
         MAVEN_OPTS = '-Xmx2g'
@@ -92,33 +96,28 @@ pipeline {
 
         stage('SonarCloud Analysis') {
             when {
-                    expression {
-                        return env.CHANGE_ID != null && env.CHANGE_TARGET == 'main'
-                    }
+                expression {
+                    return env.CHANGE_ID != null && env.CHANGE_TARGET == 'main'
                 }
+            }
             steps {
                 script {
                     githubNotify context: 'sonar', status: 'PENDING', description: 'SonarCloud 분석 중...'
 
                     withSonarQubeEnv('SonarCloud') {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                                def sonarCmd = "./mvnw sonar:sonar" +
-                                    " -Dsonar.projectKey=kodanect" +
-                                    " -Dsonar.organization=fc-dev3-final-project" +
-                                    " -Dsonar.token=${SONAR_TOKEN}" +
-                                    " -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+                            def sonarCmd = "./mvnw sonar:sonar" +
+                                " -Dsonar.projectKey=kodanect" +
+                                " -Dsonar.organization=fc-dev3-final-project" +
+                                " -Dsonar.token=${SONAR_TOKEN}" +
+                                " -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml" +
+                                " -Dsonar.pullrequest.key=${CHANGE_ID}" +
+                                " -Dsonar.pullrequest.branch=${CHANGE_BRANCH}" +
+                                " -Dsonar.pullrequest.base=${CHANGE_TARGET}"
 
-                                if (env.CHANGE_ID?.trim()) {
-                                    sonarCmd += " -Dsonar.pullrequest.key=${CHANGE_ID}" +
-                                                " -Dsonar.pullrequest.branch=${CHANGE_BRANCH}" +
-                                                " -Dsonar.pullrequest.base=${CHANGE_TARGET}"
-                                }
+                            def scannerStatus = sh(script: sonarCmd, returnStatus: true)
 
-                                sh "${sonarCmd}"
-                            }
-
-                            if (currentBuild.currentResult == 'FAILURE') {
+                            if (scannerStatus != 0) {
                                 githubNotify context: 'sonar', status: 'FAILURE', description: 'SonarCloud 분석 실패'
                                 env.CI_FAILED = 'true'
                                 error('Sonar 분석 실패')
@@ -128,9 +127,9 @@ pipeline {
                                     if (qualityGate.status != 'OK') {
                                         githubNotify context: 'sonar', status: 'FAILURE', description: "품질 게이트 실패: ${qualityGate.status}"
                                         env.CI_FAILED = 'true'
-                                        error("SonarCloud 품질 게이트 실패: ${qualityGate.status}")
+                                        error("Sonar 품질 게이트 실패")
                                     } else {
-                                        githubNotify context: 'sonar', status: 'SUCCESS', description: 'SonarCloud 품질 게이트 통과'
+                                        githubNotify context: 'sonar', status: 'SUCCESS', description: 'Sonar 품질 게이트 통과'
                                     }
                                 }
                             }
@@ -139,7 +138,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Docker Build & Push') {
             when {
@@ -199,6 +197,9 @@ DB_PASSWORD=${DB_PASSWORD}
 SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
 DOCKER_USER=${DOCKER_USER}
 IMAGE_TAG=${imageTag}
+SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+SENTRY_DSN=${SENTRY_DSN}
+SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}
 EOF
 
                             sshpass -p "\$SSH_PASS" ssh -o StrictHostKeyChecking=no \$SSH_USER@\${SERVER_HOST} 'mkdir -p /root/docker-compose-prod'
@@ -233,6 +234,25 @@ EOF
                               --title "Release ${imageTag}" \\
                               --notes "이미지: ${fullImage}"
                         """
+                        sh """
+                            curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/ \\
+                              -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
+                              -H 'Content-Type: application/json' \\
+                              -d '{
+                                "version": "kodanect@${imageTag}",
+                                "projects": ["java-spring-boot"]
+                              }'
+                        """
+                        sh """
+                            curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/kodanect@${imageTag}/commits/ \\
+                              -X POST \\
+                              -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
+                              -H "Content-Type: application/json" \\
+                              -d '{
+                                "commit": "${GIT_COMMIT}",
+                                "repository": "FC-DEV3-Final-Project/KODAnect-backend-springboot"
+                              }'
+                        """
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
@@ -252,9 +272,7 @@ EOF
                 script {
                     githubNotify context: 'healthcheck', status: 'PENDING', description: '헬스체크 중...'
 
-
                     def healthCheckUrl = "http://10.8.110.14:8080/actuator/health"
-
 
                     def retries = 3
                     def success = false
@@ -303,7 +321,7 @@ EOF
 
         failure {
             script {
-                if (env.CHANGE_ID !=null || env.BRANCH_NAME?.trim() == 'main') {
+                if (env.CHANGE_ID != null || env.BRANCH_NAME?.trim() == 'main') {
                     slackSend(
                         channel: '4_파이널프로젝트_1조_jenkins',
                         color: 'danger',

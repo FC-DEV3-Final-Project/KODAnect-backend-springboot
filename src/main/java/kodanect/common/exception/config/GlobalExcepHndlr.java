@@ -7,6 +7,8 @@ import kodanect.domain.remembrance.exception.InvalidPaginationRangeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -14,6 +16,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.io.IOException;
@@ -60,12 +63,11 @@ public class GlobalExcepHndlr {
         MissingReplyWriterException.class,
         MissingSearchDateParameterException.class,
         ReplyIdMismatchException.class,
-        ReplyPostMismatchException.class,
-    })
-    public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
+        ReplyPostMismatchException.class
+    })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
         return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
     }
 
     /**
@@ -79,6 +81,22 @@ public class GlobalExcepHndlr {
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.fail(HttpStatus.FORBIDDEN, "비밀번호가 일치하지 않습니다."));
     }
+    /**
+     * @Valided 유효성 검사 실패 예외 처리
+     */
+    @ExceptionHandler(ValidationFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> validationFailedException(MethodArgumentNotValidException ex) {
+        Optional<String> errorMessageOpt = ex.getBindingResult().getAllErrors()
+                .stream()
+                .map(ObjectError::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst();
+
+        String errorMessage = errorMessageOpt.orElse("유효하지 않은 요청입니다.");
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
+    }
+
 
     /**
      * 404 예외 처리 (Resource Not Found)
@@ -96,6 +114,40 @@ public class GlobalExcepHndlr {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.fail(HttpStatus.NOT_FOUND, msg));
     }
+
+
+    @ExceptionHandler(BadRequestException.class)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
+        log.warn("BadRequestException: {}", ex.getMessage());
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, ex.getMessage()));
+    }
+
+    /**
+     * 400 예외 처리: @RequestBody @Valid 검증 실패 시 MethodArgumentNotValidException 처리
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
+        // 가장 첫 번째 에러 메시지 키를 가져옴
+        String defaultMsgKey = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        String resolvedMsg;
+
+        try {
+            // 키를 메시지 소스에서 해석
+            resolvedMsg = messageSourceAccessor.getMessage(defaultMsgKey);
+        }
+        catch (Exception e) {
+            // 메시지 소스에서 못 찾으면 그냥 키 문자열 그대로 사용
+            resolvedMsg = defaultMsgKey;
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, resolvedMsg));
+    }
+
 
     /**
      * 409 예외 처리
@@ -120,18 +172,6 @@ public class GlobalExcepHndlr {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "메시지 키 없음"));
     }
-
-
-
-    /**
-     * 파일 처리 중 발생하는 IO 예외 처리
-     */
-    @ExceptionHandler(IOException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIOException(IOException ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류가 발생했습니다."));
-    }
-
 
 
     @ExceptionHandler({
@@ -188,43 +228,56 @@ public class GlobalExcepHndlr {
                 .filter(Objects::nonNull)
                 .findFirst();
 
+
         String errorMessage = errorMessageOpt.orElse("잘못된 요청입니다.");
+        log.info("BindException 발생: {}", errorMessage);
         return ResponseEntity.badRequest()
                 .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
     }
 
-    /**
-     * 400 예외 처리: @RequestBody @Valid 검증 실패 시 MethodArgumentNotValidException 처리
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
-        // 가장 첫 번째 에러 메시지 키를 가져옴
-        String defaultMsgKey = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
-        String resolvedMsg;
 
+    /**
+     * 400 예외 처리: 서비스에서 throw new IllegalArgumentException("...") 한 경우
+     * - ex.getMessage() 가 메시지 키라면 메시지 소스로부터 실제 문구를 찾아서 사용
+     * - 메시지 키가 아닌 일반 한글 메시지라면 그대로 반환
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArg(IllegalArgumentException ex) {
+        String keyOrMsg = ex.getMessage();
+        // messageSourceAccessor 에 해당 키가 있는지 먼저 시도
+        String msg;
         try {
-            // 키를 메시지 소스에서 해석
-            resolvedMsg = messageSourceAccessor.getMessage(defaultMsgKey);
+            msg = messageSourceAccessor.getMessage(keyOrMsg);
         }
         catch (Exception e) {
-            // 메시지 소스에서 못 찾으면 그냥 키 문자열 그대로 사용
-            resolvedMsg = defaultMsgKey;
+            // 키가 없으면 ex.getMessage() 를 그대로 사용
+            msg = keyOrMsg;
         }
-
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, resolvedMsg));
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, msg));
+    }
+
+    /**
+     * 파일 처리 중 발생하는 IO 예외 처리
+     */
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIOException(IOException ex) {
+        log.error("파일 처리 중 IOException 발생", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류가 발생했습니다."));
     }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
         log.error("Unhandled exception: ", ex);
 
-        String message = messageSourceAccessor.getMessage("error.internal"); //
+        String message = messageSourceAccessor.getMessage("error.internal"); // ← 이 줄이 핵심
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, message));
     }
+
 
     /**
      * 500 예외 처리: 나머지 모든 예외
@@ -237,6 +290,27 @@ public class GlobalExcepHndlr {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, msg));
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.warn("잘못된 파라미터 타입 요청: name={}, value={}, requiredType={}",
+                ex.getName(), ex.getValue(), ex.getRequiredType(), ex);
+
+        String name = ex.getName();
+        String value = String.valueOf(ex.getValue());
+        String expected = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "Unknown";
+
+        String message = String.format("요청 파라미터 '%s'의 값 '%s'은(는) 타입 '%s'으로 변환할 수 없습니다.",
+                name, value, expected);
+
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, message));
+    }
+
+
+
+
+
 
 
 }
