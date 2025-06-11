@@ -1,5 +1,7 @@
 package kodanect.domain.heaven.service.impl;
 
+import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.util.CursorFormatter;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.service.HeavenCommentService;
@@ -22,5 +24,15 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
         Pageable pageable = PageRequest.of(0, size + 1);
 
         return heavenCommentRepository.findByCursor(letterSeq, cursor, pageable);
+    }
+
+    /* 댓글 더보기 (페이징) */
+    @Override
+    public CursorReplyPaginationResponse<HeavenCommentResponse, Integer> getMoreCommentList(Integer letterSeq, Integer cursor, int size) {
+        Pageable pageable = PageRequest.of(0, size + 1);
+
+        List<HeavenCommentResponse> heavenCommentResponseList = heavenCommentRepository.findByCursor(letterSeq, cursor, pageable);
+
+        return CursorFormatter.cursorReplyFormat(heavenCommentResponseList, size);
     }
 }
