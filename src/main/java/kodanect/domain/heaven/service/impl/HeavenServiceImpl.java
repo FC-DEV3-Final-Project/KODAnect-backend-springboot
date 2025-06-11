@@ -77,6 +77,7 @@ public class HeavenServiceImpl implements HeavenService {
         return HeavenDetailResponse.of(heaven, cursorPaginationResponse, commentCount);
     }
 
+    /* 게시물 비밀번호 일치 여부 */
     @Override
     public HeavenVerifyResponse verifyPasscode(Integer letterSeq, String letterPasscode) {
         String findPassCode = heavenRepository.findPassCodeByLetterSeq(letterSeq);
