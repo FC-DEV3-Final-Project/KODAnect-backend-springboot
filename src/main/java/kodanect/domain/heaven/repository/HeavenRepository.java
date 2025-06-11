@@ -134,5 +134,18 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     )
     int countByContentsContaining(@Param("keyword") String keyword);
 
-
+    /**
+     * 게시글 비밀번호 조회
+     *
+     * @param letterSeq
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT h.letterPasscode
+            FROM Heaven h
+            WHERE h.letterSeq = :letterSeq
+        """
+    )
+    String findPassCodeByLetterSeq(@Param("letterSeq") Integer letterSeq);
 }

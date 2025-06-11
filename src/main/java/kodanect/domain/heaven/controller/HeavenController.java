@@ -4,6 +4,8 @@ import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
+import kodanect.domain.heaven.dto.HeavenVerifyRequest;
+import kodanect.domain.heaven.dto.HeavenVerifyResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -57,5 +59,18 @@ public class HeavenController {
         String message = messageSourceAccessor.getMessage("heaven.detail.get.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenDetailResponse));
+    }
+
+    /* 게시물 수정 인증 */
+    @PostMapping("/{letterSeq}/verifyPwd")
+    public ResponseEntity<ApiResponse<HeavenVerifyResponse>> verifyPwd(
+            @PathVariable Integer letterSeq,
+            @RequestBody HeavenVerifyRequest heavenVerifyRequest
+    ) {
+        HeavenVerifyResponse heavenVerifyResponse = heavenService.verifyPasscode(letterSeq, heavenVerifyRequest.getLetterPasscode());
+
+        String message = messageSourceAccessor.getMessage("heaven.verify.passcode.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenVerifyResponse));
     }
 }

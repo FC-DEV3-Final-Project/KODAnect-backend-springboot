@@ -6,6 +6,7 @@ import kodanect.common.util.CursorFormatter;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
+import kodanect.domain.heaven.dto.HeavenVerifyResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -73,6 +75,15 @@ public class HeavenServiceImpl implements HeavenService {
         CursorReplyPaginationResponse<HeavenCommentResponse, Integer> cursorPaginationResponse = CursorFormatter.cursorReplyFormat(heavenCommentList, COMMENT_SIZE);
 
         return HeavenDetailResponse.of(heaven, cursorPaginationResponse, commentCount);
+    }
+
+    @Override
+    public HeavenVerifyResponse verifyPasscode(Integer letterSeq, String letterPasscode) {
+        String findPassCode = heavenRepository.findPassCodeByLetterSeq(letterSeq);
+
+        int result = Objects.equals(findPassCode, letterPasscode) ? 1 : 0;
+
+        return HeavenVerifyResponse.of(result);
     }
 
     /* 검색 조건에 따른 게시물 개수 조회 */
