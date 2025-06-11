@@ -2,16 +2,14 @@ package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/heavenLetters")
@@ -47,5 +45,17 @@ public class HeavenController {
         String message = messageSourceAccessor.getMessage("heaven.list.get.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenList));
+    }
+
+    /* 게시물 상세 조회 */
+    @GetMapping("/{letterSeq}")
+    public ResponseEntity<ApiResponse<HeavenDetailResponse>> getHeavenDetail(
+            @PathVariable Integer letterSeq
+    ) {
+        HeavenDetailResponse heavenDetailResponse = heavenService.getHeavenDetail(letterSeq);
+
+        String message = messageSourceAccessor.getMessage("heaven.detail.get.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenDetailResponse));
     }
 }

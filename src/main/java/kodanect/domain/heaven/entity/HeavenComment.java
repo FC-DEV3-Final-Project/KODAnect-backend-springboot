@@ -23,7 +23,7 @@ public class HeavenComment {
 
     /* 편지 일련번호 */
     @ManyToOne
-    @JoinColumn(name = "letterSeq")
+    @JoinColumn(name = "letter_seq")
     private Heaven heaven;
 
     /* 작성자 이름 */

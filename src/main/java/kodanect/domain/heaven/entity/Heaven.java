@@ -1,5 +1,6 @@
 package kodanect.domain.heaven.entity;
 
+import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
 
@@ -25,12 +26,13 @@ public class Heaven {
 
     /* 기증자 */
     @ManyToOne
-    @JoinColumn(name = "donateSeq")
+    @JoinColumn(name = "donate_seq")
     private Memorial memorial;
 
     /* 권역 코드 */
     @Column(length = 10)
-    private String areaCode;
+    @Enumerated(EnumType.STRING)
+    private AreaCode areaCode;
 
     /* 편지 제목 */
     @Column(length = 600)
@@ -109,5 +111,9 @@ public class Heaven {
         if (modifyTime == null) {
             modifyTime = LocalDateTime.now();
         }
+    }
+
+    public void addReadCount() {
+        this.readCount++;
     }
 }

@@ -89,5 +89,50 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     )
     List<HeavenResponse> findByContentsContaining(@Param("keyword") String keyword, @Param("cursor") Integer cursor, Pageable pageable);
 
-    /* 게시물 상세 조회 */
+    /**
+     * 전체(제목 + 내용)을 통한 게시물 개수 조회
+     *
+     * @param keyword
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT COUNT(h)
+            FROM Heaven h
+            WHERE h.letterTitle LIKE %:keyword% OR h.letterContents LIKE %:keyword%
+        """
+    )
+    int countByTitleOrContentsContaining(@Param("keyword") String keyword);
+
+    /**
+     * 제목을 통한 게시물 개수 조회
+     *
+     * @param keyword
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT COUNT(h)
+            FROM Heaven h
+            WHERE h.letterTitle LIKE %:keyword%
+        """
+    )
+    int countByTitleContaining(@Param("keyword") String keyword);
+
+    /**
+     * 내용을 통한 게시물 개수 조회
+     *
+     * @param keyword
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT COUNT(h)
+            FROM Heaven h
+            WHERE h.letterContents LIKE %:keyword%
+        """
+    )
+    int countByContentsContaining(@Param("keyword") String keyword);
+
+
 }
