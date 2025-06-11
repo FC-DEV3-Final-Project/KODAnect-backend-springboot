@@ -44,7 +44,7 @@ public class HeavenController {
     ) {
         CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenListSearchResult(searchType, keyword, cursor, size);
 
-        String message = messageSourceAccessor.getMessage("heaven.list.get.success");
+        String message = messageSourceAccessor.getMessage("heaven.list.search.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenList));
     }

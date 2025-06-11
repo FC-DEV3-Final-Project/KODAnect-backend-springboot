@@ -71,6 +71,46 @@ public class HeavenServiceImplTest {
         assertEquals(anonymityFlag, firstHeavenResponse.getAnonymityFlag());
         assertEquals(Integer.valueOf(readCount), firstHeavenResponse.getReadCount());
         assertEquals(now, firstHeavenResponse.getWriteTime());
+    }
 
+    @Test
+    @DisplayName("검색을 통한 게시물 전체 조회 테스트")
+    public void getHeavenListSearchResultTest() {
+        /* given */
+        String type = "all";
+        String keyWord = "제목";
+        Integer cursor = 1000;
+        int size = 20;
+
+        String anonymityFlag = "N";
+        int readCount = 13;
+        LocalDateTime now = LocalDateTime.now();
+
+        List<HeavenResponse> heavenResponseList = new ArrayList<>();
+
+        for (int i = 1; i <= 30; i++) {
+            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
+        }
+
+        when(heavenRepository.findByTitleOrContentsContaining(eq(keyWord), eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
+        when(heavenRepository.countByTitleOrContentsContaining(eq(keyWord))).thenReturn(30);
+
+        /* when */
+        CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenListSearchResult(type, keyWord, cursor, size);
+        HeavenResponse firstHeavenResponse = cursorPaginationResponse.getContent().get(0);
+
+        /* then */
+        assertNotNull(cursorPaginationResponse);
+        assertEquals(size, cursorPaginationResponse.getContent().size());
+        assertTrue(cursorPaginationResponse.isHasNext());
+        assertEquals(30, cursorPaginationResponse.getTotalCount());
+
+        assertEquals(1, firstHeavenResponse.getLetterSeq());
+        assertEquals("제목1", firstHeavenResponse.getLetterTitle());
+        assertEquals("기증자1", firstHeavenResponse.getDonorName());
+        assertEquals("작성자1", firstHeavenResponse.getLetterWriter());
+        assertEquals(anonymityFlag, firstHeavenResponse.getAnonymityFlag());
+        assertEquals(Integer.valueOf(readCount), firstHeavenResponse.getReadCount());
+        assertEquals(now, firstHeavenResponse.getWriteTime());
     }
 }

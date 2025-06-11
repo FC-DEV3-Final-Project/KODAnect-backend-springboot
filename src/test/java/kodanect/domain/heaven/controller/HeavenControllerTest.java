@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,6 +39,7 @@ public class HeavenControllerTest {
     @Before
     public void beforeEach() {
         when(messageSourceAccessor.getMessage("heaven.list.get.success")).thenReturn("게시물 전체 조회 성공");
+        when(messageSourceAccessor.getMessage("heaven.list.search.success")).thenReturn("검색을 통한 게시물 전체 조회 성공");
     }
 
     @Test
@@ -64,7 +66,6 @@ public class HeavenControllerTest {
                 .hasNext(hasNext)
                 .totalCount(totalCount)
                 .build();
-        System.out.println("cursorPaginationResponse.getContent() = " + cursorPaginationResponse.getContent());
 
         when(heavenService.getHeavenList(eq(30), eq(20))).thenReturn(cursorPaginationResponse);
 
@@ -80,5 +81,47 @@ public class HeavenControllerTest {
                 .andExpect(jsonPath("$.data.nextCursor").value(10))
                 .andExpect(jsonPath("$.data.hasNext").value(true))
                 .andExpect(jsonPath("$.data.totalCount").value(30));
+    }
+
+    @Test
+    @DisplayName("검색을 통한 게시물 전체 조회 테스트")
+    public void searchHeavenListTest() throws Exception {
+        /* given */
+        String anonymityFlag = "N";
+        int readCount = 5;
+        LocalDateTime now = LocalDateTime.now();
+        Integer nextCursor = null;
+        boolean hasNext = false;
+        long totalCount = 10;
+
+
+        List<HeavenResponse> heavenResponseList = new ArrayList<>();
+
+        for (int i = 1; i <= totalCount; i++) {
+            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
+        }
+
+        CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = CursorPaginationResponse.<HeavenResponse, Integer>builder()
+                .content(heavenResponseList)
+                .nextCursor(null)
+                .hasNext(hasNext)
+                .totalCount(totalCount)
+                .build();
+
+        when(heavenService.getHeavenListSearchResult(eq("all"), eq("제목"), eq(10), eq(20))).thenReturn(cursorPaginationResponse);
+
+        /* when & then */
+        mockMvc.perform(get("/heavenLetters/search")
+                    .param("type", "all")
+                    .param("keyword", "제목")
+                    .param("cursor", "10")
+                    .param("size", "20"))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("검색을 통한 게시물 전체 조회 성공"))
+                .andExpect(jsonPath("$.data.content[0].letterSeq").value(1))
+                .andExpect(jsonPath("$.data.nextCursor", nullValue()))
+                .andExpect(jsonPath("$.data.hasNext").value(hasNext))
+                .andExpect(jsonPath("$.data.totalCount").value(totalCount));
     }
 }
