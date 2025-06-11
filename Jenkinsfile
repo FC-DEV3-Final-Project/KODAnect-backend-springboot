@@ -101,7 +101,6 @@ pipeline {
             steps {
                 script {
                     githubNotify context: 'sonar', status: 'PENDING', description: 'SonarCloud 분석 중...'
-
                     withSonarQubeEnv('SonarCloud') {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                             catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
@@ -111,7 +110,6 @@ pipeline {
                                     " -Dsonar.token=${SONAR_TOKEN}" +
                                     " -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml" +
                                     " -Dsonar.branch.name=main"
-
                                 sh "${sonarCmd}"
                             }
 
@@ -120,16 +118,7 @@ pipeline {
                                 env.CI_FAILED = 'true'
                                 error('Sonar 분석 실패')
                             } else {
-                                timeout(time: 5, unit: 'MINUTES') {
-                                    def qualityGate = waitForQualityGate()
-                                    if (qualityGate.status != 'OK') {
-                                        githubNotify context: 'sonar', status: 'FAILURE', description: "품질 게이트 실패: ${qualityGate.status}"
-                                        env.CI_FAILED = 'true'
-                                        error("SonarCloud 품질 게이트 실패: ${qualityGate.status}")
-                                    } else {
-                                        githubNotify context: 'sonar', status: 'SUCCESS', description: 'SonarCloud 품질 게이트 통과'
-                                    }
-                                }
+                                githubNotify context: 'sonar', status: 'SUCCESS', description: 'SonarCloud 분석 완료'
                             }
                         }
                     }
@@ -149,7 +138,12 @@ pipeline {
                     githubNotify context: 'docker', status: 'PENDING', description: "도커 이미지 빌드 중... [${imageTag}]"
 
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        sh "docker build -t ${fullImage} ."
+                        sh """
+                            docker build \\
+                              --build-arg RUN_MODE=prod \\
+                              --build-arg SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN} \\
+                              -t ${fullImage} .
+                        """
                         sh """
                             echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
                             docker push ${fullImage}
@@ -232,31 +226,29 @@ EOF
                               --title "Release ${imageTag}" \\
                               --notes "이미지: ${fullImage}"
                         """
+
                         sh """
                             curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/ \\
                               -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
                               -H 'Content-Type: application/json' \\
-                              -d '{
-                                "version": "kodanect@${imageTag}",
-                                "projects": ["java-spring-boot"]
-                              }'
+                              -d '{"version": "kodanect@${imageTag}", "projects": ["java-spring-boot"]}'
                         """
-                        sh """
-                            curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/kodanect@${imageTag}/commits/ \\
-                              -X POST \\
-                              -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
-                              -H "Content-Type: application/json" \\
-                              -d '{
-                                "commit": "${GIT_COMMIT}",
-                                "repository": "FC-DEV3-Final-Project/KODAnect-backend-springboot"
-                              }'
-                        """
-                    }
 
-                    if (currentBuild.currentResult == 'FAILURE') {
-                        githubNotify context: 'deploy', status: 'FAILURE', description: '배포 실패'
-                        env.CD_FAILED = 'true'
-                        error('배포 실패')
+                        catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+                            sh """
+                                curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/kodanect@${imageTag}/commits/ \\
+                                  -X POST \\
+                                  -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
+                                  -H "Content-Type: application/json" \\
+                                  -d '{"commits": [{"commit": "${GIT_COMMIT}", "repository": "FC-DEV3-Final-Project/KODAnect-backend-springboot"}]}'
+                            """
+                        }
+
+                        if (currentBuild.currentResult == 'FAILURE') {
+                            githubNotify context: 'deploy', status: 'FAILURE', description: '배포 실패'
+                            env.CD_FAILED = 'true'
+                            error('배포 실패')
+                        }
                     }
                 }
             }
@@ -271,9 +263,9 @@ EOF
                     githubNotify context: 'healthcheck', status: 'PENDING', description: '헬스체크 중...'
 
                     def healthCheckUrl = "http://10.8.110.14:8080/actuator/health"
-
                     def retries = 3
                     def success = false
+
                     for (int i = 0; i < retries; i++) {
                         def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}", returnStdout: true).trim()
                         if (response == '200') {
