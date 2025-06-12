@@ -35,7 +35,6 @@ import java.util.UUID;
 @Slf4j
 public class DonationServiceImpl implements DonationService {
 
-    private static final String uploadDir = "/app/uploads";
 
     private final DonationRepository donationRepository;
     private final MessageResolver messageResolver;
@@ -211,19 +210,6 @@ public class DonationServiceImpl implements DonationService {
         return UUID.randomUUID().toString().replace("-","").toUpperCase();
     }
 
-    /** 파일 업로드 처리 */
-    private String[] saveFileIfExists(MultipartFile file) {
-        try {
-            String storedFileName = makeStoredFileName();
-            String originalFileName = file.getOriginalFilename();
-            Path savePath = Paths.get(uploadDir, storedFileName);
-            Files.copy(file.getInputStream(), savePath);
-            return new String[]{storedFileName, originalFileName};
-        }
-        catch (IOException e) {
-            throw new FailToUploadFileException(messageResolver.get("donation.error.file.upload.fail"));
-        }
-    }
 
 
 }
