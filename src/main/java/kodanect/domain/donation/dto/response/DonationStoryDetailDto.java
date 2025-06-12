@@ -25,6 +25,7 @@ public class DonationStoryDetailDto {
     private String fileName;        // 저장된 파일 이름 (서버 파일명)
     private String orgFileName;
 
+    //private List<CursorCommentPaginationResponse> comments = new ArrayList<>();
 
     public static DonationStoryDetailDto fromEntity(DonationStory story){
         return DonationStoryDetailDto.builder()
