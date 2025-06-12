@@ -14,7 +14,7 @@ pipeline {
 
         CI_FAILED = 'false'
         CD_FAILED = 'false'
-        MAVEN_OPTS = '-Xmx2g -XX:+UseG1GC -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
+        MAVEN_OPTS = '-Xmx2g -XX:+UseG1GC -Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
     }
 
     stages {
@@ -60,7 +60,7 @@ pipeline {
                 script {
                     githubNotify context: 'build', status: 'PENDING', description: '빌드 시작...'
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        sh './mvnw clean compile'
+                        sh env.BRANCH_NAME == 'main' ? './mvnw clean compile' : './mvnw compile'
                     }
 
                     if (currentBuild.currentResult == 'FAILURE') {
