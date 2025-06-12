@@ -13,7 +13,7 @@ import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.PasscodeMismatchException;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.impl.DonationServiceImpl;
-import org.junit.Before;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -45,10 +45,6 @@ public class DonationServiceImplTest {
     @InjectMocks
     private DonationServiceImpl donationService;
 
-    @Before
-    public void setUp() {
-        // MockitoAnnotations.initMocks(this); // @RunWith 으로 이미 초기화됨
-    }
 
     // --- Cursor Paging 기본 조회 ---
     @Test

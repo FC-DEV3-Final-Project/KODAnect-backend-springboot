@@ -283,6 +283,7 @@ EOF
                 }
             }
         }
+    }
 
     post {
         success {
