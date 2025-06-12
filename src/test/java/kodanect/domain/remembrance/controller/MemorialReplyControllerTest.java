@@ -2,7 +2,7 @@ package kodanect.domain.remembrance.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.config.EgovConfigCommon;
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyDeleteRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyResponse;
@@ -90,11 +90,11 @@ class MemorialReplyControllerTest {
                         .build()
         );
 
-        CursorReplyPaginationResponse<MemorialReplyResponse, Integer> page =
-                CursorReplyPaginationResponse.<MemorialReplyResponse, Integer>builder()
+        CursorCommentPaginationResponse<MemorialReplyResponse, Integer> page =
+                CursorCommentPaginationResponse.<MemorialReplyResponse, Integer>builder()
                         .content(content)
-                        .replyNextCursor(null)
-                        .replyHasNext(false)
+                        .commentNextCursor(null)
+                        .commentHasNext(false)
                         .build();
 
         given(memorialReplyService.getMoreReplyList(1, 1, 3)).willReturn(page);

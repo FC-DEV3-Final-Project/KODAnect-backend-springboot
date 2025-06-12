@@ -1,6 +1,7 @@
 package kodanect.domain.remembrance.controller;
 
-import kodanect.common.response.CursorReplyPaginationResponse;
+
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyDeleteRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyResponse;
@@ -27,7 +28,7 @@ public class MemorialReplyController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<CursorReplyPaginationResponse<MemorialReplyResponse, Integer>>> getMoreReplies(
+    public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<MemorialReplyResponse, Integer>>> getMoreReplies(
             @PathVariable Integer donateSeq,
             @RequestParam Integer cursor, @RequestParam(defaultValue = "3") int size)
             throws  MemorialNotFoundException,
@@ -36,7 +37,7 @@ public class MemorialReplyController {
         /* 댓글 더보기 */
 
         String successMessage = messageSourceAccessor.getMessage("board.reply.read.success", new Object[] {});
-        CursorReplyPaginationResponse<MemorialReplyResponse, Integer> memorialReplyResponses = memorialReplyService.getMoreReplyList(donateSeq, cursor, size);
+        CursorCommentPaginationResponse<MemorialReplyResponse, Integer> memorialReplyResponses = memorialReplyService.getMoreReplyList(donateSeq, cursor, size);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, successMessage, memorialReplyResponses));
     }
 

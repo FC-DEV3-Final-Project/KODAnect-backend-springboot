@@ -3,16 +3,12 @@ package kodanect.domain.donation.controller;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.donation.dto.request.*;
-import kodanect.domain.donation.dto.response.AreaCode;
-import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
-import kodanect.domain.donation.dto.response.DonationStoryListDto;
-import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
+import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -59,7 +55,7 @@ public class  DonationController {
         CursorPaginationResponse<DonationStoryListDto, Long> response =
                 donationService.findSearchStoriesWithCursor(type, keyword, cursor, size);
 
-        String message = messageSourceAccessor.getMessage("article.detailSuccess");
+        String message = messageSourceAccessor.getMessage("donation.search.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, response));
     }
     /**
@@ -74,11 +70,14 @@ public class  DonationController {
     /**
      * 기증 스토리 등록
      */
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<ApiResponse<Void>> createStory(@ModelAttribute @Valid DonationStoryCreateRequestDto requestDto) {
         donationService.createDonationStory(requestDto);
         String message = messageSourceAccessor.getMessage("donation.create.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
+        
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(HttpStatus.CREATED, message));
     }
 
     /**
@@ -86,7 +85,7 @@ public class  DonationController {
      */
     @GetMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
-        DonationStoryDetailDto detailDto = donationService.findDonationStoryWithTopComments(storySeq);
+        DonationStoryDetailDto detailDto = donationService.findDonationStoryWithStoryId(storySeq);
         String message = messageSourceAccessor.getMessage("board.read.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, detailDto));
     }
@@ -103,10 +102,11 @@ public class  DonationController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of("result", 1)));
     }
 
+
     /**
      * 기증 스토리 수정
      */
-    @PatchMapping(value = "/{storySeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/{storySeq}")
     public ResponseEntity<ApiResponse<Void>> modifyStory(
             @PathVariable Long storySeq,
             @ModelAttribute @Valid DonationStoryModifyRequestDto requestDto) {
@@ -130,6 +130,22 @@ public class  DonationController {
     }
 
     /**
+     * 상세 페이지 전체 댓글 조회
+     */
+    @GetMapping("/{storySeq}/comments")
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryCommentDto, Long>>> getAllDonationCommentList(
+            @PathVariable("storySeq") Long storySeq,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "3") int size
+    ){
+        CursorPaginationResponse<DonationStoryCommentDto, Long> response = donationCommentService.findCommentsWithCursor(storySeq, cursor, size);
+
+        String message = messageSourceAccessor.getMessage("donation.commentSuccess");
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, response));
+    }
+
+
+    /**
      * 댓글 작성(등록)
      */
     @PostMapping("/{storySeq}/comments")
@@ -143,6 +159,22 @@ public class  DonationController {
                 HttpStatus.OK,
                 message));
     }
+
+    /**
+     * 댓글 수정 인증
+     */
+    @PostMapping("/{storySeq}/comments/{commentSeq}/verifyPwd")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> verifyCommentPassword(
+            @PathVariable Long storySeq,
+            @PathVariable Long commentSeq,
+            @RequestBody @Valid VerifyCommentPasscodeDto passCodeDto) {
+
+        donationCommentService.verifyPasswordWithPassword(storySeq, commentSeq, passCodeDto);
+        String message = messageSourceAccessor.getMessage("donation.password.match");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of("result", 1)));
+    }
+
 
     /**
      * 댓글 수정

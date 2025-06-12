@@ -2,7 +2,7 @@ package kodanect.domain.remembrance.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyDeleteRequest;
@@ -189,7 +189,7 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
 
     }
 
-    public CursorReplyPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
+    public CursorCommentPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
             throws  MemorialNotFoundException,
                     InvalidDonateSeqException
     {

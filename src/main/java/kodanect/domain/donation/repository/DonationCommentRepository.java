@@ -1,6 +1,5 @@
 package kodanect.domain.donation.repository;
 
-import kodanect.domain.donation.dto.response.DonationStoryCommentDto;
 import kodanect.domain.donation.entity.DonationStoryComment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,18 +10,20 @@ import java.util.List;
 
 public interface DonationCommentRepository extends JpaRepository<DonationStoryComment, Long> {
 
-    /**
-     * 특정 게시글(storySeq)에 작성된 댓글 목록을 조회 (페이지네이션 적용 가능)
-     */
     @Query("""
-            SELECT new kodanect.domain.donation.dto.response.DonationStoryCommentDto(
-                c.commentSeq, c.commentWriter, c.contents, c.writeTime
-            )
-            FROM DonationStoryComment c
-            WHERE c.story.storySeq = :storySeq
-            ORDER BY c.commentSeq ASC
-            """)
-    List<DonationStoryCommentDto> findCommentsByStoryId(@Param("storySeq") Long storySeq, Pageable pageable);
+        SELECT d
+        FROM DonationStoryComment d
+        WHERE d.story.storySeq = :storySeq
+          AND (:cursor IS NULL OR d.commentSeq < :cursor)
+        ORDER BY d.commentSeq DESC
+        """)
+    List<DonationStoryComment> findByCursorEntity(
+            @Param("storySeq") Long storySeq,
+            @Param("cursor") Long cursor,
+            Pageable pageable);
+
+    @Query(value =  "SELECT COUNT(*) FROM tb25_421_donation_story_comment WHERE story_seq = :storySeq ", nativeQuery=true)
+    long countAllByStorySeq(Long storySeq);
 
 
 }

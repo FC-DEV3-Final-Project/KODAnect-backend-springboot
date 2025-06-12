@@ -2,8 +2,8 @@ package kodanect.domain.remembrance.service.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.common.response.CursorReplyPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.remembrance.dto.*;
 import kodanect.domain.remembrance.entity.Memorial;
@@ -112,7 +112,7 @@ public class MemorialServiceImpl implements MemorialService {
 
         List<MemorialResponse> memorialResponses = memorialRepository.findSearchByCursor(cursor, pageable, startDateStr, endDateStr, searchWord);
 
-        return CursorFormatter.cursorFormat(memorialResponses, size);
+        return CursorFormatter.cursorFormat(memorialResponses, size, 1);
 
     }
 
@@ -128,7 +128,7 @@ public class MemorialServiceImpl implements MemorialService {
 
         List<MemorialResponse> memorialResponses = memorialRepository.findByCursor(cursor, pageable);
 
-        return CursorFormatter.cursorFormat(memorialResponses, size);
+        return CursorFormatter.cursorFormat(memorialResponses, size, 1);
     }
 
     /** 게시글 상세 조회 */
@@ -148,13 +148,13 @@ public class MemorialServiceImpl implements MemorialService {
         List<MemorialReplyResponse> memorialReplyResponses = memorialReplyService.getMemorialReplyList(donateSeq, null, DEFAULT_SIZE + 1);
 
         /* 댓글 리스트 페이징 포매팅 */
-        CursorReplyPaginationResponse<MemorialReplyResponse, Integer> cursoredReplies = CursorFormatter.cursorReplyFormat(memorialReplyResponses, DEFAULT_SIZE);
+        CursorCommentPaginationResponse<MemorialReplyResponse, Integer> cursoredReplies = CursorFormatter.cursorReplyFormat(memorialReplyResponses, DEFAULT_SIZE);
 
         /* 하늘나라 편지 리스트 조회 예정 */
 
         /* 기증자 상세 조회 */
         return MemorialDetailResponse.of(memorial,
-                cursoredReplies.getContent(), cursoredReplies.getReplyNextCursor(), cursoredReplies.isReplyHasNext());
+                cursoredReplies.getContent(), cursoredReplies.getCommentNextCursor(), cursoredReplies.isCommentHasNext());
     }
 }
 

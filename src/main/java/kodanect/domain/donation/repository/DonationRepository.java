@@ -30,11 +30,10 @@ public interface DonationRepository extends JpaRepository<DonationStory, Long> {
      * 게시글 상세 조회 시 댓글도 함께 가져오기 (댓글 정렬: 오름차순)
      */
     @Query("""
-        SELECT DISTINCT s FROM DonationStory s
-        LEFT JOIN FETCH s.comments c
+        SELECT s FROM DonationStory s
         WHERE s.storySeq = :storySeq
         """)
-    Optional<DonationStory> findWithCommentsById(@Param("storySeq") Long storySeq);
+    Optional<DonationStory> findStoryOnlyById(@Param("storySeq") Long storySeq);
 
 
     @Query("""

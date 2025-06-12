@@ -2,12 +2,10 @@ package kodanect.domain.donation.dto.response;
 
 
 import kodanect.domain.donation.entity.DonationStory;
-import kodanect.domain.donation.entity.DonationStoryComment;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.Comparator;
-import java.util.List;
+
 
 @Builder
 @Getter
@@ -27,7 +25,6 @@ public class DonationStoryDetailDto {
     private String fileName;        // 저장된 파일 이름 (서버 파일명)
     private String orgFileName;
 
-    private List<DonationStoryCommentDto> comments;
 
     public static DonationStoryDetailDto fromEntity(DonationStory story){
         return DonationStoryDetailDto.builder()
@@ -40,12 +37,6 @@ public class DonationStoryDetailDto {
                 .storyContent(story.getStoryContents())
                 .fileName(story.getFileName())
                 .orgFileName(story.getOrgFileName())
-                .comments(
-                        story.getComments().stream()
-                                .sorted(Comparator.comparing(DonationStoryComment::getCommentSeq).reversed())
-                                .limit(3)
-                                .map(DonationStoryCommentDto::fromEntity)
-                                .toList()
-                ).build();
+                .build();
     }
 }

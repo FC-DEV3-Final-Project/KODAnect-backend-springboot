@@ -6,10 +6,7 @@ import kodanect.common.util.MessageResolver;
 import kodanect.domain.donation.dto.request.DonationStoryCreateRequestDto;
 import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
-import kodanect.domain.donation.dto.response.AreaCode;
-import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
-import kodanect.domain.donation.dto.response.DonationStoryListDto;
-import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
+import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.*;
 import kodanect.domain.donation.repository.DonationRepository;
@@ -23,7 +20,6 @@ import org.jsoup.select.Elements;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -52,6 +48,7 @@ public class DonationServiceImpl implements DonationService {
         long totalCount = donationRepository.countAll();
         return CursorFormatter.cursorFormat(results, size, totalCount); // 이 한 줄이면 충분
     }
+
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size) {
         Pageable pageable = PageRequest.of(0, size + 1); // size+1개 조회해서 hasNext 판단
@@ -86,54 +83,75 @@ public class DonationServiceImpl implements DonationService {
     public void createDonationStory(DonationStoryCreateRequestDto requestDto) {
         validateStoryRequest(requestDto.getAreaCode(), requestDto.getStoryTitle(), requestDto.getStoryPasscode());
 
-        String storedFileName = null;
-        String originalFileName = null;
+        // 이미지가 여러개 저장될 수 도 있음.
 
-        List<String> orgFileNames = new ArrayList<>();
-
-        Document doc = Jsoup.parse(requestDto.getStoryContents());
-        Elements imgTags = doc.select("img");
-
-        for(Element img : imgTags){
-            String src = img.attr("src");
-            String orgFileName = src.substring(src.lastIndexOf("/") + 1);
-            orgFileNames.add(orgFileName);
-        }
-
-        String joinedNames = String.join("," ,orgFileNames);
-
-        if (requestDto.getFile() != null && !requestDto.getFile().isEmpty()) {
-            String[] result = saveFileIfExists(requestDto.getFile());
-            storedFileName = result[0];
-            originalFileName = result[1];
-        }
-
+        String [] imgNames = imgParsing(requestDto.getStoryContents());
         DonationStory story = DonationStory.builder()
                 .areaCode(requestDto.getAreaCode())
                 .storyTitle(requestDto.getStoryTitle())
                 .storyPasscode(requestDto.getStoryPasscode())
                 .storyWriter(requestDto.getStoryWriter())
-                .anonymityFlag(null)
                 .readCount(0)
                 .storyContents(requestDto.getStoryContents())
-                .fileName(storedFileName)
-                .orgFileName(originalFileName)
+                .orgFileName(imgNames[0])
+                .fileName(imgNames[1])
                 .build();
-        log.debug("storedFileName = {}, originalFileName = {}", storedFileName, storedFileName);
+
         donationRepository.save(story);
     }
 
+    private String[] imgParsing(String storyContents) {
+        List<String> orgFileNames = new ArrayList<>();
+        List<String> fileNames = new ArrayList<>();
+
+        log.info("==== storyContents ====");
+        log.info(storyContents);
+
+        Document doc = Jsoup.parse(storyContents);
+        Elements imgTags = doc.select("img");
+
+        log.info("총 이미지 수: " + imgTags.size());
+
+        for (Element img : imgTags) {
+            String src = img.attr("src");  // 또는 "data-cke-saved-src"
+
+            System.out.println("src: " + img.attr("src"));
+
+            if (src == null || !src.contains("/")) {
+                continue;
+            }
+
+            // 원본 파일명 추출
+            String orgFileName = src.substring(src.lastIndexOf("/") + 1);
+
+            // 파일명 저장
+            orgFileNames.add(orgFileName);
+            fileNames.add(makeStoredFileName()); // UUID 같은 방식
+        }
+
+        return new String[]{
+                String.join(",", orgFileNames),
+                String.join(",", fileNames)
+        };
+    }
+
     /** 스토리 상세 조회 및 조회수 증가 */
-    public DonationStoryDetailDto findDonationStoryWithTopComments(Long storySeq) {
-        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
+    public DonationStoryDetailDto findDonationStoryWithStoryId(Long storySeq) {
+        DonationStory story = findStoryWithId(storySeq);
         story.increaseReadCount(); // 조회수 증가
         return DonationStoryDetailDto.fromEntity(story);
+    }
+
+
+    private DonationStory findStoryWithId(Long storySeq) {
+        return donationRepository.findStoryOnlyById(storySeq)
+                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
     }
 
     /** 비밀번호 검증 */
     public void verifyPasswordWithPassword(Long storySeq, VerifyStoryPasscodeDto verifyPassword) {
         DonationStory story = donationRepository.findById(storySeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
 
         if (!validatePassword(verifyPassword.getStoryPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
@@ -143,31 +161,21 @@ public class DonationServiceImpl implements DonationService {
         }
     }
     /** 스토리 수정 */
-    public void updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
-        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
+    public void     updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
+        log.info("===== updateDonationStory 호출됨 =====");
 
-        String storedFileName = story.getFileName();
-        String originalFileName = story.getOrgFileName();
+        DonationStory story = donationRepository.findStoryOnlyById(storySeq)
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
 
-        // 새 파일로 교체
-        if (requestDto.getFile() != null && !requestDto.getFile().isEmpty()) {
-            String[] result = updateFileIfChanged(requestDto.getFile(), originalFileName, storedFileName);
-            storedFileName = result[0];
-            originalFileName = result[1];
-        }
-        else if(story.getFileName() != null){
-            // 새 파일 없이 기존 파일이 있는 경우 → 삭제 요청으로 간주
-            deleteFile(storedFileName);
-            storedFileName = null;
-            originalFileName = null;
-        }
+        String [] imgNames = imgParsing(requestDto.getStoryContents());
 
-        story.modifyDonationStory(requestDto, storedFileName, originalFileName);
+        story.modifyDonationStory(requestDto, imgNames[1], imgNames[0]);
     }
 
     /** 스토리 삭제 */
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
-        DonationStory story = findStoryWithTopCommentsOrThrow(storySeq);
+        DonationStory story = donationRepository.findStoryOnlyById(storySeq)
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
 
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
@@ -179,7 +187,6 @@ public class DonationServiceImpl implements DonationService {
     public boolean validatePassword(String password) {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,16}$");
     }
-
 
     /** 요청 필드 유효성 검증 */
     private void validateStoryRequest(AreaCode areaCode, String title, String password) {
@@ -197,10 +204,17 @@ public class DonationServiceImpl implements DonationService {
         }
     }
 
+    /** fileName (db 에 저장하는 형식으로 바꾸기)
+     *  -(하이픈) 제거
+     */
+    public String makeStoredFileName(){
+        return UUID.randomUUID().toString().replace("-","").toUpperCase();
+    }
+
     /** 파일 업로드 처리 */
     private String[] saveFileIfExists(MultipartFile file) {
         try {
-            String storedFileName = UUID.randomUUID().toString().replace("-", "").toUpperCase();
+            String storedFileName = makeStoredFileName();
             String originalFileName = file.getOriginalFilename();
             Path savePath = Paths.get(uploadDir, storedFileName);
             Files.copy(file.getInputStream(), savePath);
@@ -211,36 +225,5 @@ public class DonationServiceImpl implements DonationService {
         }
     }
 
-    /** 기존 파일 변경 시 업데이트 */
-    private String[] updateFileIfChanged(MultipartFile file, String oldOriginal, String oldStored) {
-        String newOriginal = file.getOriginalFilename();
-        if (oldOriginal != null && oldOriginal.equals(newOriginal)) {
-            return new String[]{oldStored, oldOriginal};
-        }
-        try {
-            if (oldStored != null) {
-                Files.deleteIfExists(Paths.get(uploadDir, oldStored));
-            }
-            return saveFileIfExists(file);
-        }
-        catch (IOException e) {
-            throw new InvalidDeleteOriginalImageException(messageResolver.get("donation.error.file.delete.fail"));
-        }
-    }
 
-
-    private DonationStory findStoryWithTopCommentsOrThrow(Long storySeq) {
-        return donationRepository.findWithCommentsById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
-    }
-
-    private void deleteFile(String fileName) {
-        try {
-            Path path = Paths.get(uploadDir, fileName);
-            Files.deleteIfExists(path);
-        }
-        catch (IOException e) {
-            log.warn("파일 삭제 실패: {}", fileName, e);
-        }
-    }
 }

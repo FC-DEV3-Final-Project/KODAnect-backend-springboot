@@ -17,7 +17,5 @@ public class DonationStoryCommentModifyRequestDto {
     private String commentWriter;
     @NotBlank(message="donation.content.blank")
     private String commentContents;
-    @NotBlank(message="donation.comment.verify.passcode.blank")
-    private String commentPasscode;
 
 }

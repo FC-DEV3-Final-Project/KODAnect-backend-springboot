@@ -1,6 +1,6 @@
 package kodanect.domain.remembrance.service;
 
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.MemorialFinder;
 import kodanect.common.util.MemorialReplyFinder;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
@@ -183,7 +183,7 @@ class MemorialReplyServiceImplTest {
         when(memorialFinder.findByIdOrThrow(donateSeq)).thenReturn(mock(Memorial.class));
         when(memorialReplyRepository.findByCursor(eq(donateSeq), eq(cursor), any(Pageable.class))).thenReturn(content);
 
-        CursorReplyPaginationResponse<MemorialReplyResponse, Integer> page =
+        CursorCommentPaginationResponse<MemorialReplyResponse, Integer> page =
                 memorialReplyService.getMoreReplyList(donateSeq, cursor, size);
 
         assertNotNull(page);

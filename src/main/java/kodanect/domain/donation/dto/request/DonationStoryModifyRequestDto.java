@@ -3,7 +3,6 @@ package kodanect.domain.donation.dto.request;
 
 import kodanect.domain.donation.dto.response.AreaCode;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -24,5 +23,4 @@ public class DonationStoryModifyRequestDto {
     private String storyWriter;
     private String storyContents;
 
-    private MultipartFile file;
 }

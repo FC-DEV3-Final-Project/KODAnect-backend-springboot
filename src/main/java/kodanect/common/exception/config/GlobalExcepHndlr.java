@@ -7,8 +7,6 @@ import kodanect.domain.remembrance.exception.InvalidPaginationRangeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -81,22 +79,6 @@ public class GlobalExcepHndlr {
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.fail(HttpStatus.FORBIDDEN, "비밀번호가 일치하지 않습니다."));
     }
-    /**
-     * @Valided 유효성 검사 실패 예외 처리
-     */
-    @ExceptionHandler(ValidationFailedException.class)
-    public ResponseEntity<ApiResponse<Void>> validationFailedException(MethodArgumentNotValidException ex) {
-        Optional<String> errorMessageOpt = ex.getBindingResult().getAllErrors()
-                .stream()
-                .map(ObjectError::getDefaultMessage)
-                .filter(Objects::nonNull)
-                .findFirst();
-
-        String errorMessage = errorMessageOpt.orElse("유효하지 않은 요청입니다.");
-        return ResponseEntity.badRequest()
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
-    }
-
 
     /**
      * 404 예외 처리 (Resource Not Found)
@@ -113,16 +95,6 @@ public class GlobalExcepHndlr {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.fail(HttpStatus.NOT_FOUND, msg));
-    }
-
-
-    @ExceptionHandler(BadRequestException.class)
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
-        log.warn("BadRequestException: {}", ex.getMessage());
-        return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
 
     /**

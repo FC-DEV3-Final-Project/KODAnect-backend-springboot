@@ -1,6 +1,6 @@
 package kodanect.domain.remembrance.service;
 
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyDeleteRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
@@ -44,7 +44,7 @@ public interface MemorialReplyService {
             throws  MemorialNotFoundException,
                     InvalidDonateSeqException;
     /* 댓글 더보기 */
-    CursorReplyPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
+    CursorCommentPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
             throws  MemorialNotFoundException,
                     InvalidDonateSeqException;
 }
