@@ -55,7 +55,7 @@ public class GlobalExcepHndlr {
      * <p>
      * 권한 오류 발생 시 403 응답 반환
      */
-    @ExceptionHandler(ReplyPasswordMismatchException.class)
+    @ExceptionHandler(CommentPasswordMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden() {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
