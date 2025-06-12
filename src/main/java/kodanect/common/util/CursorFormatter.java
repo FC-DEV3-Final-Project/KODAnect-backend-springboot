@@ -1,8 +1,8 @@
 package kodanect.common.util;
 
 import kodanect.common.response.CursorCommentCountPaginationResponse;
-import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 
 import java.util.List;
 
@@ -92,6 +92,5 @@ public class CursorFormatter {
                 .totalCommentCount(totalCount)
                 .build();
     }
-
 
 }

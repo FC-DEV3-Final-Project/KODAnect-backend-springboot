@@ -1,11 +1,11 @@
 package kodanect.domain.remembrance.dto;
 
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.FormatUtils;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  *
@@ -34,6 +34,7 @@ import java.util.List;
  * <p>commentNextCursor : 다음 페이지 번호</p>
  * <p>commentHasNext : 다음 페이지 존재 유무</p>
  * <p>totalCommentCount : 총 댓글 갯수</p>
+ * <p>heavenLetterResponses : </p>
  *
  * */
 @Builder
@@ -100,10 +101,7 @@ public class MemorialDetailResponse {
     private LocalDateTime writeTime;
 
     /* 댓글 리스트 */
-    private List<MemorialCommentResponse> memorialCommentResponses;
-    private Integer commentNextCursor;
-    private boolean commentHasNext;
-    private long totalCommentCount;
+    private CursorCommentPaginationResponse<MemorialCommentResponse, Integer> memorialCommentResponses;
 
     /* 편지 리스트 */
 
@@ -119,8 +117,7 @@ public class MemorialDetailResponse {
 
     /** 기증자 상세 조회 객체 생성 메서드 */
     public static MemorialDetailResponse of(
-            Memorial memorial, List<MemorialCommentResponse> replies,
-            Integer commentNextCursor, boolean commentHasNext, long totalCommentCount)
+            Memorial memorial, CursorCommentPaginationResponse<MemorialCommentResponse, Integer> replies)
     {
         return MemorialDetailResponse.builder()
                 .donateSeq(memorial.getDonateSeq())
@@ -143,9 +140,6 @@ public class MemorialDetailResponse {
                 .sadCount(memorial.getSadCount())
                 .writeTime(memorial.getWriteTime())
                 .memorialCommentResponses(replies)
-                .commentNextCursor(commentNextCursor)
-                .commentHasNext(commentHasNext)
-                .totalCommentCount(totalCommentCount)
                 .build();
     }
 }

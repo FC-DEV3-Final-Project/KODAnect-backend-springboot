@@ -245,7 +245,6 @@ public class MemorialServiceImplTest {
         assertEquals(6, result.getHardCount());
         assertEquals(7, result.getSadCount());
         assertEquals("2024-01-01", result.getWriteTime());
-        assertEquals(1, result.getMemorialCommentResponses().size());
     }
 
 }
