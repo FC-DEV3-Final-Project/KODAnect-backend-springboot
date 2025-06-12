@@ -3,13 +3,13 @@ package kodanect.domain.remembrance.service.impl;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.remembrance.dto.*;
 import kodanect.domain.remembrance.entity.Memorial;
 import kodanect.domain.remembrance.exception.*;
 import kodanect.domain.remembrance.repository.MemorialRepository;
-import kodanect.domain.remembrance.service.MemorialReplyService;
+import kodanect.domain.remembrance.service.MemorialCommentService;
 import kodanect.domain.remembrance.service.MemorialService;
 import kodanect.common.util.EmotionType;
 import kodanect.common.util.MemorialFinder;
@@ -44,7 +44,7 @@ public class MemorialServiceImpl implements MemorialService {
     private static final int DEFAULT_SIZE = 3;
 
     private final MemorialRepository memorialRepository;
-    private final MemorialReplyService memorialReplyService;
+    private final MemorialCommentService memorialCommentService;
     private final MemorialFinder memorialFinder;
 
     /**
@@ -58,9 +58,9 @@ public class MemorialServiceImpl implements MemorialService {
     private final Cache<Integer, ReentrantReadWriteLock> lockCache =
             Caffeine.newBuilder().expireAfterAccess(CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES).maximumSize(CACHE_MAX_SIZE).build();
 
-    public MemorialServiceImpl(MemorialRepository memorialRepository, MemorialReplyService memorialReplyService, MemorialFinder memorialFinder){
+    public MemorialServiceImpl(MemorialRepository memorialRepository, MemorialCommentService memorialCommentService, MemorialFinder memorialFinder){
         this.memorialRepository = memorialRepository;
-        this.memorialReplyService = memorialReplyService;
+        this.memorialCommentService = memorialCommentService;
         this.memorialFinder = memorialFinder;
     }
 
@@ -136,7 +136,7 @@ public class MemorialServiceImpl implements MemorialService {
 
         List<MemorialResponse> memorialResponses = memorialRepository.findSearchByCursor(cursor, pageable, startDateStr, endDateStr, keyWord);
 
-        long totalCount = memorialRepository.count();
+        long totalCount = memorialRepository.countBySearch(startDateStr, endDateStr, keyWord);
 
         return CursorFormatter.cursorFormat(memorialResponses, size, totalCount);
 
@@ -180,23 +180,23 @@ public class MemorialServiceImpl implements MemorialService {
         Memorial memorial = memorialFinder.findByIdOrThrow(donateSeq);
 
         /* 댓글 리스트 모두 조회 */
-        List<MemorialReplyResponse> memorialReplyResponses =
-                memorialReplyService.getMemorialReplyList(donateSeq, null, DEFAULT_SIZE + 1);
+        List<MemorialCommentResponse> memorialCommentResponses =
+                memorialCommentService.getMemorialCommentList(donateSeq, null, DEFAULT_SIZE + 1);
 
         /* 댓글 리스트 페이징 포매팅 */
-        CursorReplyPaginationResponse<MemorialReplyResponse, Integer> cursoredReplies =
-                CursorFormatter.cursorReplyFormat(memorialReplyResponses, DEFAULT_SIZE);
+        CursorCommentPaginationResponse<MemorialCommentResponse, Integer> cursoredReplies =
+                CursorFormatter.cursorCommentFormat(memorialCommentResponses, DEFAULT_SIZE);
 
         /* 댓글 총 갯수 조회 */
-        long totalReplyCount = memorialReplyService.getTotalReplyCount(donateSeq);
+        long totalCommentCount = memorialCommentService.getTotalCommentCount(donateSeq);
 
         /* 하늘나라 편지 리스트 조회 예정 */
 
         /* 기증자 상세 조회 */
         return MemorialDetailResponse.of(memorial,
                 cursoredReplies.getContent(),
-                cursoredReplies.getReplyNextCursor(),
-                cursoredReplies.isReplyHasNext(), totalReplyCount);
+                cursoredReplies.getCommentNextCursor(),
+                cursoredReplies.isCommentHasNext(), totalCommentCount);
     }
 }
 
