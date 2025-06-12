@@ -236,6 +236,6 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
                 .toList();
 
         // 8. CursorFormatter를 사용하여 응답 포맷팅
-        return CursorFormatter.cursorReplyFormat(commentResponseDtos, size);
+        return CursorFormatter.cursorCommentFormat(commentResponseDtos, size);
     }
 }

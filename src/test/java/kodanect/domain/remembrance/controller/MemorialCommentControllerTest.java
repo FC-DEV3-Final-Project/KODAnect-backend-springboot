@@ -3,11 +3,11 @@ package kodanect.domain.remembrance.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.config.EgovConfigCommon;
 import kodanect.common.response.CursorCommentPaginationResponse;
-import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
-import kodanect.domain.remembrance.dto.MemorialReplyPasswordRequest;
-import kodanect.domain.remembrance.dto.MemorialReplyResponse;
-import kodanect.domain.remembrance.dto.MemorialReplyUpdateRequest;
-import kodanect.domain.remembrance.service.MemorialReplyService;
+import kodanect.domain.remembrance.dto.MemorialCommentCreateRequest;
+import kodanect.domain.remembrance.dto.MemorialCommentPasswordRequest;
+import kodanect.domain.remembrance.dto.MemorialCommentResponse;
+import kodanect.domain.remembrance.dto.MemorialCommentUpdateRequest;
+import kodanect.domain.remembrance.service.MemorialCommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,41 +28,41 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(MemorialReplyController.class)
+@WebMvcTest(MemorialCommentController.class)
 @Import(EgovConfigCommon.class)
-class MemorialReplyControllerTest {
+class MemorialCommentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private MemorialReplyService memorialReplyService;
+    private MemorialCommentService memorialCommentService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
     private int donateSeq = 1;
-    private int replySeq = 1;
+    private int commentSeq = 1;
 
-    private MemorialReplyCreateRequest replyCreateDto;
-    private MemorialReplyUpdateRequest replyUpdateDto;
-    private MemorialReplyPasswordRequest passwordDto;
+    private MemorialCommentCreateRequest commentCreateDto;
+    private MemorialCommentUpdateRequest commentUpdateDto;
+    private MemorialCommentPasswordRequest commentPasswordDto;
 
     @BeforeEach
     void setupCreate() {
-        this.replyCreateDto = MemorialReplyCreateRequest.builder()
-                .replyWriter("홍길동")
-                .replyContents("내용")
-                .replyPassword("1234asdf")
+        this.commentCreateDto = MemorialCommentCreateRequest.builder()
+                .commentWriter("홍길동")
+                .contents("내용")
+                .commentPasscode("1234asdf")
                 .build();
 
-        this.replyUpdateDto = MemorialReplyUpdateRequest.builder()
-                .replyWriter("홍길동")
-                .replyContents("내용")
+        this.commentUpdateDto = MemorialCommentUpdateRequest.builder()
+                .commentWriter("홍길동")
+                .contents("내용")
                 .build();
 
-        this.passwordDto = MemorialReplyPasswordRequest.builder()
-                .replyPassword("1234asdf")
+        this.commentPasswordDto = MemorialCommentPasswordRequest.builder()
+                .commentPasscode("1234asdf")
                 .build();
     }
 
@@ -71,31 +71,31 @@ class MemorialReplyControllerTest {
     void 추모관_댓글_더보기() throws Exception {
 
         /* 게시글 댓글 리스트 */
-        List<MemorialReplyResponse> content = List.of(
-                MemorialReplyResponse.builder()
-                        .replySeq(1)
-                        .replyWriter("홍길동")
-                        .replyContents("안녕하세요")
-                        .replyWriteTime(LocalDateTime.of(2024,1,1,12,0,0))
+        List<MemorialCommentResponse> content = List.of(
+                MemorialCommentResponse.builder()
+                        .commentSeq(1)
+                        .commentWriter("홍길동")
+                        .contents("안녕하세요")
+                        .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
                         .build(),
-                MemorialReplyResponse.builder()
-                        .replySeq(2)
-                        .replyWriter("김길동")
-                        .replyContents("잘가세요")
-                        .replyWriteTime(LocalDateTime.of(2022,1,1,12,0,0))
+                MemorialCommentResponse.builder()
+                        .commentSeq(2)
+                        .commentWriter("김길동")
+                        .contents("잘가세요")
+                        .writeTime(LocalDateTime.of(2022,1,1,12,0,0))
                         .build()
         );
 
-        CursorCommentPaginationResponse<MemorialReplyResponse, Integer> page =
-                CursorCommentPaginationResponse.<MemorialReplyResponse, Integer>builder()
+        CursorCommentPaginationResponse<MemorialCommentResponse, Integer> page =
+                CursorCommentPaginationResponse.<MemorialCommentResponse, Integer>builder()
                         .content(content)
                         .commentNextCursor(null)
                         .commentHasNext(false)
                         .build();
 
-        given(memorialReplyService.getMoreReplyList(1, 1, 3)).willReturn(page);
+        given(memorialCommentService.getMoreCommentList(1, 1, 3)).willReturn(page);
 
-        mockMvc.perform(get("/remembrance/1/replies")
+        mockMvc.perform(get("/remembrance/1/comment")
                         .param("cursor", "1")
                         .param("size", "3"))
                 .andExpect(status().isOk())
@@ -103,10 +103,10 @@ class MemorialReplyControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("댓글 조회 성공"))
                 .andExpect(jsonPath("$.data.content.length()").value(2))
-                .andExpect(jsonPath("$.data.content[0].replySeq").value(1))
-                .andExpect(jsonPath("$.data.content[0].replyWriter").value("홍길동"))
-                .andExpect(jsonPath("$.data.content[1].replySeq").value(2))
-                .andExpect(jsonPath("$.data.content[1].replyWriter").value("김길동"))
+                .andExpect(jsonPath("$.data.content[0].commentSeq").value(1))
+                .andExpect(jsonPath("$.data.content[0].commentWriter").value("홍길동"))
+                .andExpect(jsonPath("$.data.content[1].commentSeq").value(2))
+                .andExpect(jsonPath("$.data.content[1].commentWriter").value("김길동"))
                 .andExpect(jsonPath("$.data.commentNextCursor").doesNotExist()) // null인 경우
                 .andExpect(jsonPath("$.data.commentHasNext").value(false));
 
@@ -116,11 +116,11 @@ class MemorialReplyControllerTest {
     @Test
     @DisplayName("추모관 댓글 생성")
     void 추모관_댓글_생성() throws Exception {
-        doNothing().when(memorialReplyService).createReply(donateSeq, replyCreateDto);
+        doNothing().when(memorialCommentService).createComment(donateSeq, commentCreateDto);
 
-        mockMvc.perform(post("/remembrance/1/replies")
+        mockMvc.perform(post("/remembrance/1/comment")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(replyCreateDto)))
+                        .content(objectMapper.writeValueAsString(commentCreateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -130,11 +130,11 @@ class MemorialReplyControllerTest {
     @Test
     @DisplayName("추모관 댓글 수정")
     void 추모관_댓글_수정() throws Exception {
-        doNothing().when(memorialReplyService).updateReply(donateSeq, replySeq, replyUpdateDto);
+        doNothing().when(memorialCommentService).updateComment(donateSeq, commentSeq, commentUpdateDto);
 
-        mockMvc.perform(put("/remembrance/1/replies/1")
+        mockMvc.perform(put("/remembrance/1/comment/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(replyUpdateDto)))
+                        .content(objectMapper.writeValueAsString(commentUpdateDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -144,11 +144,11 @@ class MemorialReplyControllerTest {
     @Test
     @DisplayName("추모관 댓글 삭제")
     void 추모관_댓글_삭제() throws Exception {
-        doNothing().when(memorialReplyService).deleteReply(donateSeq, replySeq, passwordDto.getReplyPassword());
+        doNothing().when(memorialCommentService).deleteComment(donateSeq, commentSeq, commentPasswordDto);
 
-        mockMvc.perform(delete("/remembrance/1/replies/1")
+        mockMvc.perform(delete("/remembrance/1/comment/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(passwordDto)))
+                        .content(objectMapper.writeValueAsString(commentPasswordDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -156,13 +156,13 @@ class MemorialReplyControllerTest {
     }
 
     @Test
-    @DisplayName("추모관 비밀번호 인증")
-    void 추모관_비밀번호_인증() throws Exception {
-        doNothing().when(memorialReplyService).verifyReplyPassword(donateSeq, replySeq, passwordDto.getReplyPassword());
+    @DisplayName("추모관 댓글 비밀번호 검증")
+    void 추모관_댓글_비밀번호_검증() throws Exception {
+        doNothing().when(memorialCommentService).varifyComment(donateSeq, commentSeq, commentPasswordDto);
 
-        mockMvc.perform(post("/remembrance/1/replies/1")
+        mockMvc.perform(post("/remembrance/1/comment/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(passwordDto)))
+                        .content(objectMapper.writeValueAsString(commentPasswordDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))

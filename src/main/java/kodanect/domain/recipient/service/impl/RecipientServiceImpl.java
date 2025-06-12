@@ -1,8 +1,8 @@
 package kodanect.domain.recipient.service.impl;
 
 import kodanect.common.config.GlobalsProperties;
-import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.recipient.dto.*;
 import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
@@ -266,7 +266,7 @@ public class RecipientServiceImpl implements RecipientService {
 
         // 6. CursorFormatter를 사용하여 댓글 응답 포맷 생성
         CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> commentPaginationResponse =
-                CursorFormatter.cursorReplyFormat(initialCommentDtos, INITIAL_COMMENT_LOAD_LIMIT); // 실제 클라이언트 요청 size는 INITIAL_COMMENT_LOAD_LIMIT
+                CursorFormatter.cursorCommentFormat(initialCommentDtos, INITIAL_COMMENT_LOAD_LIMIT); // 실제 클라이언트 요청 size는 INITIAL_COMMENT_LOAD_LIMIT
 
         // 7. DTO에 댓글 관련 데이터 설정
         responseDto.setInitialCommentData(commentPaginationResponse);

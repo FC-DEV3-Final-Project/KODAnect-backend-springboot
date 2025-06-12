@@ -144,7 +144,7 @@ public class ArticleControllerTest {
         mockMvc.perform(get("/notices")
                         .param("optionStr", "1")
                         .param("type", "title")
-                        .param("search", longKeyword)
+                        .param("keyWord", longKeyword)
                         .param("page", "0")
                         .param("size", "20"))
                 .andExpect(status().isBadRequest())

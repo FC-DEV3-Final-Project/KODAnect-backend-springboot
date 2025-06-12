@@ -30,9 +30,10 @@ import java.util.List;
  * <p>hardCount : 이모지 힘들어요</p>
  * <p>sadCount : 이모지 슬퍼요</p>
  * <p>writeTime : 생성 일시</p>
- * <p>memorialReplyResponses : 댓글 리스트</p>
- * <p>replyNextCursor : 다음 페이지 번호</p>
- * <p>replyHasNext : 다음 페이지 존재 유무</p>
+ * <p>memorialCommentResponses : 댓글 리스트</p>
+ * <p>commentNextCursor : 다음 페이지 번호</p>
+ * <p>commentHasNext : 다음 페이지 존재 유무</p>
+ * <p>totalCommentCount : 총 댓글 갯수</p>
  *
  * */
 @Builder
@@ -99,10 +100,10 @@ public class MemorialDetailResponse {
     private LocalDateTime writeTime;
 
     /* 댓글 리스트 */
-    private List<MemorialReplyResponse> memorialReplyResponses;
-    private Integer replyNextCursor;
-    private boolean replyHasNext;
-    private long totalReplyCount;
+    private List<MemorialCommentResponse> memorialCommentResponses;
+    private Integer commentNextCursor;
+    private boolean commentHasNext;
+    private long totalCommentCount;
 
     /* 편지 리스트 */
 
@@ -118,8 +119,8 @@ public class MemorialDetailResponse {
 
     /** 기증자 상세 조회 객체 생성 메서드 */
     public static MemorialDetailResponse of(
-            Memorial memorial, List<MemorialReplyResponse> replies,
-            Integer replyNextCursor, boolean replyHasNext, long totalReplyCount)
+            Memorial memorial, List<MemorialCommentResponse> replies,
+            Integer commentNextCursor, boolean commentHasNext, long totalCommentCount)
     {
         return MemorialDetailResponse.builder()
                 .donateSeq(memorial.getDonateSeq())
@@ -141,10 +142,10 @@ public class MemorialDetailResponse {
                 .hardCount(memorial.getHardCount())
                 .sadCount(memorial.getSadCount())
                 .writeTime(memorial.getWriteTime())
-                .memorialReplyResponses(replies)
-                .replyNextCursor(replyNextCursor)
-                .replyHasNext(replyHasNext)
-                .totalReplyCount(totalReplyCount)
+                .memorialCommentResponses(replies)
+                .commentNextCursor(commentNextCursor)
+                .commentHasNext(commentHasNext)
+                .totalCommentCount(totalCommentCount)
                 .build();
     }
 }
