@@ -78,18 +78,18 @@ public class MemorialServiceImpl implements MemorialService {
     }
 
     /**
-     * 
+     *
      * 기증자 추모관 이모지 카운팅 메서드
-     * 
+     *
      * @param donateSeq 상세 게시글 번호
      * @param emotion  추가 카운트 될 이모지
-     * 
+     *
      * */
     @Override
     @Transactional
     public void emotionCountUpdate(Integer donateSeq, String emotion)
             throws  InvalidEmotionTypeException,
-                    MemorialNotFoundException
+            MemorialNotFoundException
     {
         /* 게시글 마다 락을 개별 쓰기 락 객체로 관리 */
         ReentrantReadWriteLock lock = getLock(donateSeq);
@@ -108,10 +108,10 @@ public class MemorialServiceImpl implements MemorialService {
         }
     }
 
-    /** 
-     * 
+    /**
+     *
      * 기증자 추모관 게시글 검색 조건 조회 메서드
-     * 
+     *
      * @param startDate 시작 일
      * @param endDate 종료 일
      * @param keyWord 검색 문자
@@ -183,20 +183,22 @@ public class MemorialServiceImpl implements MemorialService {
         List<MemorialCommentResponse> memorialCommentResponses =
                 memorialCommentService.getMemorialCommentList(donateSeq, null, DEFAULT_SIZE + 1);
 
+        /* 댓글 총 갯수 조회 */
+        long totalCount = memorialCommentService.getTotalCommentCount(donateSeq);
+
         /* 댓글 리스트 페이징 포매팅 */
         CursorCommentPaginationResponse<MemorialCommentResponse, Integer> cursoredReplies =
-                CursorFormatter.cursorCommentFormat(memorialCommentResponses, DEFAULT_SIZE);
+                CursorFormatter.cursorCommentCountFormat(memorialCommentResponses, DEFAULT_SIZE, totalCount);
 
-        /* 댓글 총 갯수 조회 */
-        long totalCommentCount = memorialCommentService.getTotalCommentCount(donateSeq);
+
 
         /* 하늘나라 편지 리스트 조회 예정 */
 
         /* 기증자 상세 조회 */
-        return MemorialDetailResponse.of(memorial,
-                cursoredReplies.getContent(),
-                cursoredReplies.getCommentNextCursor(),
-                cursoredReplies.isCommentHasNext(), totalCommentCount);
+        return MemorialDetailResponse.of(
+                memorial,
+                cursoredReplies
+        );
     }
 }
 
