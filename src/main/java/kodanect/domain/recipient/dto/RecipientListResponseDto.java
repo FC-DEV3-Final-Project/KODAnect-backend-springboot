@@ -1,5 +1,7 @@
 package kodanect.domain.recipient.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import kodanect.common.util.CursorIdentifiable;
 import kodanect.domain.recipient.entity.RecipientEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RecipientListResponseDto {
+public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
 
     private Integer letterSeq;
     private String organCode;
@@ -24,8 +26,10 @@ public class RecipientListResponseDto {
     private int readCount;
     private String fileName;
     private String orgFileName;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime writeTime;
     private String writerId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime modifyTime;
     private String modifierId;
     private String delFlag; // char 타입으로 유지
@@ -51,5 +55,11 @@ public class RecipientListResponseDto {
                 .delFlag(entity.getDelFlag())
                 .commentCount(0)
                 .build();
+    }
+
+    // CursorIdentifiable 인터페이스 구현
+    @Override
+    public Integer getCursorId() {
+        return this.letterSeq; // 게시물 커서 ID로 letterSeq 사용
     }
 }
