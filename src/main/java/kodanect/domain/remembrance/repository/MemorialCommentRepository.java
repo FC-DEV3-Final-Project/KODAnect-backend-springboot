@@ -52,7 +52,7 @@ public interface MemorialCommentRepository extends JpaRepository<MemorialComment
     @Query(
             value = """
             SELECT new kodanect.domain.remembrance.dto.MemorialCommentResponse
-                    (r.commentSeq, r.commentWriter, r.contents, r.commentWriteTime)
+                    (r.commentSeq, r.commentWriter, r.contents, r.writeTime)
             FROM MemorialComment r
             WHERE r.donateSeq = :donateSeq
                     AND r.delFlag = 'N'
