@@ -32,7 +32,7 @@ public interface MemorialRepository extends JpaRepository<Memorial, Integer> {
         value = """
             SELECT new kodanect.domain.remembrance.dto.MemorialResponse
                     (m.donateSeq, m.donorName, m.anonymityFlag, m.donateDate,m.genderFlag, m.donateAge,
-                    (SELECT COUNT(r) FROM MemorialComment r WHERE m.donateSeq = r.donateSeq))
+                    (SELECT COUNT(r) FROM MemorialComment r WHERE m.donateSeq = r.donateSeq AND r.delFlag='N'))
             FROM Memorial m
             WHERE m.delFlag = 'N'
                     AND (:cursor IS NULL OR m.donateSeq < :cursor)

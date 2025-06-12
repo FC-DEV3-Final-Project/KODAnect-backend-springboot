@@ -63,5 +63,13 @@ public interface MemorialCommentRepository extends JpaRepository<MemorialComment
     List<MemorialCommentResponse> findByCursor(@Param("donateSeq") Integer donateSeq, @Param("cursor") Integer cursor, Pageable pageable);
 
     /** 게시물 번호 기준 총 댓글 수 */
+    @Query(
+            value = """
+            SELECT COUNT(*)
+            FROM tb25_401_memorial_reply r
+            WHERE r.donate_seq = :donateSeq
+                    AND r.del_flag = 'N'
+        """, nativeQuery = true
+    )
     long countByDonateSeq(@Param("donateSeq") Integer donateSeq);
 }
