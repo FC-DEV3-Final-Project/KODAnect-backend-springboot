@@ -1,7 +1,9 @@
 package kodanect.domain.remembrance.controller;
 
 import kodanect.common.config.EgovConfigCommon;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.CursorFormatter;
 import kodanect.domain.remembrance.dto.MemorialDetailResponse;
 import kodanect.domain.remembrance.dto.MemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialCommentResponse;
@@ -128,6 +130,9 @@ class MemorialControllerTest {
                 comment2
         );
 
+        CursorCommentPaginationResponse<MemorialCommentResponse, Integer> cursoredReplies =
+                CursorFormatter.cursorCommentCountFormat(replies, 3, 30);
+
         MemorialDetailResponse memorial = MemorialDetailResponse.builder()
                 .donateSeq(1)
                 .donorName("홍길동")
@@ -148,7 +153,7 @@ class MemorialControllerTest {
                 .hardCount(6)
                 .sadCount(7)
                 .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
-                .memorialCommentResponses(replies)
+                .memorialCommentResponses(cursoredReplies)
                 .build();
 
         given(memorialService.getMemorialByDonateSeq(1)).willReturn(memorial);
@@ -177,15 +182,15 @@ class MemorialControllerTest {
                 .andExpect(jsonPath("$.data.hardCount").value(6))
                 .andExpect(jsonPath("$.data.sadCount").value(7))
                 .andExpect(jsonPath("$.data.writeTime").value("2024-01-01"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[0].commentSeq").value(1))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[0].commentWriter").value("홍길동"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[0].contents").value("안녕하세요"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[0].writeTime").value("2024-01-01"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[1].commentSeq").value(2))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[1].commentWriter").value("김길동"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[1].contents").value("잘가세요"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[1].writeTime").value("2022-01-01"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses.length()").value(2));
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].commentSeq").value(1))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].commentWriter").value("홍길동"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].contents").value("안녕하세요"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].writeTime").value("2024-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].commentSeq").value(2))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].commentWriter").value("김길동"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].contents").value("잘가세요"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].writeTime").value("2022-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content.length()").value(2));
 
 
     }
