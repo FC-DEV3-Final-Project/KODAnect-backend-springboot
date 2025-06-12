@@ -1,5 +1,6 @@
 package kodanect.domain.donation.service.impl;
 
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.common.util.MessageResolver;
@@ -9,6 +10,7 @@ import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
 import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.*;
+import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class DonationServiceImpl implements DonationService {
 
 
     private final DonationRepository donationRepository;
+    private final DonationCommentRepository commentRepository;
     private final MessageResolver messageResolver;
 
     @Override
@@ -129,11 +132,37 @@ public class DonationServiceImpl implements DonationService {
         };
     }
 
-    /** 스토리 상세 조회 및 조회수 증가 */
+    @Override
     public DonationStoryDetailDto findDonationStoryWithStoryId(Long storySeq) {
-        DonationStory story = findStoryWithId(storySeq);
-        story.increaseReadCount(); // 조회수 증가
-        return DonationStoryDetailDto.fromEntity(story);
+        // 1) 스토리 로드 + 조회수 증가
+        DonationStory story = donationRepository.findStoryOnlyById(storySeq)
+                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
+        story.increaseReadCount();
+
+        // 2) 댓글 최신 3개 조회
+        int pageSize = 3;
+        List<DonationStoryCommentDto> latestComments =
+                commentRepository.findLatestComments(storySeq, PageRequest.of(0, pageSize));
+
+        // 3) 전체 댓글 수 계산해서 hasNext, nextCursor 결정
+        long totalComments = commentRepository.countAllByStorySeq(storySeq);
+        Long nextCursor = null;
+        if (latestComments.size() == pageSize) {
+            nextCursor = latestComments.get(pageSize - 1).getCommentSeq();
+        }
+        boolean hasNext = totalComments > latestComments.size();
+
+        CursorCommentPaginationResponse<DonationStoryCommentDto, Long> commentPage =
+                CursorCommentPaginationResponse.<DonationStoryCommentDto, Long>builder()
+                        .content(latestComments)
+                        .commentNextCursor(nextCursor)
+                        .commentHasNext(hasNext)
+                        .build();
+
+        // 4) DTO 조립
+        DonationStoryDetailDto dto = DonationStoryDetailDto.fromEntity(story);
+        dto.setComments(commentPage);
+        return dto;
     }
 
 

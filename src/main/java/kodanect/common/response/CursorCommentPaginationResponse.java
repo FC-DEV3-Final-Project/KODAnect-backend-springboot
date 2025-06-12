@@ -2,6 +2,7 @@ package kodanect.common.response;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ import java.util.List;
  */
 
 @Getter
-@Builder
+@SuperBuilder
 public class CursorCommentPaginationResponse<T, C> {
 
     /** 실제 데이터 응답 리스트 */
