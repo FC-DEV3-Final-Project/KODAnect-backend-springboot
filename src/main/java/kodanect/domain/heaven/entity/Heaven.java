@@ -8,6 +8,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity(name = "Heaven")
 @Table(name = "tb25_410_heaven_letter")
@@ -113,7 +114,15 @@ public class Heaven {
         }
     }
 
+    /* 조회수 증가 */
     public void addReadCount() {
         this.readCount++;
+    }
+
+    /* 비밀번호 일치 검증 */
+    public void verifyPasscode(String passcode) {
+        if (!Objects.equals(this.letterPasscode, passcode)) {
+            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+        }
     }
 }

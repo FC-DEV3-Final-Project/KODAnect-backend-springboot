@@ -46,6 +46,7 @@ public class HeavenServiceImplTest {
         /* given */
         Integer cursor = 1000;
         int size = 20;
+        Long heavenCount = 50L;
 
         String anonymityFlag = "N";
         int readCount = 5;
@@ -53,12 +54,12 @@ public class HeavenServiceImplTest {
 
         List<HeavenResponse> heavenResponseList = new ArrayList<>();
 
-        for (int i = 1; i <= 50; i++) {
+        for (int i = 1; i <= heavenCount; i++) {
             heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
         }
 
         when(heavenRepository.findByCursor(eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
-        when(heavenRepository.count()).thenReturn(50L);
+        when(heavenRepository.count()).thenReturn(heavenCount);
 
         /* when */
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenList(cursor, size);
@@ -68,7 +69,7 @@ public class HeavenServiceImplTest {
         assertNotNull(cursorPaginationResponse);
         assertEquals(size, cursorPaginationResponse.getContent().size());
         assertTrue(cursorPaginationResponse.isHasNext());
-        assertEquals(50, cursorPaginationResponse.getTotalCount());
+        assertEquals(heavenCount, cursorPaginationResponse.getTotalCount());
 
         assertEquals(1, firstHeavenResponse.getLetterSeq());
         assertEquals("제목1", firstHeavenResponse.getLetterTitle());
@@ -87,6 +88,7 @@ public class HeavenServiceImplTest {
         String keyWord = "제목";
         Integer cursor = 1000;
         int size = 20;
+        Long heavenCount = 30L;
 
         String anonymityFlag = "N";
         int readCount = 13;
@@ -94,7 +96,7 @@ public class HeavenServiceImplTest {
 
         List<HeavenResponse> heavenResponseList = new ArrayList<>();
 
-        for (int i = 1; i <= 30; i++) {
+        for (int i = 1; i <= heavenCount; i++) {
             heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
         }
 
@@ -109,7 +111,7 @@ public class HeavenServiceImplTest {
         assertNotNull(cursorPaginationResponse);
         assertEquals(size, cursorPaginationResponse.getContent().size());
         assertTrue(cursorPaginationResponse.isHasNext());
-        assertEquals(30, cursorPaginationResponse.getTotalCount());
+        assertEquals(heavenCount, cursorPaginationResponse.getTotalCount());
 
         assertEquals(1, firstHeavenResponse.getLetterSeq());
         assertEquals("제목1", firstHeavenResponse.getLetterTitle());

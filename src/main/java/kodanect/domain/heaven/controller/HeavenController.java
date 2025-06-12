@@ -60,15 +60,15 @@ public class HeavenController {
 
     /* 게시물 수정 인증 */
     @PostMapping("/{letterSeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<HeavenVerifyResponse>> verifyPwd(
+    public ResponseEntity<ApiResponse<Void>> verifyPwd(
             @PathVariable Integer letterSeq,
             @RequestBody HeavenVerifyRequest heavenVerifyRequest
     ) {
-        HeavenVerifyResponse heavenVerifyResponse = heavenService.verifyPasscode(letterSeq, heavenVerifyRequest.getLetterPasscode());
+        heavenService.verifyPasscode(letterSeq, heavenVerifyRequest.getLetterPasscode());
 
         String message = messageSourceAccessor.getMessage("heaven.verify.passcode.success");
 
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenVerifyResponse));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
     /* 게시물 등록 */
@@ -81,5 +81,18 @@ public class HeavenController {
         String message = messageSourceAccessor.getMessage("heaven.create.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
+    }
+
+    /* 게시물 삭제 */
+    @DeleteMapping("/{letterSeq}")
+    public ResponseEntity<ApiResponse<Void>> deleteHeaven(
+        @PathVariable Integer letterSeq,
+        @RequestBody HeavenVerifyRequest heavenVerifyRequest
+    ) {
+        heavenService.deleteHeaven(letterSeq, heavenVerifyRequest.getLetterPasscode());
+
+        String message = messageSourceAccessor.getMessage("heaven.delete.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 }

@@ -85,12 +85,10 @@ public class HeavenServiceImpl implements HeavenService {
 
     /* 게시물 비밀번호 일치 여부 */
     @Override
-    public HeavenVerifyResponse verifyPasscode(Integer letterSeq, String letterPasscode) {
-        String findPassCode = heavenRepository.findPassCodeByLetterSeq(letterSeq);
+    public void verifyPasscode(Integer letterSeq, String letterPasscode) {
+        Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow(); // 예외 (추후 구현)
 
-        int result = Objects.equals(findPassCode, letterPasscode) ? 1 : 0;
-
-        return HeavenVerifyResponse.of(result);
+        heaven.verifyPasscode(letterPasscode);
     }
 
     /* 게시물 생성 */
@@ -126,6 +124,16 @@ public class HeavenServiceImpl implements HeavenService {
                 .build();
 
         heavenRepository.save(heaven);
+    }
+
+    /* 게시물 삭제 */
+    @Override
+    public void deleteHeaven(Integer letterSeq, String letterPasscode) {
+        Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow(); // 예외 (추후 구현)
+
+        heaven.verifyPasscode(letterPasscode);
+
+        heavenRepository.deleteById(letterSeq);
     }
 
     /* 검색 조건에 따른 게시물 개수 조회 */
