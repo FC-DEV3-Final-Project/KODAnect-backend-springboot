@@ -9,7 +9,7 @@ import static kodanect.common.exception.config.MessageKeys.HEAVEN_CREATE_RESPONS
 public class InvalidHeavenCreateRequestException extends AbstractCustomException {
 
     private final String donorName;
-    private final Memorial memorial;
+    private final transient Memorial memorial;
 
     public InvalidHeavenCreateRequestException(String donorName, Memorial memorial) {
         super(HEAVEN_CREATE_RESPONSE_INVALID);

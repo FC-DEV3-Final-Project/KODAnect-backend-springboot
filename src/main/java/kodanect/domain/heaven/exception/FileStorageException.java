@@ -9,7 +9,7 @@ import static kodanect.common.exception.config.MessageKeys.HEAVEN_FILE_SAVE_FAIL
 
 public class FileStorageException extends AbstractCustomException {
 
-    private final Path path;
+    private final transient Path path;
     private final String fileName;
 
     public FileStorageException(Path path, String fileName) {
