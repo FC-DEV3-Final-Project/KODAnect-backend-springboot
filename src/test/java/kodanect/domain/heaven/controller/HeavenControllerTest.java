@@ -1,6 +1,8 @@
 package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.domain.heaven.dto.HeavenCommentResponse;
+import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import org.junit.Before;
@@ -40,6 +42,7 @@ public class HeavenControllerTest {
     public void beforeEach() {
         when(messageSourceAccessor.getMessage("heaven.list.get.success")).thenReturn("게시물 전체 조회 성공");
         when(messageSourceAccessor.getMessage("heaven.list.search.success")).thenReturn("검색을 통한 게시물 전체 조회 성공");
+        when(messageSourceAccessor.getMessage("heaven.detail.get.success")).thenReturn("게시물 상세 조회 성공");
     }
 
     @Test
@@ -123,5 +126,54 @@ public class HeavenControllerTest {
                 .andExpect(jsonPath("$.data.nextCursor", nullValue()))
                 .andExpect(jsonPath("$.data.hasNext").value(hasNext))
                 .andExpect(jsonPath("$.data.totalCount").value(totalCount));
+    }
+
+    @Test
+    @DisplayName("게시물 상세 조회 테스트")
+    public void getHeavenDetailTest() throws Exception {
+        /* given */
+        Integer letterSeq = 1;
+        String letterTitle = "사랑하는 가족에게";
+        String letterPasscode = "asdf1234";
+        String letterWriter = "작성자";
+        String anonymityFlag = "Y";
+        Integer readCount = 5;
+        String letterContents = "이 편지는 하늘로 보냅니다.";
+        LocalDateTime writeTime = LocalDateTime.now();
+
+        boolean replyHasNext = false;
+        long commentCount = 2L;
+
+        List<HeavenCommentResponse> heavenCommentResponseList = new ArrayList<>();
+        for (int i = 1; i <= commentCount; i++) {
+            heavenCommentResponseList.add(new HeavenCommentResponse(i, "댓글 작성자"+i, "댓글 내용"+i, writeTime));
+        }
+
+        HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
+                .letterSeq(letterSeq)
+                .letterTitle(letterTitle)
+                .letterPasscode(letterPasscode)
+                .letterWriter(letterWriter)
+                .anonymityFlag(anonymityFlag)
+                .readCount(readCount)
+                .letterContents(letterContents)
+                .writeTime(writeTime)
+                .heavenCommentResponseList(heavenCommentResponseList)
+                .replyHasNext(replyHasNext)
+                .totalCommentCount(commentCount)
+                .build();
+
+        when(heavenService.getHeavenDetail(letterSeq)).thenReturn(heavenDetailResponse);
+
+        /* when & then */
+        mockMvc.perform(get("/heavenLetters/{letterSeq}", letterSeq))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("게시물 상세 조회 성공"))
+                .andExpect(jsonPath("$.data.letterSeq").value(1))
+                .andExpect(jsonPath("$.data.heavenCommentResponseList[0].commentSeq").value(1))
+                .andExpect(jsonPath("$.data.replyNextCursor", nullValue()))
+                .andExpect(jsonPath("$.data.replyHasNext").value(replyHasNext))
+                .andExpect(jsonPath("$.data.totalCommentCount").value(commentCount));
     }
 }
