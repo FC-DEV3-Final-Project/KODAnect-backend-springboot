@@ -263,7 +263,7 @@ public class MemorialCommentServiceImpl implements MemorialCommentService {
         /* 댓글 리스트 모두 조회 */
         List<MemorialCommentResponse> memorialCommentResponses = memorialCommentRepository.findByCursor(donateSeq, cursor, pageable);
 
-        return CursorFormatter.cursorReplyFormat(memorialCommentResponses, size);
+        return CursorFormatter.cursorCommentFormat(memorialCommentResponses, size);
     }
 
     /**

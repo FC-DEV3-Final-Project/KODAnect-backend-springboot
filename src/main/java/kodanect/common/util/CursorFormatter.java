@@ -61,7 +61,7 @@ public class CursorFormatter {
      * @return 다음 커서 정보를 포함한 CursorReplyPaginationResponse
      */
 
-    public static <T extends CursorIdentifiable<C>, C> CursorCommentPaginationResponse<T, C> cursorReplyFormat(List<T> responses, int size) {
+    public static <T extends CursorIdentifiable<C>, C> CursorCommentPaginationResponse<T, C> cursorCommentFormat(List<T> responses, int size) {
         /* 댓글 cursor 포맷 */
         boolean hasNext = responses.size() > size;
 

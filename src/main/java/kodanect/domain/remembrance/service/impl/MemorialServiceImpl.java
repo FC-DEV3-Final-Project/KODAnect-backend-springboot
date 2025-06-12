@@ -185,7 +185,7 @@ public class MemorialServiceImpl implements MemorialService {
 
         /* 댓글 리스트 페이징 포매팅 */
         CursorCommentPaginationResponse<MemorialCommentResponse, Integer> cursoredReplies =
-                CursorFormatter.cursorReplyFormat(memorialCommentResponses, DEFAULT_SIZE);
+                CursorFormatter.cursorCommentFormat(memorialCommentResponses, DEFAULT_SIZE);
 
         /* 댓글 총 갯수 조회 */
         long totalCommentCount = memorialCommentService.getTotalCommentCount(donateSeq);
