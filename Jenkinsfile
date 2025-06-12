@@ -14,7 +14,7 @@ pipeline {
 
         CI_FAILED = 'false'
         CD_FAILED = 'false'
-        MAVEN_OPTS = '-Xmx2g'
+        MAVEN_OPTS = '-Xmx2g -XX:+UseG1GC -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
     }
 
     stages {
@@ -233,16 +233,6 @@ EOF
                               -H 'Content-Type: application/json' \\
                               -d '{"version": "kodanect@${imageTag}", "projects": ["java-spring-boot"]}'
                         """
-
-                        catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-                            sh """
-                                curl https://sentry.io/api/0/organizations/my-sentry-3h/releases/kodanect@${imageTag}/commits/ \\
-                                  -X POST \\
-                                  -H "Authorization: Bearer ${SENTRY_AUTH_TOKEN}" \\
-                                  -H "Content-Type: application/json" \\
-                                  -d '{"commits": [{"commit": "${GIT_COMMIT}", "repository": "FC-DEV3-Final-Project/KODAnect-backend-springboot"}]}'
-                            """
-                        }
 
                         if (currentBuild.currentResult == 'FAILURE') {
                             githubNotify context: 'deploy', status: 'FAILURE', description: '배포 실패'
