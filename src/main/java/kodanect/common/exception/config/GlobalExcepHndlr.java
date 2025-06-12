@@ -1,6 +1,10 @@
 package kodanect.common.exception.config;
 
+import io.sentry.Sentry;
 import kodanect.common.response.ApiResponse;
+import kodanect.domain.donation.exception.BadRequestException;
+import kodanect.domain.donation.exception.DonationNotFoundException;
+import kodanect.domain.donation.exception.ValidationFailedException;
 import kodanect.domain.donation.exception.*;
 import kodanect.domain.remembrance.exception.*;
 import kodanect.domain.remembrance.exception.InvalidPaginationRangeException;
@@ -44,28 +48,21 @@ public class GlobalExcepHndlr {
     public GlobalExcepHndlr(MessageSourceAccessor messageSourceAccessor) {
         this.messageSourceAccessor = messageSourceAccessor;
     }
+
     /**
-     * 400 예외 처리
-     *
-     * 잘못된 입력 발생 시 400 응답 반환
-     * */
-    @ExceptionHandler({
-        InvalidDonateSeqException.class,
-        InvalidEmotionTypeException.class,
-        InvalidPaginationRangeException.class,
-        InvalidReplySeqException.class,
-        InvalidSearchDateFormatException.class,
-        InvalidSearchDateRangeException.class,
-        MissingReplyContentException.class,
-        MissingReplyPasswordException.class,
-        MissingReplyWriterException.class,
-        MissingSearchDateParameterException.class,
-        ReplyIdMismatchException.class,
-        ReplyPostMismatchException.class
-    })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
+     * @Valided 유효성 검사 실패 예외 처리
+     */
+    @ExceptionHandler(ValidationFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> validationFailedException(MethodArgumentNotValidException ex) {
+        Optional<String> errorMessageOpt = ex.getBindingResult().getAllErrors()
+                .stream()
+                .map(ObjectError::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .findFirst();
+
+        String errorMessage = errorMessageOpt.orElse("유효하지 않은 요청입니다.");
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
     }
 
     /**
@@ -84,11 +81,7 @@ public class GlobalExcepHndlr {
      * 404 예외 처리 (Resource Not Found)
      * - 매핑되지 않은 URI 요청 또는 명시적으로 NOT_FOUND 예외를 던진 경우
      */
-    @ExceptionHandler({
-        MemorialNotFoundException.class,
-        MemorialReplyNotFoundException.class,
-        NoHandlerFoundException.class
-    })
+    @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound() {
 
         String msg = messageSourceAccessor.getMessage("error.notfound", "요청한 자원을 찾을 수 없습니다.");
@@ -122,15 +115,27 @@ public class GlobalExcepHndlr {
 
 
     /**
-     * 409 예외 처리
-     *
-     * 충돌 발생 시 409 응답 반환
+     * 400 예외 처리: @PathVariable, @RequestParam 등에서 @Min, @NotBlank 검증 실패 시 ConstraintViolationException 처리
      */
-    @ExceptionHandler(ReplyAlreadyDeleteException.class)
-    public ResponseEntity<ApiResponse<Void>> handleConflict() {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(ConstraintViolationException ex) {
+        String resolvedMsg;
+
+        try{
+            String firstMessageKey = ex.getConstraintViolations()
+                    .iterator()
+                    .next()
+                    .getMessage();
+
+            resolvedMsg = messageSourceAccessor.getMessage(firstMessageKey);
+        }
+        catch (Exception e) {
+            resolvedMsg = "잘못된 요청입니다.";
+        }
+
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(ApiResponse.fail(HttpStatus.CONFLICT, "해당 항목은 이미 삭제되었습니다."));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, resolvedMsg));
     }
 
 
@@ -236,6 +241,7 @@ public class GlobalExcepHndlr {
     @ExceptionHandler(IOException.class)
     public ResponseEntity<ApiResponse<Void>> handleIOException(IOException ex) {
         log.error("파일 처리 중 IOException 발생", ex);
+        Sentry.captureException(ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "파일 처리 중 오류가 발생했습니다."));
     }
@@ -243,7 +249,7 @@ public class GlobalExcepHndlr {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
         log.error("Unhandled exception: ", ex);
-
+        Sentry.captureException(ex);
         String message = messageSourceAccessor.getMessage("error.internal"); // ← 이 줄이 핵심
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

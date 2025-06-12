@@ -4,7 +4,7 @@ import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.MemorialFinder;
 import kodanect.common.util.MemorialReplyFinder;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
-import kodanect.domain.remembrance.dto.MemorialReplyDeleteRequest;
+import kodanect.domain.remembrance.dto.MemorialReplyPasswordRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyUpdateRequest;
 import kodanect.domain.remembrance.entity.Memorial;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-class MemorialReplyServiceImplTest {
+public class MemorialReplyServiceImplTest {
 
     @InjectMocks
     private MemorialReplyServiceImpl memorialReplyService;
@@ -45,13 +45,12 @@ class MemorialReplyServiceImplTest {
 
     @Test
     @DisplayName("추모관 댓글 생성")
-    void 추모관_댓글_생성() {
+    public void 추모관_댓글_생성() {
 
         Integer donateSeq = 1;
 
         MemorialReplyCreateRequest request =
                 MemorialReplyCreateRequest.builder()
-                        .donateSeq(donateSeq)
                         .replyWriter("홍길동")
                         .replyPassword("1234")
                         .replyContents("내용")
@@ -67,7 +66,7 @@ class MemorialReplyServiceImplTest {
 
     @Test
     @DisplayName("추모관 댓글 수정")
-    void 추모관_댓글_수정() {
+    public void 추모관_댓글_수정() {
 
         Integer donateSeq = 1;
         Integer replySeq = 1;
@@ -75,10 +74,8 @@ class MemorialReplyServiceImplTest {
         MemorialReplyUpdateRequest request =
                 MemorialReplyUpdateRequest
                         .builder()
-                        .donateSeq(donateSeq)
-                        .replySeq(replySeq)
+                        .replyWriter("홍길동")
                         .replyContents("수정 내용")
-                        .replyPassword("1234")
                         .build();
 
         MemorialReply mockReply =
@@ -86,6 +83,7 @@ class MemorialReplyServiceImplTest {
                         .builder()
                         .donateSeq(donateSeq)
                         .replySeq(replySeq)
+                        .replyWriter("홍길동")
                         .replyContents("안바뀐 내용")
                         .replyPassword("1234")
                         .build();
@@ -95,21 +93,19 @@ class MemorialReplyServiceImplTest {
 
         memorialReplyService.updateReply(donateSeq, replySeq, request);
 
-        verify(memorialReplyRepository, times(1)).updateReplyContents(replySeq,"수정 내용");
+        verify(memorialReplyRepository, times(1)).updateReplyContents(replySeq,"수정 내용", "홍길동");
     }
 
     @Test
     @DisplayName("추모관 댓글 삭제")
-    void 추모관_댓글_삭제() {
+    public void 추모관_댓글_삭제() {
 
         Integer donateSeq = 1;
         Integer replySeq = 1;
 
-        MemorialReplyDeleteRequest request =
-                MemorialReplyDeleteRequest
+        MemorialReplyPasswordRequest request =
+                MemorialReplyPasswordRequest
                         .builder()
-                        .donateSeq(donateSeq)
-                        .replySeq(replySeq)
                         .replyPassword("1234")
                         .build();
 
@@ -124,7 +120,7 @@ class MemorialReplyServiceImplTest {
         when(memorialReplyFinder.findByIdOrThrow(replySeq)).thenReturn(mockReply);
         when(memorialReplyRepository.save(any(MemorialReply.class))).thenReturn(null);
 
-        memorialReplyService.deleteReply(donateSeq, replySeq, request);
+        memorialReplyService.deleteReply(donateSeq, replySeq, request.getReplyPassword());
 
         assertEquals("Y", mockReply.getDelFlag());
         verify(memorialReplyRepository, times(1)).save(mockReply);
@@ -132,7 +128,7 @@ class MemorialReplyServiceImplTest {
 
     @Test
     @DisplayName("추모관 댓글 조회")
-    void 추모관_댓글_조회() {
+    public void 추모관_댓글_조회() {
 
         Integer donateSeq = 1;
         Integer cursor = 1;
@@ -158,14 +154,14 @@ class MemorialReplyServiceImplTest {
         assertEquals(1, page.get(0).getReplySeq());
         assertEquals("작성자", page.get(0).getReplyWriter());
         assertEquals("내용입니다",  page.get(0).getReplyContents());
-        assertEquals(LocalDateTime.of(2024,6,1,10,0), page.get(0).getReplyWriteTime());
+        assertEquals("2024-06-01", page.get(0).getReplyWriteTime());
 
         verify(memorialReplyRepository, times(1)).findByCursor(eq(donateSeq), eq(cursor), any(Pageable.class));
     }
 
     @Test
     @DisplayName("추모관 댓글 더보기")
-    void 추모관_댓글_더보기() {
+    public void 추모관_댓글_더보기() {
 
         Integer donateSeq = 1;
         Integer cursor = 1;
@@ -191,7 +187,7 @@ class MemorialReplyServiceImplTest {
         assertEquals(1, content.get(0).getReplySeq());
         assertEquals("작성자", content.get(0).getReplyWriter());
         assertEquals("내용입니다",  content.get(0).getReplyContents());
-        assertEquals(LocalDateTime.of(2024,6,1,10,0), content.get(0).getReplyWriteTime());
+        assertEquals("2024-06-01", content.get(0).getReplyWriteTime());
 
         verify(memorialReplyRepository, times(1)).findByCursor(eq(donateSeq), eq(cursor), any(Pageable.class));
     }
