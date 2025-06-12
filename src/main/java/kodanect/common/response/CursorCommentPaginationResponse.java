@@ -26,14 +26,14 @@ import java.util.List;
 
 @Getter
 @Builder
-public class CursorReplyPaginationResponse<T, C> {
+public class CursorCommentPaginationResponse<T, C> {
 
     /** 실제 데이터 응답 리스트 */
     private List<T> content;
 
     /** 다음 요청 시 사용할 커서 값*/
-    private C replyNextCursor;
+    private C commentNextCursor;
 
     /** 다음 페이지가 존재하는지 여부 (true면 다음 요청 가능) */
-    private boolean replyHasNext;
+    private boolean commentHasNext;
 }
