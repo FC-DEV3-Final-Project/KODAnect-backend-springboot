@@ -39,6 +39,12 @@ public final class MessageKeys {
     public static final String REPLY_CONTENTS_EMPTY = "error.reply.contents.empty";
     public static final String REPLY_ALREADY_DELETED = "error.reply.alreadyDeleted";
 
+    // 하늘나라 편지 관련
+    public static final String HEAVEN_CREATE_RESPONSE_INVALID = "heaven.create.invalid.error";
+    public static final String HEAVEN_PASSWORD_MISMATCH = "heaven.password.mismatch.error";
+    public static final String HEAVEN_TYPE_INVALID = "heaven.type.invalid.error";
+    public static final String HEAVEN_FILE_SAVE_FAIL = "heaven.file.save.error";
+
     private MessageKeys() {}
 
 }

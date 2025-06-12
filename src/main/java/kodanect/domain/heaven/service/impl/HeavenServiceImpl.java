@@ -6,6 +6,8 @@ import kodanect.common.util.CursorFormatter;
 import kodanect.common.validation.HeavenCreateRequestValidator;
 import kodanect.domain.heaven.dto.*;
 import kodanect.domain.heaven.entity.Heaven;
+import kodanect.domain.heaven.exception.FileStorageException;
+import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
 import kodanect.domain.heaven.service.HeavenCommentService;
@@ -20,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -142,7 +143,7 @@ public class HeavenServiceImpl implements HeavenService {
             case "all"    -> heavenRepository.countByTitleOrContentsContaining(keyWord);
             case "title"  -> heavenRepository.countByTitleContaining(keyWord);
             case "content"-> heavenRepository.countByContentsContaining(keyWord);
-            default       -> throw new IllegalArgumentException("Invalid search type: " + type);
+            default       -> throw new InvalidTypeException(type);
         };
     }
 
@@ -152,22 +153,25 @@ public class HeavenServiceImpl implements HeavenService {
             case "all"    -> heavenRepository.findByTitleOrContentsContaining(keyWord, cursor, pageable);
             case "title"  -> heavenRepository.findByTitleContaining(keyWord, cursor, pageable);
             case "content"-> heavenRepository.findByContentsContaining(keyWord, cursor, pageable);
-            default       -> throw new IllegalArgumentException("Invalid search type: " + type);
+            default       -> throw new InvalidTypeException(type);
         };
     }
 
     /* 파일 저장 및 문자열 처리 */
     private Map<String, String> saveFile(MultipartFile file) {
+        String orgFileName = file.getOriginalFilename();
+        String extension = orgFileName.substring(orgFileName.lastIndexOf("."));
+        String fileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
+
+        Path path = Paths.get(FILE_PATH);
+        Path filePath = path.resolve(fileName);
+
         try {
-            String fileName = UUID.randomUUID().toString().replace("-", "").toUpperCase();
-            String orgFileName = Optional.ofNullable(file.getOriginalFilename())
-                    .orElseThrow(() -> new RuntimeException("원본 파일명이 없습니다.")); // 임시 처리 추후 구현 예정
-            Path path = Paths.get(FILE_PATH, fileName);
-            Files.copy(file.getInputStream(), path);
+            file.transferTo(filePath);
 
             return Map.of("fileName", fileName, "orgFileName", orgFileName);
         } catch (IOException e) {
-            throw new RuntimeException("파일 에러"); // 임시 처리 추후 구현 예정
+            throw new FileStorageException(filePath, orgFileName);
         }
     }
 }

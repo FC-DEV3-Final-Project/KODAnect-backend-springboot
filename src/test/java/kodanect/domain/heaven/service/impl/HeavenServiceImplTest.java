@@ -1,8 +1,6 @@
 package kodanect.domain.heaven.service.impl;
 
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.common.response.CursorReplyPaginationResponse;
-import kodanect.common.util.CursorFormatter;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
@@ -101,7 +99,7 @@ public class HeavenServiceImplTest {
         }
 
         when(heavenRepository.findByTitleOrContentsContaining(eq(keyWord), eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
-        when(heavenRepository.countByTitleOrContentsContaining(eq(keyWord))).thenReturn(30);
+        when(heavenRepository.countByTitleOrContentsContaining(keyWord)).thenReturn(30);
 
         /* when */
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenListSearchResult(type, keyWord, cursor, size);
@@ -149,11 +147,9 @@ public class HeavenServiceImplTest {
             heavenCommentResponseList.add(new HeavenCommentResponse(i, "댓글 작성자"+i, "댓글 내용"+i, now));
         }
 
-        when(heavenRepository.findById(eq(letterSeq))).thenReturn(Optional.of(heaven));
-        when(heavenCommentService.getHeavenCommentList(eq(letterSeq), eq(null), eq(commentSize))).thenReturn(heavenCommentResponseList);
+        when(heavenRepository.findById(letterSeq)).thenReturn(Optional.of(heaven));
+        when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize)).thenReturn(heavenCommentResponseList);
         when(heavenCommentRepository.countByHeaven(heaven)).thenReturn(commentCount);
-
-        CursorReplyPaginationResponse<HeavenCommentResponse, Integer> cursorReplyPaginationResponse = CursorFormatter.cursorReplyFormat(heavenCommentResponseList, commentSize);
 
         /* when */
         HeavenDetailResponse heavenDetailResponse = heavenServiceImpl.getHeavenDetail(letterSeq);

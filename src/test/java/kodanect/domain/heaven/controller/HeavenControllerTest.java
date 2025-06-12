@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -70,7 +69,7 @@ public class HeavenControllerTest {
                 .totalCount(totalCount)
                 .build();
 
-        when(heavenService.getHeavenList(eq(30), eq(20))).thenReturn(cursorPaginationResponse);
+        when(heavenService.getHeavenList(30, 20)).thenReturn(cursorPaginationResponse);
 
         /* when & then */
         mockMvc.perform(get("/heavenLetters")
@@ -93,7 +92,6 @@ public class HeavenControllerTest {
         String anonymityFlag = "N";
         int readCount = 5;
         LocalDateTime now = LocalDateTime.now();
-        Integer nextCursor = null;
         boolean hasNext = false;
         long totalCount = 10;
 
@@ -111,7 +109,7 @@ public class HeavenControllerTest {
                 .totalCount(totalCount)
                 .build();
 
-        when(heavenService.getHeavenListSearchResult(eq("all"), eq("제목"), eq(10), eq(20))).thenReturn(cursorPaginationResponse);
+        when(heavenService.getHeavenListSearchResult("all", "제목", 10,20)).thenReturn(cursorPaginationResponse);
 
         /* when & then */
         mockMvc.perform(get("/heavenLetters/search")

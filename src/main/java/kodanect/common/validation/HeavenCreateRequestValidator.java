@@ -1,26 +1,33 @@
 package kodanect.common.validation;
 
+import kodanect.domain.heaven.exception.InvalidHeavenCreateRequestException;
 import kodanect.domain.remembrance.entity.Memorial;
 
 public class HeavenCreateRequestValidator {
 
+    /* 유틸리티 클래스로 생성자 불가 */
+    private HeavenCreateRequestValidator() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
+    /* HeavenCreateRequest 유효성 검사 */
     public static void validateHeavenCreateRequest(String donorName, Memorial memorial) {
         boolean hasDonorName = donorName != null && !donorName.isBlank();
         boolean hasMemorial = memorial != null;
 
         // Case 1: memorial이 없는데 donorName이 있는 경우
         if (!hasMemorial && hasDonorName) {
-            throw new RuntimeException("donateSeq 없이 donorName을 제공할 수 없습니다.");
+            throw new InvalidHeavenCreateRequestException(donorName, memorial);
         }
 
         // Case 2: memorial이 있는데 donorName이 없는 경우
         if (hasMemorial && !hasDonorName) {
-            throw new RuntimeException("donorName 없이 donateSeq를 제공할 수 없습니다.");
+            throw new InvalidHeavenCreateRequestException(donorName, memorial);
         }
 
         // Case 3: memorial과 donorName이 모두 있을 경우 → 이름 일치 여부 검증
         if (hasMemorial && !donorName.equals(memorial.getDonorName())) {
-            throw new RuntimeException("요청한 donorName이 DB의 값과 일치하지 않습니다.");
+            throw new InvalidHeavenCreateRequestException(donorName, memorial);
         }
     }
 }
