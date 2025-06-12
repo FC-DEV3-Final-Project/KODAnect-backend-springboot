@@ -136,7 +136,7 @@ public class MemorialServiceImpl implements MemorialService {
 
         List<MemorialResponse> memorialResponses = memorialRepository.findSearchByCursor(cursor, pageable, startDateStr, endDateStr, keyWord);
 
-        long totalCount = memorialRepository.count();
+        long totalCount = memorialRepository.countBySearch(startDateStr, endDateStr, keyWord);
 
         return CursorFormatter.cursorFormat(memorialResponses, size, totalCount);
 
