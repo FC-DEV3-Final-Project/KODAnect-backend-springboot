@@ -112,8 +112,8 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
     @Override
     public void updateReply(Integer donateSeq, Integer replySeq, MemorialReplyUpdateRequest memorialReplyUpdateRequest)
             throws  MemorialReplyNotFoundException,
-                    MemorialNotFoundException,
-                    ReplyAlreadyDeleteException
+            MemorialNotFoundException,
+            ReplyAlreadyDeleteException
     {
         /* 게시글 댓글 수정 */
         ReentrantReadWriteLock lock = getLock(donateSeq);
@@ -162,12 +162,6 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
         lock.writeLock().lock();
 
         try{
-            /* 게시글 ID 검증 */
-            validateDonateSeq(donateSeq);
-
-            /* 댓글 ID 검증 */
-            replySeqValidate(replySeq);
-
             /* 게시글 조회 */
             memorialFinder.findByIdOrThrow(donateSeq);
 
@@ -227,13 +221,9 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
      *
      * */
     public CursorCommentPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
-            throws  MemorialNotFoundException,
-                    InvalidDonateSeqException
+            throws  MemorialNotFoundException
     {
         /* 게시글 댓글 리스트 더보기 */
-
-        /* 게시글 ID 검증 */
-        validateDonateSeq(donateSeq);
 
         /* 게시글 조회 */
         memorialFinder.findByIdOrThrow(donateSeq);
@@ -285,4 +275,3 @@ public class MemorialReplyServiceImpl implements MemorialReplyService {
         memorialReply.validateNotDeleted();
     }
 }
-

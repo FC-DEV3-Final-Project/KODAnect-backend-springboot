@@ -7,7 +7,6 @@ import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.ValidationFailedException;
 import kodanect.domain.donation.exception.*;
 import kodanect.domain.remembrance.exception.*;
-import kodanect.domain.remembrance.exception.InvalidPaginationRangeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -21,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import javax.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,27 +49,12 @@ public class GlobalExcepHndlr {
         this.messageSourceAccessor = messageSourceAccessor;
     }
 
-    /**
-     * @Valided 유효성 검사 실패 예외 처리
-     */
-    @ExceptionHandler(ValidationFailedException.class)
-    public ResponseEntity<ApiResponse<Void>> validationFailedException(MethodArgumentNotValidException ex) {
-        Optional<String> errorMessageOpt = ex.getBindingResult().getAllErrors()
-                .stream()
-                .map(ObjectError::getDefaultMessage)
-                .filter(Objects::nonNull)
-                .findFirst();
-
-        String errorMessage = errorMessageOpt.orElse("유효하지 않은 요청입니다.");
-        return ResponseEntity.badRequest()
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage));
-    }
 
     /**
      * 403 예외 처리
-     *
+     * <p>
      * 권한 오류 발생 시 403 응답 반환
-     * */
+     */
     @ExceptionHandler(ReplyPasswordMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleForbidden() {
         return ResponseEntity
@@ -102,8 +87,7 @@ public class GlobalExcepHndlr {
         try {
             // 키를 메시지 소스에서 해석
             resolvedMsg = messageSourceAccessor.getMessage(defaultMsgKey);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // 메시지 소스에서 못 찾으면 그냥 키 문자열 그대로 사용
             resolvedMsg = defaultMsgKey;
         }
@@ -121,15 +105,14 @@ public class GlobalExcepHndlr {
     public ResponseEntity<ApiResponse<Void>> handleValidationException(ConstraintViolationException ex) {
         String resolvedMsg;
 
-        try{
+        try {
             String firstMessageKey = ex.getConstraintViolations()
                     .iterator()
                     .next()
                     .getMessage();
 
             resolvedMsg = messageSourceAccessor.getMessage(firstMessageKey);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             resolvedMsg = "잘못된 요청입니다.";
         }
 
@@ -141,7 +124,7 @@ public class GlobalExcepHndlr {
 
     /**
      * 500 예외 처리
-     *
+     * <p>
      * 처리되지 않은 메세지키 미응답시 500 응답 반환
      */
     @ExceptionHandler(NoSuchMessageException.class)
@@ -165,8 +148,7 @@ public class GlobalExcepHndlr {
         String msg;
         try {
             msg = messageSourceAccessor.getMessage(ex.getMessage());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             msg = ex.getMessage(); // 메시지 키가 아니면 그대로
         }
         return ResponseEntity
@@ -225,8 +207,7 @@ public class GlobalExcepHndlr {
         String msg;
         try {
             msg = messageSourceAccessor.getMessage(keyOrMsg);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // 키가 없으면 ex.getMessage() 를 그대로 사용
             msg = keyOrMsg;
         }
@@ -284,11 +265,6 @@ public class GlobalExcepHndlr {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, message));
     }
-
-
-
-
-
 
 
 }

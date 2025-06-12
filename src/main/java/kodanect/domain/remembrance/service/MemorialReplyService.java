@@ -1,7 +1,6 @@
 package kodanect.domain.remembrance.service;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
-import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyResponse;
 import kodanect.domain.remembrance.dto.MemorialReplyCreateRequest;
 import kodanect.domain.remembrance.dto.MemorialReplyUpdateRequest;
@@ -73,7 +72,7 @@ public interface MemorialReplyService {
      * @return 조건에 맞는 댓글 리스트(최신순)
      *
      * */
-    CursorReplyPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
+    CursorCommentPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
             throws  MemorialNotFoundException;
 
     /**
@@ -96,10 +95,5 @@ public interface MemorialReplyService {
      *
      * */
     void verifyReplyPassword(Integer donateSeq, Integer replySeq, String password);
-            throws  MemorialNotFoundException,
-                    InvalidDonateSeqException;
-    /* 댓글 더보기 */
-    CursorCommentPaginationResponse<MemorialReplyResponse, Integer> getMoreReplyList(Integer donateSeq, Integer cursor, int size)
-            throws  MemorialNotFoundException,
-                    InvalidDonateSeqException;
+
 }

@@ -107,8 +107,8 @@ class MemorialReplyControllerTest {
                 .andExpect(jsonPath("$.data.content[0].replyWriter").value("홍길동"))
                 .andExpect(jsonPath("$.data.content[1].replySeq").value(2))
                 .andExpect(jsonPath("$.data.content[1].replyWriter").value("김길동"))
-                .andExpect(jsonPath("$.data.replyNextCursor").doesNotExist()) // null인 경우
-                .andExpect(jsonPath("$.data.replyHasNext").value(false));
+                .andExpect(jsonPath("$.data.commentNextCursor").doesNotExist()) // null인 경우
+                .andExpect(jsonPath("$.data.commentHasNext").value(false));
 
 
     }
