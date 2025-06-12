@@ -111,7 +111,7 @@ class MemorialControllerTest {
                 .commentSeq(1)
                 .commentWriter("홍길동")
                 .contents("안녕하세요")
-                .commentWriteTime(LocalDateTime.of(2024,1,1,12,0,0))
+                .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
                 .build();
 
         /* 게시글 댓글 조회2 */
@@ -119,7 +119,7 @@ class MemorialControllerTest {
                 .commentSeq(2)
                 .commentWriter("김길동")
                 .contents("잘가세요")
-                .commentWriteTime(LocalDateTime.of(2022,1,1,12,0,0))
+                .writeTime(LocalDateTime.of(2022,1,1,12,0,0))
                 .build();
 
         /* 게시글 댓글 리스트 */
@@ -180,11 +180,11 @@ class MemorialControllerTest {
                 .andExpect(jsonPath("$.data.memorialCommentResponses[0].commentSeq").value(1))
                 .andExpect(jsonPath("$.data.memorialCommentResponses[0].commentWriter").value("홍길동"))
                 .andExpect(jsonPath("$.data.memorialCommentResponses[0].contents").value("안녕하세요"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[0].commentWriteTime").value("2024-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses[0].writeTime").value("2024-01-01"))
                 .andExpect(jsonPath("$.data.memorialCommentResponses[1].commentSeq").value(2))
                 .andExpect(jsonPath("$.data.memorialCommentResponses[1].commentWriter").value("김길동"))
                 .andExpect(jsonPath("$.data.memorialCommentResponses[1].contents").value("잘가세요"))
-                .andExpect(jsonPath("$.data.memorialCommentResponses[1].commentWriteTime").value("2022-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses[1].writeTime").value("2022-01-01"))
                 .andExpect(jsonPath("$.data.memorialCommentResponses.length()").value(2));
 
 

@@ -219,7 +219,7 @@ public class MemorialServiceImplTest {
                         .commentSeq(1)
                         .commentWriter("김길동")
                         .contents("감사합니다")
-                        .commentWriteTime(LocalDateTime.of(2024, 1, 1, 14, 0))
+                        .writeTime(LocalDateTime.of(2024, 1, 1, 14, 0))
                         .build()
         );
 

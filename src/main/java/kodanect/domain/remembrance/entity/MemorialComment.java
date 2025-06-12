@@ -45,19 +45,19 @@ public class MemorialComment {
 
     /* 댓글 등록일시 */
     @Column(updatable = false, name = "reply_write_time")
-    private LocalDateTime commentWriteTime;
+    private LocalDateTime writeTime;
 
     /* 댓글 작성자 아이디 */
     @Column(nullable = true, length = 60, name = "reply_writer_id")
-    private String commentWriterId;
+    private String writerId;
 
     /* 댓글 수정시간 */
     @Column(name = "reply_modify_time")
-    private LocalDateTime commentModifyTime;
+    private LocalDateTime modifyTime;
 
     /* 댓글 수정자 아이디 */
     @Column(nullable = true, length = 60, name = "reply_modifier_id")
-    private String commentModifierId;
+    private String modifierId;
 
     /* 삭제 여부 */
     @Column(nullable = false, length = 1, name = "del_flag")
@@ -65,7 +65,7 @@ public class MemorialComment {
 
     @PrePersist
     public void prePersist() {
-        this.commentWriteTime = LocalDateTime.now();
+        this.writeTime = LocalDateTime.now();
     }
 
     public void setDonateSeq(int donateSeq) {

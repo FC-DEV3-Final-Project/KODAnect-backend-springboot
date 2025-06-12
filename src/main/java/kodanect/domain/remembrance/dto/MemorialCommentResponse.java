@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * <p>commentSeq : 댓글 번호</p>
  * <p>commentWriter : 댓글 작성자 닉네임</p>
  * <p>contents : 댓글 내용</p>
- * <p>commentWriteTime : 댓글 등록일시</p>
+ * <p>writeTime : 댓글 등록일시</p>
  *
  * */
 @Builder
@@ -31,7 +31,7 @@ public class MemorialCommentResponse implements CursorIdentifiable<Integer> {
     private String contents;
 
     /* 댓글 등록일시 */
-    private LocalDateTime commentWriteTime;
+    private LocalDateTime writeTime;
 
     @Override
     public Integer getCursorId() {
@@ -39,8 +39,8 @@ public class MemorialCommentResponse implements CursorIdentifiable<Integer> {
     }
 
     /** 2020-12-13T02:11:12 -> 2020-12-13 형식 변경 */
-    public String getCommentWriteTime() {
-        return commentWriteTime.toLocalDate().toString();
+    public String getWriteTime() {
+        return writeTime.toLocalDate().toString();
     }
 }
 

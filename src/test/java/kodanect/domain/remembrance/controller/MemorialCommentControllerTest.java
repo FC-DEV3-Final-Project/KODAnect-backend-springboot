@@ -76,13 +76,13 @@ class MemorialCommentControllerTest {
                         .commentSeq(1)
                         .commentWriter("홍길동")
                         .contents("안녕하세요")
-                        .commentWriteTime(LocalDateTime.of(2024,1,1,12,0,0))
+                        .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
                         .build(),
                 MemorialCommentResponse.builder()
                         .commentSeq(2)
                         .commentWriter("김길동")
                         .contents("잘가세요")
-                        .commentWriteTime(LocalDateTime.of(2022,1,1,12,0,0))
+                        .writeTime(LocalDateTime.of(2022,1,1,12,0,0))
                         .build()
         );
 

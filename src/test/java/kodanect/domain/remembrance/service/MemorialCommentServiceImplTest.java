@@ -167,7 +167,7 @@ public class MemorialCommentServiceImplTest {
                 .commentSeq(1)
                 .commentWriter("작성자")
                 .contents("내용입니다")
-                .commentWriteTime(LocalDateTime.of(2024, 6, 1, 10, 0))
+                .writeTime(LocalDateTime.of(2024, 6, 1, 10, 0))
                 .build();
 
         List<MemorialCommentResponse> content = List.of(comment);
@@ -182,7 +182,7 @@ public class MemorialCommentServiceImplTest {
         assertEquals(1, page.get(0).getCommentSeq());
         assertEquals("작성자", page.get(0).getCommentWriter());
         assertEquals("내용입니다",  page.get(0).getContents());
-        assertEquals("2024-06-01", page.get(0).getCommentWriteTime());
+        assertEquals("2024-06-01", page.get(0).getWriteTime());
 
         verify(memorialCommentRepository, times(1)).findByCursor(eq(donateSeq), eq(cursor), any(Pageable.class));
     }
@@ -199,7 +199,7 @@ public class MemorialCommentServiceImplTest {
                 .commentSeq(1)
                 .commentWriter("작성자")
                 .contents("내용입니다")
-                .commentWriteTime(LocalDateTime.of(2024, 6, 1, 10, 0))
+                .writeTime(LocalDateTime.of(2024, 6, 1, 10, 0))
                 .build();
 
         List<MemorialCommentResponse> content = List.of(comment);
@@ -215,7 +215,7 @@ public class MemorialCommentServiceImplTest {
         assertEquals(1, content.get(0).getCommentSeq());
         assertEquals("작성자", content.get(0).getCommentWriter());
         assertEquals("내용입니다",  content.get(0).getContents());
-        assertEquals("2024-06-01", content.get(0).getCommentWriteTime());
+        assertEquals("2024-06-01", content.get(0).getWriteTime());
 
         verify(memorialCommentRepository, times(1)).findByCursor(eq(donateSeq), eq(cursor), any(Pageable.class));
     }
