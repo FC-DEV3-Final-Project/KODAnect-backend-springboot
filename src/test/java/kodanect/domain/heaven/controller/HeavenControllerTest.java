@@ -116,7 +116,7 @@ public class HeavenControllerTest {
         /* when & then */
         mockMvc.perform(get("/heavenLetters/search")
                     .param("type", "all")
-                    .param("keyword", "제목")
+                    .param("keyWord", "제목")
                     .param("cursor", "10")
                     .param("size", "20"))
                 .andExpect(jsonPath("$.success").value(true))

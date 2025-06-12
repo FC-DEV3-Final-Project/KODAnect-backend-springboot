@@ -34,12 +34,12 @@ public class HeavenController {
     /* 검색을 통한 게시물 전체 조회 (페이징) */
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<CursorPaginationResponse<HeavenResponse, Integer>>> searchHeavenList(
-            @RequestParam(value = "type") String searchType,
-            @RequestParam String keyword,
+            @RequestParam String type,
+            @RequestParam String keyWord,
             @RequestParam(required = false) Integer cursor,
             @RequestParam(defaultValue = "20") int size
     ) {
-        CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenListSearchResult(searchType, keyword, cursor, size);
+        CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenListSearchResult(type, keyWord, cursor, size);
 
         String message = messageSourceAccessor.getMessage("heaven.list.search.success");
 

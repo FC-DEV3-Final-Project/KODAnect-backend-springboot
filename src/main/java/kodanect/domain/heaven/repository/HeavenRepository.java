@@ -33,7 +33,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      * 전체(제목 + 내용)을 통한 게시물 전체 조회 (페이징)
      *
      * @param cursor
-     * @param keyword
+     * @param keyWord
      * @param pageable
      * @return
      */
@@ -43,16 +43,16 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
-            AND (h.letterTitle LIKE %:keyword% OR h.letterContents LIKE %:keyword%)
+            AND (h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%)
             ORDER BY h.letterSeq DESC
         """
     )
-    List<HeavenResponse> findByTitleOrContentsContaining(@Param("keyword") String keyword, @Param("cursor") Integer cursor, Pageable pageable);
+    List<HeavenResponse> findByTitleOrContentsContaining(@Param("keyWord") String keyWord, @Param("cursor") Integer cursor, Pageable pageable);
 
     /**
      * 제목을 통한 게시물 전체 조회 (페이징)
      *
-     * @param keyword
+     * @param keyWord
      * @param cursor
      * @param pageable
      * @return
@@ -63,16 +63,16 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
-            AND h.letterTitle LIKE %:keyword%
+            AND h.letterTitle LIKE %:keyWord%
             ORDER BY h.letterSeq DESC
         """
     )
-    List<HeavenResponse> findByTitleContaining(@Param("keyword") String keyword, @Param("cursor") Integer cursor, Pageable pageable);
+    List<HeavenResponse> findByTitleContaining(@Param("keyWord") String keyWord, @Param("cursor") Integer cursor, Pageable pageable);
 
     /**
      * 내용을 통한 게시물 전체 조회 (페이징)
      *
-     * @param keyword
+     * @param keyWord
      * @param cursor
      * @param pageable
      * @return
@@ -83,54 +83,54 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
-            AND h.letterContents LIKE %:keyword%
+            AND h.letterContents LIKE %:keyWord%
             ORDER BY h.letterSeq DESC
         """
     )
-    List<HeavenResponse> findByContentsContaining(@Param("keyword") String keyword, @Param("cursor") Integer cursor, Pageable pageable);
+    List<HeavenResponse> findByContentsContaining(@Param("keyWord") String keyWord, @Param("cursor") Integer cursor, Pageable pageable);
 
     /**
      * 전체(제목 + 내용)을 통한 게시물 개수 조회
      *
-     * @param keyword
+     * @param keyWord
      * @return
      */
     @Query(
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterTitle LIKE %:keyword% OR h.letterContents LIKE %:keyword%
+            WHERE h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%
         """
     )
-    int countByTitleOrContentsContaining(@Param("keyword") String keyword);
+    int countByTitleOrContentsContaining(@Param("keyWord") String keyWord);
 
     /**
      * 제목을 통한 게시물 개수 조회
      *
-     * @param keyword
+     * @param keyWord
      * @return
      */
     @Query(
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterTitle LIKE %:keyword%
+            WHERE h.letterTitle LIKE %:keyWord%
         """
     )
-    int countByTitleContaining(@Param("keyword") String keyword);
+    int countByTitleContaining(@Param("keyWord") String keyWord);
 
     /**
      * 내용을 통한 게시물 개수 조회
      *
-     * @param keyword
+     * @param keyWord
      * @return
      */
     @Query(
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterContents LIKE %:keyword%
+            WHERE h.letterContents LIKE %:keyWord%
         """
     )
-    int countByContentsContaining(@Param("keyword") String keyword);
+    int countByContentsContaining(@Param("keyWord") String keyWord);
 }

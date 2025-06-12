@@ -11,7 +11,7 @@ public interface HeavenService {
     CursorPaginationResponse<HeavenResponse, Integer> getHeavenList(Integer cursor, int size);
 
     /* 검색을 통한 게시물 전체 조회 (페이징) */
-    CursorPaginationResponse<HeavenResponse, Integer> getHeavenListSearchResult(String searchType, String keyword, Integer cursor, int size);
+    CursorPaginationResponse<HeavenResponse, Integer> getHeavenListSearchResult(String type, String keyWord, Integer cursor, int size);
 
     /* 게시물 상세 조회 */
     HeavenDetailResponse getHeavenDetail(Integer letterSeq);

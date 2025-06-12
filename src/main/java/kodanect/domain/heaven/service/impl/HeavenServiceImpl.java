@@ -52,12 +52,12 @@ public class HeavenServiceImpl implements HeavenService {
 
     /* 검색을 통한 게시물 전체 조회 (페이징) */
     @Override
-    public CursorPaginationResponse<HeavenResponse, Integer> getHeavenListSearchResult(String searchType, String keyword, Integer cursor, int size) {
+    public CursorPaginationResponse<HeavenResponse, Integer> getHeavenListSearchResult(String type, String keyWord, Integer cursor, int size) {
         Pageable pageable = PageRequest.of(0, size + 1);
 
-        long count = countBySearchType(searchType, keyword);
+        long count = countByType(type, keyWord);
 
-        List<HeavenResponse> heavenResponseList = findBySearchType(searchType, keyword, cursor, pageable);
+        List<HeavenResponse> heavenResponseList = findByType(type, keyWord, cursor, pageable);
 
         return CursorFormatter.cursorFormat(heavenResponseList, size, count);
     }
@@ -137,22 +137,22 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 검색 조건에 따른 게시물 개수 조회 */
-    private long countBySearchType(String searchType, String keyword) {
-        return switch (searchType) {
-            case "all"    -> heavenRepository.countByTitleOrContentsContaining(keyword);
-            case "title"  -> heavenRepository.countByTitleContaining(keyword);
-            case "content"-> heavenRepository.countByContentsContaining(keyword);
-            default       -> throw new IllegalArgumentException("Invalid search type: " + searchType);
+    private long countByType(String type, String keyWord) {
+        return switch (type) {
+            case "all"    -> heavenRepository.countByTitleOrContentsContaining(keyWord);
+            case "title"  -> heavenRepository.countByTitleContaining(keyWord);
+            case "content"-> heavenRepository.countByContentsContaining(keyWord);
+            default       -> throw new IllegalArgumentException("Invalid search type: " + type);
         };
     }
 
     /* 검색 조건에 따른 게시물 조회 */
-    private List<HeavenResponse> findBySearchType(String searchType, String keyword, Integer cursor, Pageable pageable) {
-        return switch (searchType) {
-            case "all"    -> heavenRepository.findByTitleOrContentsContaining(keyword, cursor, pageable);
-            case "title"  -> heavenRepository.findByTitleContaining(keyword, cursor, pageable);
-            case "content"-> heavenRepository.findByContentsContaining(keyword, cursor, pageable);
-            default       -> throw new IllegalArgumentException("Invalid search type: " + searchType);
+    private List<HeavenResponse> findByType(String type, String keyWord, Integer cursor, Pageable pageable) {
+        return switch (type) {
+            case "all"    -> heavenRepository.findByTitleOrContentsContaining(keyWord, cursor, pageable);
+            case "title"  -> heavenRepository.findByTitleContaining(keyWord, cursor, pageable);
+            case "content"-> heavenRepository.findByContentsContaining(keyWord, cursor, pageable);
+            default       -> throw new IllegalArgumentException("Invalid search type: " + type);
         };
     }
 
