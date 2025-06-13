@@ -25,6 +25,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DonationCommentServiceImpl implements DonationCommentService {
 
+    private static final String DONATION_NOT_FOUND_MESSAGE = "donation.error.notfound";
+    private static final String DONATION_COMMENT_ERROR_NOTFOUND = "donation.comment.error.notfound";
+
     private final DonationCommentRepository commentRepository;
     private final DonationRepository storyRepository;
     private final MessageResolver messageResolver;
@@ -37,9 +40,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     @Override
     public CursorPaginationResponse<DonationStoryCommentDto, Long> findCommentsWithCursor(Long storySeq, Long cursor, int size) {
         Pageable pageable = PageRequest.of(0, size + 1);
-
-        DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.error.notfound")));
 
         List<DonationStoryComment> commentEntities = commentRepository.findByCursorEntity(storySeq, cursor, pageable);
 
@@ -60,7 +60,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
             throws NotFoundException, BadRequestException, DonationCommentNotFoundException {
 
         DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_NOT_FOUND_MESSAGE)));;
 
         // 작성자 필수 검증
         if (requestDto.getCommentWriter() == null || requestDto.getCommentWriter().isBlank()) {
@@ -94,10 +94,14 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     @Override
     public void verifyPasswordWithPassword(Long storySeq, Long commentSeq, VerifyCommentPasscodeDto commentPassCodeDto) {
         DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_NOT_FOUND_MESSAGE)));
 
         DonationStoryComment comment = commentRepository.findById(commentSeq)
-                .orElseThrow(() -> new DonationCommentNotFoundException(messageResolver.get("donation.comment.error.notfound")));
+                .orElseThrow(() -> new DonationCommentNotFoundException(messageResolver.get(DONATION_COMMENT_ERROR_NOTFOUND)));
+
+        if (!comment.getStory().getStorySeq().equals(story.getStorySeq())) {
+            throw new BadRequestException("해당 댓글은 지정된 스토리에 속하지 않습니다.");
+        }
 
         if (!validatePassword(commentPassCodeDto.getCommentPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
@@ -115,13 +119,12 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
-                .orElseThrow(() -> new DonationCommentNotFoundException(messageResolver.get("donation.comment.error.notfound")));
+                .orElseThrow(() -> new DonationCommentNotFoundException(messageResolver.get(DONATION_COMMENT_ERROR_NOTFOUND)));
 
         // 작성자 검증
         if (requestDto.getCommentWriter() == null || requestDto.getCommentWriter().isBlank()) {
             throw new BadRequestException(messageResolver.get("donation.error.required.writer"));
         }
-
         // 댓글 내용 수정
         storyComment.modifyDonationStoryComment(requestDto);
     }
@@ -133,7 +136,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.delete.not_found")));
         DonationStoryComment storyComment = commentRepository.findById(commentSeq)
-                .orElseThrow(() -> new NotFoundException(messageResolver.get("donation.comment.error.notfound")));
+                .orElseThrow(() -> new NotFoundException(messageResolver.get(DONATION_COMMENT_ERROR_NOTFOUND)));
 
         // 비밀번호 일치 여부 확인
         if (!commentDto.getCommentPasscode().equals(storyComment.getCommentPasscode())) {

@@ -22,7 +22,7 @@ import java.util.Map;
 @RequestMapping("/donationLetters")
 public class  DonationController {
 
-    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final String DEFAULT_STRING = "result";
 
     private final DonationService donationService;
     private final DonationCommentService donationCommentService;
@@ -98,8 +98,9 @@ public class  DonationController {
             @RequestBody @Valid VerifyStoryPasscodeDto passCodeDto) {
 
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
+
         String message = messageSourceAccessor.getMessage("donation.password.match");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of("result", 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
     }
 
 
@@ -126,7 +127,7 @@ public class  DonationController {
 
         donationService.deleteDonationStory(storySeq, storyPasscodeDto);
         String message = messageSourceAccessor.getMessage("donation.delete.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of("result", 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
     }
 
     /**
@@ -172,7 +173,7 @@ public class  DonationController {
         donationCommentService.verifyPasswordWithPassword(storySeq, commentSeq, passCodeDto);
         String message = messageSourceAccessor.getMessage("donation.password.match");
 
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of("result", 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
     }
 
 

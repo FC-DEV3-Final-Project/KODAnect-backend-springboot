@@ -56,6 +56,7 @@ public class DonationServiceImplTest {
     public void findStoriesWithCursor_ShouldReturnPageResult() {
         Long cursor = null;
         int size = 2;
+
         Pageable pg = PageRequest.of(0, size + 1);
         List<DonationStoryListDto> dtoList = List.of(
                 new DonationStoryListDto(1L, "A", "W", 0, (LocalDateTime) null),
@@ -76,7 +77,6 @@ public class DonationServiceImplTest {
     // --- Cursor Paging 검색(title, contents, default) ---
     @Test
     public void findSearchStoriesWithCursor_ByTitle() {
-        Pageable pg = PageRequest.of(0, 3);
         List<DonationStoryListDto> list = List.of(
                 new DonationStoryListDto(10L, "T", "U", 0, (LocalDateTime) null),
                 new DonationStoryListDto(20L, "T2","V", 0, (LocalDateTime) null),
@@ -93,7 +93,7 @@ public class DonationServiceImplTest {
 
     @Test
     public void findSearchStoriesWithCursor_ByContents() {
-        Pageable pg = PageRequest.of(0, 4);
+
         given(donationRepository.countByContents("bar")).willReturn(0L);
 
         var resp = donationService.findSearchStoriesWithCursor("contents", "bar", 5L, 4);
@@ -103,7 +103,6 @@ public class DonationServiceImplTest {
 
     @Test
     public void findSearchStoriesWithCursor_DefaultCase() {
-        Pageable pg = PageRequest.of(0, 2);
         given(donationRepository.countByTitleAndContents("kw")).willReturn(0L);
 
         var resp = donationService.findSearchStoriesWithCursor("other", "kw", null, 2);
@@ -209,7 +208,8 @@ public class DonationServiceImplTest {
     public void findDonationStoryWithStoryId_최신댓글3개_반환() {
         // given
         DonationStory story = DonationStory.builder()
-                .storySeq(1L).readCount(0).storyTitle("타이틀").build();
+                .storySeq(1L).readCount(0).storyTitle("타이틀").writeTime(LocalDateTime.now())
+                        .build();
 
         List<DonationStoryCommentDto> comments = List.of(
                 new DonationStoryCommentDto(10L, "홍길동", "댓글1", LocalDateTime.now()),
@@ -233,7 +233,7 @@ public class DonationServiceImplTest {
     public void findDonationStoryWithStoryId_댓글3개미만_hasNextFalse() {
         // given
         DonationStory story = DonationStory.builder()
-                .storySeq(2L).readCount(0).storyTitle("제목").build();
+                .storySeq(2L).readCount(0).storyTitle("제목").writeTime(LocalDateTime.now()).build();
 
         List<DonationStoryCommentDto> fewComments = List.of(
                 new DonationStoryCommentDto(10L, "유재석", "하하", LocalDateTime.now())
