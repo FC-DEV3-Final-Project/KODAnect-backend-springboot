@@ -130,7 +130,7 @@ public class  DonationController {
     }
 
     /**
-     * 상세 페이지 전체 댓글 조회
+     * 상세 페이지 더보기 댓글 조회
      */
     @GetMapping("/{storySeq}/comments")
     public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryCommentDto, Long>>> getAllDonationCommentList(

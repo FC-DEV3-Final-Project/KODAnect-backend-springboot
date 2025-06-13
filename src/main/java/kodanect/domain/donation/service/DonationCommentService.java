@@ -7,7 +7,6 @@ import kodanect.domain.donation.dto.request.VerifyCommentPasscodeDto;
 import kodanect.domain.donation.dto.response.DonationStoryCommentDto;
 
 
-
 public interface DonationCommentService {
 
     // 기증 스토리 댓글 등록
@@ -27,6 +26,7 @@ public interface DonationCommentService {
 
     // 댓글 조회
     CursorPaginationResponse<DonationStoryCommentDto, Long> findCommentsWithCursor(Long storySeq, Long cursor, int size);
+
 
 
 }

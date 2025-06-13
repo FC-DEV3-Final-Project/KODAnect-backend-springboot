@@ -23,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -325,7 +326,7 @@ class DonationControllerTest {
                 .commentSeq(5L)
                 .commentWriter("댓글작성자")
                 .comments("댓글본문")
-                .commentWriteTime("2025-06-12")
+                .commentWriteTime(LocalDateTime.now())
                 .build();
         CursorPaginationResponse<DonationStoryCommentDto, Long> pageResp =
                 CursorPaginationResponse.<DonationStoryCommentDto, Long>builder()

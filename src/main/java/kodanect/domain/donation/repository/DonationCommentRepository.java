@@ -23,18 +23,22 @@ public interface DonationCommentRepository extends JpaRepository<DonationStoryCo
             @Param("cursor") Long cursor,
             Pageable pageable);
 
-    // ① 최신 댓글 3개를 DTO로 바로 조회
+
+    /**
+     * 최신 댓글 N개를 DTO로 바로 조회 (정적 팩토리 사용)
+     */
     @Query("""
         SELECT new kodanect.domain.donation.dto.response.DonationStoryCommentDto(
             c.commentSeq,
             c.commentWriter,
-            c.comments,
-            c.commentWriteTime
+            c.contents,
+            c.writeTime
         )
         FROM DonationStoryComment c
         WHERE c.story.storySeq = :storySeq
+          AND c.delFlag = 'N'
         ORDER BY c.commentSeq DESC
-    """)
+        """)
     List<DonationStoryCommentDto> findLatestComments(
             @Param("storySeq") Long storySeq,
             Pageable pageable
@@ -42,6 +46,7 @@ public interface DonationCommentRepository extends JpaRepository<DonationStoryCo
 
     @Query(value =  "SELECT COUNT(*) FROM tb25_421_donation_story_comment WHERE story_seq = :storySeq ", nativeQuery=true)
     long countAllByStorySeq(Long storySeq);
+
 
 
 }

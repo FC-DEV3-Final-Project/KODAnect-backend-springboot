@@ -29,9 +29,10 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     private final DonationRepository storyRepository;
     private final MessageResolver messageResolver;
 
+
     /**
      *
-     * 댓글 전체 조회
+     * 댓글 더보기 조회
      */
     @Override
     public CursorPaginationResponse<DonationStoryCommentDto, Long> findCommentsWithCursor(Long storySeq, Long cursor, int size) {
@@ -104,7 +105,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         if(!commentPassCodeDto.getCommentPasscode().equals(comment.getCommentPasscode())){
             throw new PasscodeMismatchException("donation.error.passcode.mismatch");
         }
-
     }
 
 
@@ -155,4 +155,6 @@ public class DonationCommentServiceImpl implements DonationCommentService {
     public boolean validatePassword(String password) {
         return password != null && password.matches("^(?=.*[A-Za-z])(?=.*\\d).{8,16}$");
     }
+
+
 }

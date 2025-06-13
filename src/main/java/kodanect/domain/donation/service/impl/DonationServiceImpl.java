@@ -12,6 +12,7 @@ import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.*;
 import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
+import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +33,13 @@ import java.util.UUID;
 @Slf4j
 public class DonationServiceImpl implements DonationService {
 
+    /** Cursor 기반 기본 Size */
+    private static final int DEFAULT_SIZE = 3;
 
     private final DonationRepository donationRepository;
     private final DonationCommentRepository commentRepository;
     private final MessageResolver messageResolver;
+    private final DonationCommentService commentService;
 
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size) {
@@ -139,29 +143,19 @@ public class DonationServiceImpl implements DonationService {
                 .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
         story.increaseReadCount();
 
-        // 2) 댓글 최신 3개 조회
-        int pageSize = 3;
-        List<DonationStoryCommentDto> latestComments =
-                commentRepository.findLatestComments(storySeq, PageRequest.of(0, pageSize));
+        // 2) 최신 댓글 3개 조회
+        var pageable = PageRequest.of(0, DEFAULT_SIZE + 1);  // +1로 hasNext 체크
+        List<DonationStoryCommentDto> latest = commentRepository.findLatestComments(storySeq, pageable);
 
-        // 3) 전체 댓글 수 계산해서 hasNext, nextCursor 결정
-        long totalComments = commentRepository.countAllByStorySeq(storySeq);
-        Long nextCursor = null;
-        if (latestComments.size() == pageSize) {
-            nextCursor = latestComments.get(pageSize - 1).getCommentSeq();
-        }
-        boolean hasNext = totalComments > latestComments.size();
-
-        CursorCommentPaginationResponse<DonationStoryCommentDto, Long> commentPage =
-                CursorCommentPaginationResponse.<DonationStoryCommentDto, Long>builder()
-                        .content(latestComments)
-                        .commentNextCursor(nextCursor)
-                        .commentHasNext(hasNext)
-                        .build();
+        // 3) 커서 포맷팅
+        long total = commentRepository.countAllByStorySeq(storySeq);
+        CursorCommentPaginationResponse<DonationStoryCommentDto, Long> commentsPage =
+                CursorFormatter.cursorCommentCountFormat(latest, DEFAULT_SIZE, total);
 
         // 4) DTO 조립
         DonationStoryDetailDto dto = DonationStoryDetailDto.fromEntity(story);
-        dto.setComments(commentPage);
+        dto.setComments(commentsPage);
+
         return dto;
     }
 

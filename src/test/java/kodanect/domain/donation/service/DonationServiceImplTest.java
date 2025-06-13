@@ -5,12 +5,15 @@ import kodanect.common.util.MessageResolver;
 import kodanect.domain.donation.dto.request.DonationStoryCreateRequestDto;
 import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
+import kodanect.domain.donation.dto.response.DonationStoryCommentDto;
+import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
 import kodanect.domain.donation.dto.response.DonationStoryListDto;
 import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.BadRequestException;
 import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.PasscodeMismatchException;
+import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.impl.DonationServiceImpl;
 
@@ -26,7 +29,6 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.*;
@@ -38,6 +40,9 @@ public class DonationServiceImplTest {
 
     @Mock
     private DonationRepository donationRepository;
+
+    @Mock
+    private DonationCommentRepository commentRepository;
 
     @Mock
     private MessageResolver messageResolver;
@@ -198,6 +203,51 @@ public class DonationServiceImplTest {
         var dto = donationService.findDonationStoryWithStoryId(5L);
         assertThat(dto.getStorySeq()).isEqualTo(5L);
         assertThat(s.getReadCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void findDonationStoryWithStoryId_최신댓글3개_반환() {
+        // given
+        DonationStory story = DonationStory.builder()
+                .storySeq(1L).readCount(0).storyTitle("타이틀").build();
+
+        List<DonationStoryCommentDto> comments = List.of(
+                new DonationStoryCommentDto(10L, "홍길동", "댓글1", LocalDateTime.now()),
+                new DonationStoryCommentDto(9L, "김길동", "댓글2", LocalDateTime.now()),
+                new DonationStoryCommentDto(8L, "박길동", "댓글3", LocalDateTime.now())
+        );
+
+        given(donationRepository.findStoryOnlyById(1L)).willReturn(Optional.of(story));
+        given(commentRepository.findLatestComments(eq(1L), any(Pageable.class))).willReturn(comments);
+        given(commentRepository.countAllByStorySeq(1L)).willReturn(10L);
+
+        // when
+        DonationStoryDetailDto dto = donationService.findDonationStoryWithStoryId(1L);
+
+        // then
+        assertThat(dto.getComments().getContent()).hasSize(3);
+        assertThat(dto.getComments().getContent().get(0).getCommentSeq()).isEqualTo(10L);
+    }
+
+    @Test
+    public void findDonationStoryWithStoryId_댓글3개미만_hasNextFalse() {
+        // given
+        DonationStory story = DonationStory.builder()
+                .storySeq(2L).readCount(0).storyTitle("제목").build();
+
+        List<DonationStoryCommentDto> fewComments = List.of(
+                new DonationStoryCommentDto(10L, "유재석", "하하", LocalDateTime.now())
+        );
+
+        given(donationRepository.findStoryOnlyById(2L)).willReturn(Optional.of(story));
+        given(commentRepository.findLatestComments(eq(2L), any(Pageable.class))).willReturn(fewComments);
+        given(commentRepository.countAllByStorySeq(2L)).willReturn(1L);
+
+        // when
+        DonationStoryDetailDto dto = donationService.findDonationStoryWithStoryId(2L);
+
+        // then
+        assertThat(dto.getComments().getContent()).hasSize(1);
     }
 
     @Test(expected = DonationNotFoundException.class)

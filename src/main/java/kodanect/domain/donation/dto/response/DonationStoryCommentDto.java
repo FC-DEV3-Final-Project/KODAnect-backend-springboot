@@ -7,6 +7,8 @@ import kodanect.domain.donation.entity.DonationStoryComment;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class DonationStoryCommentDto implements CursorIdentifiable<Long> {
@@ -18,7 +20,14 @@ public class DonationStoryCommentDto implements CursorIdentifiable<Long> {
     private String comments;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private String commentWriteTime; // yyyy-MM-dd 형식의 문자열
+    private LocalDateTime commentWriteTime; // yyyy-MM-dd 형식의 문자열
+
+    public DonationStoryCommentDto(Long commentSeq, String commentWriter, String comments, LocalDateTime writeTime) {
+        this.commentSeq = commentSeq;
+        this.commentWriter = commentWriter;
+        this.comments = comments;
+        this.commentWriteTime = writeTime;
+    }
 
     @Override
     @JsonIgnore
@@ -34,7 +43,7 @@ public class DonationStoryCommentDto implements CursorIdentifiable<Long> {
                 .commentSeq(storyComment.getCommentSeq())
                 .commentWriter(storyComment.getCommentWriter())
                 .comments(storyComment.getContents())
-                .commentWriteTime(storyComment.getWriteTime().toLocalDate().toString())
+                .commentWriteTime(storyComment.getWriteTime())
                 .build();
     }
 }
