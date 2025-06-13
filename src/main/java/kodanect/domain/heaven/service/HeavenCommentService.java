@@ -1,6 +1,6 @@
 package kodanect.domain.heaven.service;
 
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 
 import java.util.List;
@@ -11,5 +11,5 @@ public interface HeavenCommentService {
     List<HeavenCommentResponse> getHeavenCommentList(Integer letterSeq, Integer cursor, int size);
 
     /* 댓글 더보기 (페이징) */
-    CursorReplyPaginationResponse<HeavenCommentResponse, Integer> getMoreCommentList(Integer letterSeq, Integer cursor, int size);
+    CursorCommentPaginationResponse<HeavenCommentResponse, Integer> getMoreCommentList(Integer letterSeq, Integer cursor, int size);
 }

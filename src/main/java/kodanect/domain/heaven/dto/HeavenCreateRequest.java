@@ -5,7 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter @ToString
+@Getter @Setter @ToString
 @Builder
 public class HeavenCreateRequest {
 

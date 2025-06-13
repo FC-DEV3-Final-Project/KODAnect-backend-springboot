@@ -1,13 +1,13 @@
 package kodanect.domain.heaven.dto;
 
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentCountPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,22 +54,12 @@ public class HeavenDetailResponse {
     /* 생성 일시 */
     private LocalDateTime writeTime;
 
-    /* 댓글 정보 */
-    private List<HeavenCommentResponse> heavenCommentResponseList;
-
-    /* 다음 페이지 번호 */
-    private Integer replyNextCursor;
-
-    /* 다음 페이지 존재 여부 */
-    private boolean replyHasNext;
-
-    /* 총 댓글 수 */
-    private long totalCommentCount;
+    /* 댓글 리스트 */
+    private CursorCommentPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse;
 
     public static HeavenDetailResponse of(
             Heaven heaven,
-            CursorReplyPaginationResponse<HeavenCommentResponse, Integer> cursorPaginationResponse,
-            long totalCommentCount
+            CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse
     ) {
         Memorial memorial = heaven.getMemorial();
 
@@ -87,10 +77,7 @@ public class HeavenDetailResponse {
                 .fileName(heaven.getFileName())
                 .orgFileName(heaven.getOrgFileName())
                 .writeTime(heaven.getWriteTime())
-                .heavenCommentResponseList(cursorPaginationResponse.getContent())
-                .replyNextCursor(cursorPaginationResponse.getReplyNextCursor())
-                .replyHasNext(cursorPaginationResponse.isReplyHasNext())
-                .totalCommentCount(totalCommentCount)
+                .cursorCommentPaginationResponse(cursorCommentPaginationResponse)
                 .build();
     }
 }

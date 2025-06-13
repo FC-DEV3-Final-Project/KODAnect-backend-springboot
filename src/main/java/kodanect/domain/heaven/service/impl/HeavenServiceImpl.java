@@ -1,7 +1,7 @@
 package kodanect.domain.heaven.service.impl;
 
+import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.common.response.CursorReplyPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.common.validation.HeavenCreateRequestValidator;
 import kodanect.domain.heaven.dto.*;
@@ -74,14 +74,15 @@ public class HeavenServiceImpl implements HeavenService {
         heaven.addReadCount();
 
         /* 댓글 리스트 조회 */
-        List<HeavenCommentResponse> heavenCommentList = heavenCommentService.getHeavenCommentList(letterSeq, null, COMMENT_SIZE);
+        List<HeavenCommentResponse> heavenCommentList = heavenCommentService.getHeavenCommentList(letterSeq, null, COMMENT_SIZE + 1);
 
         /* 댓글 개수 조회 */
         int commentCount = heavenCommentRepository.countByHeaven(heaven);
 
-        CursorReplyPaginationResponse<HeavenCommentResponse, Integer> cursorPaginationResponse = CursorFormatter.cursorReplyFormat(heavenCommentList, COMMENT_SIZE);
+        CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
+                CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);
 
-        return HeavenDetailResponse.of(heaven, cursorPaginationResponse, commentCount);
+        return HeavenDetailResponse.of(heaven, cursorCommentCountPaginationResponse);
     }
 
     /* 게시물 비밀번호 일치 여부 */

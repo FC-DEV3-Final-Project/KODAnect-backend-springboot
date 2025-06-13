@@ -7,6 +7,7 @@ import kodanect.domain.heaven.service.HeavenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,9 +73,9 @@ public class HeavenController {
     }
 
     /* 게시물 등록 */
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> createHeaven(
-            @RequestBody HeavenCreateRequest heavenCreateRequest
+            @ModelAttribute HeavenCreateRequest heavenCreateRequest
     ) {
         heavenService.createHeaven(heavenCreateRequest);
 

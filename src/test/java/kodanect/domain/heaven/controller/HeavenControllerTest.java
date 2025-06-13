@@ -1,5 +1,6 @@
 package kodanect.domain.heaven.controller;
 
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
@@ -139,13 +140,18 @@ public class HeavenControllerTest {
         String letterContents = "이 편지는 하늘로 보냅니다.";
         LocalDateTime writeTime = LocalDateTime.now();
 
-        boolean replyHasNext = false;
+        boolean commentHasNext = false;
         long commentCount = 2L;
 
         List<HeavenCommentResponse> heavenCommentResponseList = new ArrayList<>();
         for (int i = 1; i <= commentCount; i++) {
             heavenCommentResponseList.add(new HeavenCommentResponse(i, "댓글 작성자"+i, "댓글 내용"+i, writeTime));
         }
+        CursorCommentPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse = CursorCommentPaginationResponse.<HeavenCommentResponse, Integer>builder()
+                .content(heavenCommentResponseList)
+                .commentNextCursor(null)
+                .commentHasNext(commentHasNext)
+                .build();
 
         HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
                 .letterSeq(letterSeq)
@@ -156,9 +162,7 @@ public class HeavenControllerTest {
                 .readCount(readCount)
                 .letterContents(letterContents)
                 .writeTime(writeTime)
-                .heavenCommentResponseList(heavenCommentResponseList)
-                .replyHasNext(replyHasNext)
-                .totalCommentCount(commentCount)
+                .cursorCommentPaginationResponse(cursorCommentPaginationResponse)
                 .build();
 
         when(heavenService.getHeavenDetail(letterSeq)).thenReturn(heavenDetailResponse);
@@ -169,9 +173,8 @@ public class HeavenControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("게시물 상세 조회 성공"))
                 .andExpect(jsonPath("$.data.letterSeq").value(1))
-                .andExpect(jsonPath("$.data.heavenCommentResponseList[0].commentSeq").value(1))
-                .andExpect(jsonPath("$.data.replyNextCursor", nullValue()))
-                .andExpect(jsonPath("$.data.replyHasNext").value(replyHasNext))
-                .andExpect(jsonPath("$.data.totalCommentCount").value(commentCount));
+                .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.content[0].commentSeq").value(1))
+                .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentNextCursor", nullValue()))
+                .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentHasNext").value(false));
     }
 }

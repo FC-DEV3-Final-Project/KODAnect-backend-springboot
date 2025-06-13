@@ -1,7 +1,7 @@
 package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.ApiResponse;
-import kodanect.common.response.CursorReplyPaginationResponse;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import lombok.AllArgsConstructor;
@@ -20,12 +20,12 @@ public class HeavenCommentController {
 
     /* 댓글 더보기 */
     @GetMapping("/{letterSeq}/comments")
-    public ResponseEntity<ApiResponse<CursorReplyPaginationResponse<HeavenCommentResponse, Integer>>> getMoreCommentList(
+    public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<HeavenCommentResponse, Integer>>> getMoreCommentList(
             @PathVariable Integer letterSeq,
             @RequestParam Integer cursor,
             @RequestParam(defaultValue = "3") int size
     ) {
-        CursorReplyPaginationResponse<HeavenCommentResponse, Integer> commentList = heavenCommentService.getMoreCommentList(letterSeq, cursor, size);
+        CursorCommentPaginationResponse<HeavenCommentResponse, Integer> commentList = heavenCommentService.getMoreCommentList(letterSeq, cursor, size);
 
         String message = messageSourceAccessor.getMessage("heaven.comment.read.success");
 

@@ -1,5 +1,6 @@
 package kodanect.domain.heaven.service.impl;
 
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
@@ -148,19 +149,19 @@ public class HeavenServiceImplTest {
         }
 
         when(heavenRepository.findById(letterSeq)).thenReturn(Optional.of(heaven));
-        when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize)).thenReturn(heavenCommentResponseList);
+        when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize + 1)).thenReturn(heavenCommentResponseList);
         when(heavenCommentRepository.countByHeaven(heaven)).thenReturn(commentCount);
 
         /* when */
         HeavenDetailResponse heavenDetailResponse = heavenServiceImpl.getHeavenDetail(letterSeq);
-        HeavenCommentResponse firstHeavenCommentResponse = heavenDetailResponse.getHeavenCommentResponseList().get(0);
+        CursorCommentPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse = heavenDetailResponse.getCursorCommentPaginationResponse();
+        HeavenCommentResponse firstHeavenCommentResponse = cursorCommentPaginationResponse.getContent().get(0);
 
         /* then */
-        assertNotNull(heavenDetailResponse);
-        assertEquals(commentSize, heavenDetailResponse.getHeavenCommentResponseList().size());
-        assertEquals(Integer.valueOf(3), heavenDetailResponse.getReplyNextCursor());
-        assertTrue(heavenDetailResponse.isReplyHasNext());
-        assertEquals(commentCount, heavenDetailResponse.getTotalCommentCount());
+        assertNotNull(cursorCommentPaginationResponse);
+        assertEquals(commentSize, cursorCommentPaginationResponse.getContent().size());
+        assertEquals(Integer.valueOf(3), cursorCommentPaginationResponse.getCommentNextCursor());
+        assertTrue(cursorCommentPaginationResponse.isCommentHasNext());
 
         assertEquals(letterSeq, heavenDetailResponse.getLetterSeq());
         assertEquals("사랑하는 가족에게", heavenDetailResponse.getLetterTitle());
