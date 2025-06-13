@@ -20,6 +20,7 @@ out/
 
 # === Node.js/NPM ===
 node_modules/
+package-lock.json
 
 # === Maven ===
 *.log
