@@ -64,10 +64,10 @@ public class ArticleController {
      * @param pageable 페이징 및 정렬 정보
      * @return ApiResponse
      */
-    private ResponseEntity<ApiResponse<Page<? extends ArticleDTO>>> getArticlesCommon(
+    private ResponseEntity<ApiResponse<Page<ArticleDTO>>> getArticlesCommon(
             List<String> boardCodes, SearchCondition condition, Pageable pageable) {
 
-        Page<? extends ArticleDTO> articles = service.getArticles(boardCodes, condition.getType(), condition.getKeyWord(), pageable);
+        Page<ArticleDTO> articles = service.getArticles(boardCodes, condition.getType(), condition.getKeyWord(), pageable);
         String message = messageSourceAccessor.getMessage(ARTICLE_LIST_SUCCESS);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, articles));
     }
@@ -99,12 +99,11 @@ public class ArticleController {
      * @return ApiResponse
      */
     @GetMapping("/notices")
-    public ResponseEntity<ApiResponse<Page<? extends ArticleDTO>>> getArticles(
+    public ResponseEntity<ApiResponse<Page<ArticleDTO>>> getArticles(
             @RequestParam(defaultValue = "all") String optionStr,
             @Validated @ModelAttribute SearchCondition condition,
             @PageableDefault(size = DEFAULT_ARTICLE_PAGE_SIZE) Pageable pageable
     ) {
-
         Pageable sortedPageable = applyDefaultSort(pageable);
 
         List<String> boardCodes;
@@ -114,7 +113,7 @@ public class ArticleController {
             String boardCode = boardCategoryCache.getBoardCodeByUrlParam(optionStr);
             boardCodes = boardCode != null ? List.of(boardCode) : List.of();
         }
-        return getArticlesCommon(boardCodes,condition, sortedPageable);
+        return getArticlesCommon(boardCodes, condition, sortedPageable);
     }
 
     /**
@@ -165,7 +164,7 @@ public class ArticleController {
      * @return ApiResponse
      */
     @GetMapping("/{boardCode}")
-    public ResponseEntity<ApiResponse<Page<? extends ArticleDTO>>> getOtherBoardArticles(
+    public ResponseEntity<ApiResponse<Page<ArticleDTO>>> getOtherBoardArticles(
             @PathVariable String boardCode,
             @Validated @ModelAttribute SearchCondition condition,
             @PageableDefault(size = DEFAULT_ARTICLE_PAGE_SIZE) Pageable pageable

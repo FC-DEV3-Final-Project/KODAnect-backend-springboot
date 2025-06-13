@@ -35,6 +35,7 @@ public class DonationServiceImpl implements DonationService {
 
     /** Cursor 기반 기본 Size */
     private static final int DEFAULT_SIZE = 3;
+    private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
 
     private final DonationRepository donationRepository;
     private final DonationCommentRepository commentRepository;
@@ -116,7 +117,6 @@ public class DonationServiceImpl implements DonationService {
         for (Element img : imgTags) {
             String src = img.attr("src");  // 또는 "data-cke-saved-src"
 
-            System.out.println("src: " + img.attr("src"));
 
             if (src == null || !src.contains("/")) {
                 continue;
@@ -140,7 +140,7 @@ public class DonationServiceImpl implements DonationService {
     public DonationStoryDetailDto findDonationStoryWithStoryId(Long storySeq) {
         // 1) 스토리 로드 + 조회수 증가
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
+                .orElseThrow(() -> new DonationNotFoundException(DONATION_ERROR_NOTFOUND));
         story.increaseReadCount();
 
         // 2) 최신 댓글 3개 조회
@@ -160,15 +160,10 @@ public class DonationServiceImpl implements DonationService {
     }
 
 
-    private DonationStory findStoryWithId(Long storySeq) {
-        return donationRepository.findStoryOnlyById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException("donation.error.notfound"));
-    }
-
     /** 비밀번호 검증 */
     public void verifyPasswordWithPassword(Long storySeq, VerifyStoryPasscodeDto verifyPassword) {
         DonationStory story = donationRepository.findById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
         if (!validatePassword(verifyPassword.getStoryPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
@@ -182,7 +177,7 @@ public class DonationServiceImpl implements DonationService {
         log.info("===== updateDonationStory 호출됨 =====");
 
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
         String [] imgNames = imgParsing(requestDto.getStoryContents());
 
@@ -192,7 +187,7 @@ public class DonationServiceImpl implements DonationService {
     /** 스토리 삭제 */
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get("donation.error.notfound")));
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
