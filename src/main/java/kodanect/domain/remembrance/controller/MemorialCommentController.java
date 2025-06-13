@@ -52,7 +52,7 @@ public class MemorialCommentController {
     public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<MemorialCommentResponse, Integer>>> getMoreReplies(
             @PathVariable @Min(value = 1, message = DONATE_INVALID) Integer donateSeq,
             @RequestParam Integer cursor, @RequestParam(defaultValue = "3") int size)
-            throws  InvalidPaginationRangeException,
+            throws InvalidPaginationException,
                     MemorialNotFoundException
     {
         /* 댓글 더보기 */

@@ -55,29 +55,6 @@ public class CursorFormatter {
     }
 
     /**
-     * 일반 게시글 목록 응답 포맷 생성
-     *
-     * @param responses 전체 응답 대상 목록
-     * @param slice Sequence index
-     * @param totalCount 총 게시글 수
-     * @return 다음 커서 정보를 포함한 CursorPaginationResponse
-     */
-    public static <T extends CursorIdentifiable<C>, C>CursorPaginationResponse<T, C> cursorSearchFormat(List<T> responses, CursorPaginationResponse<C, C> slice, long totalCount) {
-        /* 기본 cursor 포맷 */
-
-        C nextCursor = slice.isHasNext() && !slice.getContent().isEmpty()
-                ? slice.getContent().get(slice.getContent().size() - 1)
-                : null;
-
-        return CursorPaginationResponse.<T, C>builder()
-                .content(responses)
-                .nextCursor(nextCursor)
-                .hasNext(slice.isHasNext())
-                .totalCount(totalCount)
-                .build();
-    }
-
-    /**
      * 댓글 목록 응답 포맷 생성
      *
      * @param responses 전체 댓글 응답 대상 목록
