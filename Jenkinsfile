@@ -280,6 +280,7 @@ EOF
     post {
         success {
             script {
+                githubNotify context: 'continuous-integration/jenkins/branch', status: 'SUCCESS', description: '전체 빌드 및 테스트 성공', targetUrl: "${env.BUILD_URL}"
                 if (env.CHANGE_ID != null || env.BRANCH_NAME?.trim() == 'main') {
                     slackSend(
                         channel: '4_파이널프로젝트_1조_jenkins',
@@ -298,9 +299,9 @@ EOF
                 }
             }
         }
-
         failure {
             script {
+                githubNotify context: 'continuous-integration/jenkins/branch', status: 'FAILURE', description: '전체 빌드 또는 테스트 실패', targetUrl: "${env.BUILD_URL}"
                 if (env.CHANGE_ID != null || env.BRANCH_NAME?.trim() == 'main') {
                     slackSend(
                         channel: '4_파이널프로젝트_1조_jenkins',
@@ -320,4 +321,4 @@ EOF
             }
         }
     }
-}
+
