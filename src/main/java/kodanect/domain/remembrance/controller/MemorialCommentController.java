@@ -83,7 +83,7 @@ public class MemorialCommentController {
 
         String successMessage = messageSourceAccessor.getMessage("board.comment.create.success", new Object[] {});
         memorialCommentService.createComment(donateSeq, memorialCommentCreateRequest);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, successMessage));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, successMessage));
     }
 
     /**
