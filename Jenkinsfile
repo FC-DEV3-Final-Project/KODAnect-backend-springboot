@@ -253,16 +253,24 @@ EOF
                     githubNotify context: 'healthcheck', status: 'PENDING', description: '헬스체크 중...'
 
                     def healthCheckUrl = "http://10.8.110.14:8080/actuator/health"
-                    def retries = 3
+                    def retries = 5
                     def success = false
 
                     for (int i = 0; i < retries; i++) {
-                        def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}", returnStdout: true).trim()
-                        if (response == '200') {
-                            success = true
-                            break
+                        try {
+                            def response = sh(
+                                script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
+                                returnStdout: true
+                            ).trim()
+                            echo "헬스체크 응답 코드: ${response}"
+                            if (response == '200') {
+                                success = true
+                                break
+                            }
+                        } catch (Exception e) {
+                            echo "헬스체크 중 오류 발생 (시도 ${i+1}/${retries}): ${e.getMessage()}"
                         }
-                        sleep(5)
+                        sleep 5
                     }
 
                     if (success) {
