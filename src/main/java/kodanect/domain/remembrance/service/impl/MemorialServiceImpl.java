@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
+import kodanect.common.util.CursorPaginationUtils;
 import kodanect.domain.remembrance.dto.*;
 import kodanect.domain.remembrance.entity.Memorial;
 import kodanect.domain.remembrance.exception.*;
@@ -132,13 +133,15 @@ public class MemorialServiceImpl implements MemorialService {
         String endDateStr = formatDate(endDate);
 
         /* 페이징 포매팅 */
-        Pageable pageable = PageRequest.of(0, size +1);
+        List<Integer> allSeq = memorialRepository.findSearchAllSorted(startDateStr, endDateStr, keyWord);
 
-        List<MemorialResponse> memorialResponses = memorialRepository.findSearchByCursor(cursor, pageable, startDateStr, endDateStr, keyWord);
+        CursorPaginationResponse<Integer, Integer> slice = CursorPaginationUtils.paginationWithCursor(allSeq, cursor, size);
+
+        List<MemorialResponse> memorialResponses = memorialRepository.findBySeqs(slice.getContent());
 
         long totalCount = memorialRepository.countBySearch(startDateStr, endDateStr, keyWord);
 
-        return CursorFormatter.cursorFormat(memorialResponses, size, totalCount);
+        return CursorFormatter.cursorSearchFormat(memorialResponses, slice, totalCount);
 
     }
 

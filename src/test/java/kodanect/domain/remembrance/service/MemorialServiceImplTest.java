@@ -117,27 +117,41 @@ public class MemorialServiceImplTest {
         String endDate = "2024-01-01";
         String searchWord = "홍길동";
 
+        List<Integer> seqs = List.of(1, 2, 3);
+
+        List<Integer> pageSeqs = List.of(2, 3);
+
         List<MemorialResponse> content = List.of(
-                new MemorialResponse(1, "홍길동", "N", "20230101", "M", 40, 5)
+                new MemorialResponse(2, "홍길동", "N", "2023-01-02", "M", 40, 5),
+                new MemorialResponse(3, "홍길동", "N", "2023-01-03", "M", 42, 3)
         );
 
-        when(memorialRepository.findSearchByCursor(
-                eq(cursor), any(Pageable.class), eq("20230101"), eq("20240101"), eq("%홍길동%"))
-        ).thenReturn(content);
+        when(memorialRepository.findSearchAllSorted(
+                eq("20230101"), eq("20240101"), eq("%홍길동%"))
+        ).thenReturn(seqs);
+
+        when(memorialRepository.findBySeqs(eq(pageSeqs)))
+                .thenReturn(content);
+
+        when(memorialRepository.countBySearch(
+                eq("20230101"), eq("20240101"), eq("%홍길동%"))
+        ).thenReturn(3L);
 
         CursorPaginationResponse<MemorialResponse, Integer> result
                 = memorialService.getSearchMemorialList(startDate, endDate, searchWord, cursor, size);
 
         assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-        assertEquals(Integer.valueOf(1), result.getContent().get(0).getDonateSeq());
-        assertEquals("홍길동", result.getContent().get(0).getDonorName());
-        assertEquals("N", result.getContent().get(0).getAnonymityFlag());
-        assertEquals("2023-01-01", result.getContent().get(0).getDonateDate());
-        assertEquals("M", result.getContent().get(0).getGenderFlag());
-        assertEquals(Integer.valueOf(40), result.getContent().get(0).getDonateAge());
-        assertEquals(5, result.getContent().get(0).getCommentCount());
+        assertEquals(2, result.getContent().size());
+
+        MemorialResponse item = result.getContent().get(0);
+        assertEquals("홍길동", item.getDonorName());
+        assertEquals("N", item.getAnonymityFlag());
+        assertEquals("2023-01-02", item.getDonateDate());
+        assertEquals("M", item.getGenderFlag());
+        assertEquals(Integer.valueOf(40), item.getDonateAge());
+        assertEquals(5, item.getCommentCount());
     }
+
 
     @Test
     @DisplayName("추모관 게시글 리스트 조회")
