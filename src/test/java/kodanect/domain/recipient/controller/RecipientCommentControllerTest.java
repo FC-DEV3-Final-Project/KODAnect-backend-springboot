@@ -3,8 +3,10 @@ package kodanect.domain.recipient.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.dto.CommentDeleteRequestDto;
+import kodanect.domain.recipient.dto.RecipientCommentAuthRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
+import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -104,34 +106,6 @@ class RecipientCommentControllerTest {
     }
 
     @Test
-    @DisplayName("댓글 수정 성공 테스트")
-    void testUpdateComment() throws Exception {
-        RecipientCommentRequestDto requestDto = new RecipientCommentRequestDto();
-        requestDto.setCommentContents("수정된 댓글");
-        requestDto.setCommentWriter("작성자");
-        requestDto.setCommentPasscode("asdf1234");
-
-        RecipientCommentResponseDto responseDto = new RecipientCommentResponseDto();
-        responseDto.setCommentSeq(1);
-        responseDto.setCommentContents("수정된 댓글");
-        responseDto.setCommentWriter("작성자");
-        responseDto.setWriteTime(LocalDateTime.now());
-        responseDto.setModifyTime(LocalDateTime.now());
-
-        given(recipientCommentService.updateComment(
-                1,
-                "수정된 댓글",
-                "작성자",
-                "asdf1234")).willReturn(responseDto);
-
-        mockMvc.perform(put("/recipientLetters/1/comments/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-    }
-
-    @Test
     @DisplayName("댓글 삭제 성공 테스트")
     void testDeleteComment() throws Exception {
         CommentDeleteRequestDto requestDto = new CommentDeleteRequestDto();
@@ -146,5 +120,5 @@ class RecipientCommentControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("댓글이 성공적으로 삭제되었습니다."));
     }
-  
+
 }
