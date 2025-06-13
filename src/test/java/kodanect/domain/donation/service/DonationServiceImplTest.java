@@ -208,7 +208,8 @@ public class DonationServiceImplTest {
     public void findDonationStoryWithStoryId_최신댓글3개_반환() {
         // given
         DonationStory story = DonationStory.builder()
-                .storySeq(1L).readCount(0).storyTitle("타이틀").build();
+                .storySeq(1L).readCount(0).storyTitle("타이틀").writeTime(LocalDateTime.now())
+                        .build();
 
         List<DonationStoryCommentDto> comments = List.of(
                 new DonationStoryCommentDto(10L, "홍길동", "댓글1", LocalDateTime.now()),
@@ -232,7 +233,7 @@ public class DonationServiceImplTest {
     public void findDonationStoryWithStoryId_댓글3개미만_hasNextFalse() {
         // given
         DonationStory story = DonationStory.builder()
-                .storySeq(2L).readCount(0).storyTitle("제목").build();
+                .storySeq(2L).readCount(0).storyTitle("제목").writeTime(LocalDateTime.now()).build();
 
         List<DonationStoryCommentDto> fewComments = List.of(
                 new DonationStoryCommentDto(10L, "유재석", "하하", LocalDateTime.now())

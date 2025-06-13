@@ -58,7 +58,6 @@ public class DonationCommentServiceImplTest {
         DonationStory story = DonationStory.builder()
                 .storySeq(storySeq)
                 .build();
-        given(storyRepository.findById(storySeq)).willReturn(Optional.of(story));
 
         DonationStoryComment comment1 = DonationStoryComment.builder().commentSeq(10L).commentWriter("작성자1")
                 .commentPasscode("pass1234").contents("댓글1").writeTime(LocalDateTime.now()).delFlag("N")
@@ -161,7 +160,7 @@ public class DonationCommentServiceImplTest {
     public void verifyPasswordWithPassword_정상_인증성공() {
         Long storySeq = 1L;
         Long commentSeq = 2L;
-        String validPassword = "Abcd1234";
+        String validPassword = "Abcd1234!";
 
         DonationStory story = DonationStory.builder()
                 .storySeq(storySeq)
@@ -170,6 +169,8 @@ public class DonationCommentServiceImplTest {
 
         DonationStoryComment comment = DonationStoryComment.builder()
                 .commentSeq(commentSeq)
+                .story(story)
+                .commentPasscode(validPassword)
                 .build();
 
         given(storyRepository.findById(storySeq)).willReturn(Optional.of(story));
@@ -211,10 +212,19 @@ public class DonationCommentServiceImplTest {
         Long storySeq = 1L;
         Long commentSeq = 2L;
 
-        given(storyRepository.findById(storySeq)).willReturn(Optional.of(DonationStory.builder()
-                .storySeq(storySeq).storyPasscode("Abcd1234").build()));
-        given(commentRepository.findById(commentSeq)).willReturn(Optional.of(DonationStoryComment.builder()
-                .commentSeq(commentSeq).build()));
+        DonationStory mockStory = DonationStory.builder()
+                .storySeq(storySeq)
+                .storyPasscode("Abcd1234")
+                .build();
+
+        DonationStoryComment comment = DonationStoryComment.builder()
+                .commentSeq(commentSeq)
+                .story(mockStory)
+                .commentPasscode("Wrong")  // 또는 실제 비밀번호
+                .build();
+
+        given(storyRepository.findById(storySeq)).willReturn(Optional.of(mockStory));
+        given(commentRepository.findById(commentSeq)).willReturn(Optional.of(comment));
         given(messageResolver.get("donation.error.invalid.passcode.format"))
                 .willReturn("비밀번호 형식 오류");
 
@@ -223,7 +233,7 @@ public class DonationCommentServiceImplTest {
     }
 
     // --- 비밀번호 불일치 ---
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PasscodeMismatchException.class)
     public void verifyPasswordWithPassword_비밀번호불일치_예외() {
         Long storySeq = 1L;
         Long commentSeq = 2L;
@@ -232,15 +242,17 @@ public class DonationCommentServiceImplTest {
                 .storySeq(storySeq)
                 .storyPasscode("Abcd1234")
                 .build();
+
         DonationStoryComment comment = DonationStoryComment.builder()
                 .commentSeq(commentSeq)
+                .story(story)
+                .commentPasscode("Correct123") // ✅ 실제 저장된 비밀번호
                 .build();
 
         given(storyRepository.findById(storySeq)).willReturn(Optional.of(story));
         given(commentRepository.findById(commentSeq)).willReturn(Optional.of(comment));
-        given(messageResolver.get("donation.error.delete.password_mismatch"))
-                .willReturn("비밀번호가 일치하지 않습니다.");
 
+        // 입력 비밀번호를 틀리게 줌
         service.verifyPasswordWithPassword(storySeq, commentSeq,
                 new VerifyCommentPasscodeDto("Wrong123"));
     }
