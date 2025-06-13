@@ -18,6 +18,9 @@ build/
 bin/
 out/
 
+# === Node.js/NPM ===
+node_modules/
+
 # === Maven ===
 *.log
 *.tmp
