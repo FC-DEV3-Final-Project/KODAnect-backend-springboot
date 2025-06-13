@@ -26,7 +26,7 @@ public interface RecipientService {
 
     CursorPaginationResponse<RecipientListResponseDto, Integer> selectRecipientList(
             RecipientSearchCondition searchCondition,
-            Integer lastId,
+            Integer cusor,
             int size);
 
     int selectRecipientListTotCnt(RecipientSearchCondition searchCondition);

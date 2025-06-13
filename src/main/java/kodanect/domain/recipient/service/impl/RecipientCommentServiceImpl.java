@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.persistence.criteria.Predicate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -142,25 +143,36 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         return RecipientCommentResponseDto.fromEntity(savedComment);
     }
 
-    // 댓글 수정
     @Override
-    public RecipientCommentResponseDto updateComment(Integer commentSeq, String newContents, String newWriter, String inputPasscode) {
-        logger.info("댓글 수정 요청 시작: commentSeq={}", commentSeq);
+    public boolean authenticateComment(Integer commentSeq, String inputPasscode) {
+        logger.info("댓글 인증 요청 시작: commentSeq={}", commentSeq);
+
+        // 1. 삭제되지 않은 기존 댓글 조회
+        RecipientCommentEntity existingComment = getActiveComment(commentSeq);
+
+        // 2. 비밀번호 검증
+        validateCommentPasscode(existingComment, inputPasscode); // 비밀번호 불일치 시 예외 발생
+
+        logger.info("댓글 인증 성공: commentSeq={}", commentSeq);
+        return true; // 인증 성공
+    }
+
+    @Override
+    public RecipientCommentResponseDto updateComment(Integer commentSeq, String newContents, String newWriter) {
+        logger.info("댓글 수정 요청 시작 (인증 후): commentSeq={}", commentSeq);
 
         // 1. 삭제되지 않은 기존 댓글 조회 (헬퍼 메서드 사용)
         RecipientCommentEntity existingComment = getActiveComment(commentSeq);
 
-        // 2. 비밀번호 검증 (헬퍼 메서드 사용)
-        validateCommentPasscode(existingComment, inputPasscode);
-
-        // 3. 입력받은 데이터로 댓글 정보 업데이트
+        // 2. 입력받은 데이터로 댓글 정보 업데이트
         // HTML 태그 필터링 및 내용 검증 (헬퍼 메서드 사용)
         String finalContents = cleanAndValidateCommentContents(newContents);
 
         existingComment.setCommentContents(finalContents);
         existingComment.setCommentWriter(newWriter); // 작성자 수정 허용
+        existingComment.setModifyTime(LocalDateTime.now()); // 수정 시간 업데이트
 
-        // 4. 업데이트된 댓글 저장
+        // 3. 업데이트된 댓글 저장
         RecipientCommentEntity updatedComment = recipientCommentRepository.save(existingComment);
         logger.info("댓글 성공적으로 수정됨: commentSeq={}", updatedComment.getCommentSeq());
         return RecipientCommentResponseDto.fromEntity(updatedComment);
