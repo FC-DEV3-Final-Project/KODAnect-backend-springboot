@@ -25,7 +25,7 @@ public final class MessageKeys {
     public static final String DONATE_NOT_FOUND = "error.donate.notFound";
     public static final String DONATE_INVALID = "error.donate.invalid";
     public static final String EMOTION_INVALID = "error.emotion.invalid";
-    public static final String PAGINATION_INVALID = "error.pagination.range";
+    public static final String PAGINATION_INVALID = "error.pagination.invalid";
     public static final String SEARCH_DATE_FORMAT_INVALID = "error.search.date.format.invalid";
     public static final String SEARCH_DATE_RANGE_INVALID = "error.search.date.range.invalid";
     public static final String SEARCH_DATE_MISSING = "error.search.date.missing";
