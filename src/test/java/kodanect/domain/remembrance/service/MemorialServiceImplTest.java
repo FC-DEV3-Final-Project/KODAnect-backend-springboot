@@ -133,7 +133,7 @@ public class MemorialServiceImplTest {
         )).thenReturn(content);
 
         when(memorialRepository.countBySearch(
-                eq("20230101"), eq("20240101"), eq("%홍길동%"))
+                "20230101", "20240101", "%홍길동%")
         ).thenReturn(2L);
 
         CursorPaginationResponse<MemorialResponse, MemorialNextCursor> result

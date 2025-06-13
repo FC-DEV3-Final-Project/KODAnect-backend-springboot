@@ -245,7 +245,7 @@ class MemorialControllerTest {
 
         assertThat(startDateCaptor.getValue()).isEqualTo("1900-01-01");
         assertThat(endDateCaptor.getValue()).isEqualTo("2100-12-31");
-        assertThat(searchWordCaptor.getValue()).isEqualTo("");
+        assertThat(searchWordCaptor.getValue()).isEmpty();
         assertThat(sizeCaptor.getValue()).isEqualTo(20);
 
         MemorialNextCursor cursor = cursorCaptor.getValue();
