@@ -168,11 +168,6 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>org.seleniumhq.selenium</groupId>-->
-<!--			<artifactId>selenium-java</artifactId>-->
-<!--			<scope>test</scope>-->
-<!--		</dependency>-->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -269,7 +264,6 @@
 					<configLocation>config/checkstyle/checkstyle.xml</configLocation>
 					<suppressionsLocation>config/checkstyle/suppressions.xml</suppressionsLocation>
 					<consoleOutput>true</consoleOutput>
-<!--					<encoding>UTF-8</encoding>-->
 					<failsOnError>true</failsOnError>
 					<outputFile>target/checkstyle-result.xml</outputFile>
 				</configuration>
