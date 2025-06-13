@@ -31,7 +31,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "https://kodanect-frontend.netlify.app",
-                        "https://kodanect-test.netlify.app"
+                        "http://localhost:5173",
+                        "http://localhost:3000"
                 )
                 .allowedMethods("*")
                 .allowedHeaders("*")
