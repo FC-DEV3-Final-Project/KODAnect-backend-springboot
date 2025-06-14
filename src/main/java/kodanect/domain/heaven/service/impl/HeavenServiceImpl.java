@@ -3,7 +3,8 @@ package kodanect.domain.heaven.service.impl;
 import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
-import kodanect.common.validation.HeavenDonorValidator;
+import kodanect.common.util.HeavenFinder;
+import kodanect.common.validation.HeavenValidator;
 import kodanect.domain.heaven.dto.request.HeavenCreateRequest;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
@@ -11,7 +12,6 @@ import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.exception.FileStorageException;
-import kodanect.domain.heaven.exception.HeavenNotFoundException;
 import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
@@ -19,7 +19,7 @@ import kodanect.domain.heaven.service.HeavenCommentService;
 import kodanect.domain.heaven.service.HeavenService;
 import kodanect.domain.remembrance.entity.Memorial;
 import kodanect.domain.remembrance.repository.MemorialRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class HeavenServiceImpl implements HeavenService {
 
     /* 기본값 */
@@ -44,6 +44,7 @@ public class HeavenServiceImpl implements HeavenService {
     private final HeavenCommentRepository heavenCommentRepository;
     private final HeavenCommentService heavenCommentService;
     private final MemorialRepository memorialRepository;
+    private final HeavenFinder heavenFinder;
 
     /* 게시물 전체 조회 (페이징) */
     @Override
@@ -74,7 +75,7 @@ public class HeavenServiceImpl implements HeavenService {
     @Override
     public HeavenDetailResponse getHeavenDetail(Integer letterSeq) {
         /* 게시물 상세 조회 */
-        Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow();
+        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
 
         /* 조회수 증가 */
         heaven.addReadCount();
@@ -91,21 +92,13 @@ public class HeavenServiceImpl implements HeavenService {
         return HeavenDetailResponse.of(heaven, cursorCommentCountPaginationResponse);
     }
 
-    /* 게시물 수정 인증 */
-    @Override
-    public void verifyPasscode(Integer letterSeq, String letterPasscode) {
-        Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow(); // 예외 (추후 구현)
-
-        heaven.verifyPasscode(letterPasscode);
-    }
-
     /* 게시물 생성 */
     @Override
     public void createHeaven(HeavenCreateRequest heavenCreateRequest) {
         Memorial memorial = memorialRepository.findById(heavenCreateRequest.getDonateSeq()).orElse(null);
 
         /* memorial과 Request DonorName 유효성 검사 */
-        HeavenDonorValidator.validateDonorNameMatches(heavenCreateRequest.getDonorName(), memorial);
+        HeavenValidator.validateDonorNameMatches(heavenCreateRequest.getDonorName(), memorial);
 
         /* 파일 생성 */
         Map<String, String> fileMap = saveFile(heavenCreateRequest.getFile());
@@ -128,15 +121,22 @@ public class HeavenServiceImpl implements HeavenService {
         heavenRepository.save(heaven);
     }
 
+    /* 게시물 수정 인증 */
+    @Override
+    public void verifyHeavenPasscode(Integer letterSeq, String letterPasscode) {
+        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
+
+        heaven.verifyPasscode(letterPasscode);
+    }
+
     /* 게시물 수정 */
     @Override
     public void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
-        Heaven heaven = heavenRepository.findById(letterSeq)
-                .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
+        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
         Memorial memorial = memorialRepository.findById(heavenUpdateRequest.getDonateSeq()).orElse(null);
 
         /* 유효성 검사 */
-        HeavenDonorValidator.validateDonorNameMatches(heavenUpdateRequest.getDonorName(), memorial);
+        HeavenValidator.validateDonorNameMatches(heavenUpdateRequest.getDonorName(), memorial);
 
         Map<String, String> fileMap = updateFile(heavenUpdateRequest.getFile(), heaven);
 
@@ -146,8 +146,7 @@ public class HeavenServiceImpl implements HeavenService {
     /* 게시물 삭제 */
     @Override
     public void deleteHeaven(Integer letterSeq, String letterPasscode) {
-        Heaven heaven = heavenRepository.findById(letterSeq)
-                .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
+        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
 
         heaven.verifyPasscode(letterPasscode);
 

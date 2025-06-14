@@ -2,7 +2,7 @@ package kodanect.domain.heaven.entity;
 
 import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
-import kodanect.domain.heaven.exception.PasswordMissmatchException;
+import kodanect.domain.heaven.exception.PasswordMismatchException;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
 
@@ -125,7 +125,7 @@ public class Heaven {
     /* 비밀번호 일치 검증 */
     public void verifyPasscode(String passcode) {
         if (!Objects.equals(this.letterPasscode, passcode)) {
-            throw new PasswordMissmatchException(passcode);
+            throw new PasswordMismatchException(passcode);
         }
     }
 

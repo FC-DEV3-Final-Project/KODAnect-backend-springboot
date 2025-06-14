@@ -5,11 +5,11 @@ import org.springframework.http.HttpStatus;
 
 import static kodanect.common.exception.config.MessageKeys.HEAVEN_PASSWORD_MISMATCH;
 
-public class PasswordMissmatchException extends AbstractCustomException {
+public class PasswordMismatchException extends AbstractCustomException {
 
     private final String passcode;
 
-    public PasswordMissmatchException(String passcode) {
+    public PasswordMismatchException(String passcode) {
         super(HEAVEN_PASSWORD_MISMATCH);
         this.passcode = passcode;
     }

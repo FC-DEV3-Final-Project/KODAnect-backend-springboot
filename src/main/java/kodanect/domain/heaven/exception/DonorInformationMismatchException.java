@@ -4,22 +4,22 @@ import kodanect.common.exception.custom.AbstractCustomException;
 import kodanect.domain.remembrance.entity.Memorial;
 import org.springframework.http.HttpStatus;
 
-import static kodanect.common.exception.config.MessageKeys.HEAVEN_CREATE_RESPONSE_INVALID;
+import static kodanect.common.exception.config.MessageKeys.HEAVEN_DONOR_INFORM_MISMATCH;
 
-public class InvalidDonorInformationException extends AbstractCustomException {
+public class DonorInformationMismatchException extends AbstractCustomException {
 
     private final String donorName;
     private final transient Memorial memorial;
 
-    public InvalidDonorInformationException(String donorName, Memorial memorial) {
-        super(HEAVEN_CREATE_RESPONSE_INVALID);
+    public DonorInformationMismatchException(String donorName, Memorial memorial) {
+        super(HEAVEN_DONOR_INFORM_MISMATCH);
         this.donorName = donorName;
         this.memorial = memorial;
     }
 
     @Override
     public String getMessageKey() {
-        return HEAVEN_CREATE_RESPONSE_INVALID;
+        return HEAVEN_DONOR_INFORM_MISMATCH;
     }
 
     @Override

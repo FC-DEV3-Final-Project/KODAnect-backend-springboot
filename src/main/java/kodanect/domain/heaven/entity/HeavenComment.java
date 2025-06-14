@@ -1,6 +1,7 @@
 package kodanect.domain.heaven.entity;
 
-import kodanect.domain.heaven.exception.PasswordMissmatchException;
+import kodanect.domain.heaven.dto.request.HeavenCommentUpdateRequest;
+import kodanect.domain.heaven.exception.PasswordMismatchException;
 import lombok.*;
 
 import javax.persistence.*;
@@ -86,7 +87,13 @@ public class HeavenComment {
     /* 비밀번호 검증 */
     public void verifyPasscode(String passcode) {
         if (!Objects.equals(this.commentPasscode, passcode)) {
-            throw new PasswordMissmatchException(passcode);
+            throw new PasswordMismatchException(passcode);
         }
+    }
+
+    /* 댓글 수정 */
+    public void updateHeavenComment(HeavenCommentUpdateRequest heavenCommentUpdateRequest) {
+        commentWriter = heavenCommentUpdateRequest.getCommentWriter();
+        contents = heavenCommentUpdateRequest.getContents();
     }
 }

@@ -17,11 +17,11 @@ public interface HeavenService {
     /* 게시물 상세 조회 */
     HeavenDetailResponse getHeavenDetail(Integer letterSeq);
 
-    /* 게시물 수정 인증 */
-    void verifyPasscode(Integer letterSeq, String letterPasscode);
-
     /* 게시물 생성 */
     void createHeaven(HeavenCreateRequest heavenCreateRequest);
+
+    /* 게시물 수정 인증 */
+    void verifyHeavenPasscode(Integer letterSeq, String letterPasscode);
 
     /* 게시물 수정 */
     void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest);

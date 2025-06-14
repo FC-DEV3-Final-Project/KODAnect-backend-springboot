@@ -63,19 +63,6 @@ public class HeavenController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenDetailResponse));
     }
 
-    /* 게시물 수정 인증 */
-    @PostMapping("/{letterSeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<Void>> verifyPwd(
-            @PathVariable Integer letterSeq,
-            @RequestBody HeavenVerifyRequest heavenVerifyRequest
-    ) {
-        heavenService.verifyPasscode(letterSeq, heavenVerifyRequest.getLetterPasscode());
-
-        String message = messageSourceAccessor.getMessage("heaven.verify.passcode.success");
-
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
-    }
-
     /* 게시물 등록 */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Void>> createHeaven(
@@ -88,6 +75,19 @@ public class HeavenController {
         String message = messageSourceAccessor.getMessage("heaven.create.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
+    }
+
+    /* 게시물 수정 인증 */
+    @PostMapping("/{letterSeq}/verifyPwd")
+    public ResponseEntity<ApiResponse<Void>> verifyHeavenPasscode(
+            @PathVariable Integer letterSeq,
+            @RequestBody HeavenVerifyRequest heavenVerifyRequest
+    ) {
+        heavenService.verifyHeavenPasscode(letterSeq, heavenVerifyRequest.getLetterPasscode());
+
+        String message = messageSourceAccessor.getMessage("heaven.verify.passcode.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
     /* 게시물 수정 */
