@@ -1,6 +1,6 @@
 package kodanect.domain.heaven.repository;
 
-import kodanect.domain.heaven.dto.HeavenCommentResponse;
+import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.entity.HeavenComment;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +21,7 @@ public interface HeavenCommentRepository extends JpaRepository<HeavenComment, In
      */
     @Query(
             value = """
-            SELECT new kodanect.domain.heaven.dto.HeavenCommentResponse
+            SELECT new kodanect.domain.heaven.dto.response.HeavenCommentResponse
                     (hc.commentSeq, hc.commentWriter, hc.contents, hc.writeTime)
             FROM HeavenComment hc
             WHERE (:cursor IS NULL OR hc.commentSeq < :cursor)

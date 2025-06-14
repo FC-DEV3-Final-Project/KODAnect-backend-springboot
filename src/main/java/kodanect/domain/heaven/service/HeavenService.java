@@ -1,10 +1,10 @@
 package kodanect.domain.heaven.service;
 
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.domain.heaven.dto.HeavenCreateRequest;
-import kodanect.domain.heaven.dto.HeavenDetailResponse;
-import kodanect.domain.heaven.dto.HeavenResponse;
-import kodanect.domain.heaven.dto.HeavenUpdateRequest;
+import kodanect.domain.heaven.dto.request.HeavenCreateRequest;
+import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
+import kodanect.domain.heaven.dto.response.HeavenResponse;
+import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 
 public interface HeavenService {
 

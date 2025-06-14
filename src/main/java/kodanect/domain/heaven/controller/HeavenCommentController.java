@@ -2,7 +2,8 @@ package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
-import kodanect.domain.heaven.dto.HeavenCommentResponse;
+import kodanect.domain.heaven.dto.request.HeavenCommentCreateRequest;
+import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -11,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/heavenLetters")
+@RequestMapping("/heavenLetters/{letterSeq}")
 @AllArgsConstructor
 public class HeavenCommentController {
 
@@ -19,7 +20,7 @@ public class HeavenCommentController {
     private final MessageSourceAccessor messageSourceAccessor;
 
     /* 댓글 더보기 */
-    @GetMapping("/{letterSeq}/comments")
+    @GetMapping("/comments")
     public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<HeavenCommentResponse, Integer>>> getMoreCommentList(
             @PathVariable Integer letterSeq,
             @RequestParam Integer cursor,
@@ -30,5 +31,17 @@ public class HeavenCommentController {
         String message = messageSourceAccessor.getMessage("heaven.comment.read.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, commentList));
+    }
+
+    @PostMapping("/comments")
+    public ResponseEntity<ApiResponse<Void>> createHeavenComment(
+            @PathVariable Integer letterSeq,
+            @RequestBody HeavenCommentCreateRequest heavenCommentCreateRequest
+    ) {
+        heavenCommentService.createHeavenComment(letterSeq, heavenCommentCreateRequest);
+
+        String message = messageSourceAccessor.getMessage("heaven.comment.create.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
     }
 }

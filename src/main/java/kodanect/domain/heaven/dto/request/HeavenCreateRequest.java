@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.dto;
+package kodanect.domain.heaven.dto.request;
 
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -7,13 +7,16 @@ import org.springframework.web.multipart.MultipartFile;
 @AllArgsConstructor
 @Getter @Setter @ToString
 @Builder
-public class HeavenUpdateRequest {
+public class HeavenCreateRequest {
 
     /* 편지 작성자 */
     private String letterWriter;
 
     /* 편지 익명 여부 */
     private String anonymityFlag;
+
+    /* 편지 비밀번호 */
+    private String letterPasscode;
 
     /* 기증자 명 */
     private String donorName;

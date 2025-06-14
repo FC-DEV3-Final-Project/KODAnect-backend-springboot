@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.dto;
+package kodanect.domain.heaven.dto.request;
 
 import lombok.*;
 

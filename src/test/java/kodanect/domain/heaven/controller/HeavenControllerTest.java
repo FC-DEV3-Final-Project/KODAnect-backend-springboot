@@ -2,9 +2,9 @@ package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
-import kodanect.domain.heaven.dto.HeavenCommentResponse;
-import kodanect.domain.heaven.dto.HeavenDetailResponse;
-import kodanect.domain.heaven.dto.HeavenResponse;
+import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
+import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
+import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import org.junit.Before;
 import org.junit.Test;

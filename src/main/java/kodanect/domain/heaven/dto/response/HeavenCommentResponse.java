@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.dto;
+package kodanect.domain.heaven.dto.response;
 
 import kodanect.common.util.CursorIdentifiable;
 import lombok.*;

@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.dto;
+package kodanect.domain.heaven.dto.response;
 
 import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;

@@ -1,6 +1,6 @@
 package kodanect.domain.heaven.repository;
 
-import kodanect.domain.heaven.dto.HeavenResponse;
+import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,7 +20,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      */
     @Query(
             value = """
-            SELECT new kodanect.domain.heaven.dto.HeavenResponse
+            SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE :cursor IS NULL OR h.letterSeq < :cursor
@@ -39,7 +39,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      */
     @Query(
             value = """
-            SELECT new kodanect.domain.heaven.dto.HeavenResponse
+            SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
@@ -59,7 +59,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      */
     @Query(
             value = """
-            SELECT new kodanect.domain.heaven.dto.HeavenResponse
+            SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
@@ -79,7 +79,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      */
     @Query(
             value = """
-            SELECT new kodanect.domain.heaven.dto.HeavenResponse
+            SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
                     (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)

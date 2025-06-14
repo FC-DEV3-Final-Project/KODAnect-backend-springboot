@@ -1,7 +1,7 @@
 package kodanect.domain.heaven.entity;
 
 import kodanect.domain.donation.dto.response.AreaCode;
-import kodanect.domain.heaven.dto.HeavenUpdateRequest;
+import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.exception.PasswordMissmatchException;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
