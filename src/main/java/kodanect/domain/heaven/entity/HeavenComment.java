@@ -1,10 +1,12 @@
 package kodanect.domain.heaven.entity;
 
+import kodanect.domain.heaven.exception.PasswordMissmatchException;
 import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Entity(name = "HeavenComment")
 @Table(name = "tb25_411_heaven_letter_comment")
@@ -78,6 +80,13 @@ public class HeavenComment {
 
         if (modifyTime == null) {
             modifyTime = LocalDateTime.now();
+        }
+    }
+
+    /* 비밀번호 검증 */
+    public void verifyPasscode(String passcode) {
+        if (!Objects.equals(this.commentPasscode, passcode)) {
+            throw new PasswordMissmatchException(passcode);
         }
     }
 }

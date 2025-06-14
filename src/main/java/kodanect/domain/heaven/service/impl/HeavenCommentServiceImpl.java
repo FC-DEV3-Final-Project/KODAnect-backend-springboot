@@ -3,9 +3,11 @@ package kodanect.domain.heaven.service.impl;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.heaven.dto.request.HeavenCommentCreateRequest;
+import kodanect.domain.heaven.dto.request.HeavenCommentVerifyRequest;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.entity.HeavenComment;
+import kodanect.domain.heaven.exception.HeavenCommentNotFoundException;
 import kodanect.domain.heaven.exception.HeavenNotFoundException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
@@ -42,6 +44,7 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
         return CursorFormatter.cursorCommentFormat(heavenCommentResponseList, size);
     }
 
+    /* 댓글 등록 */
     @Override
     public void createHeavenComment(Integer letterSeq, HeavenCommentCreateRequest heavenCommentCreateRequest) {
         Heaven heaven = heavenRepository.findById(letterSeq)
@@ -55,5 +58,18 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
                 .build();
 
         heavenCommentRepository.save(heavenComment);
+    }
+
+    /* 댓글 삭제 */
+    @Override
+    public void deleteHeavenComment(Integer letterSeq, Integer commentSeq, HeavenCommentVerifyRequest heavenCommentVerifyRequest) {
+        Heaven heaven = heavenRepository.findById(letterSeq)
+                .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
+        HeavenComment heavenComment = heavenCommentRepository.findById(commentSeq)
+                .orElseThrow(() -> new HeavenCommentNotFoundException(commentSeq));
+
+        heavenComment.verifyPasscode(heavenCommentVerifyRequest.getCommentPasscode());
+
+        heavenCommentRepository.delete(heavenComment);
     }
 }

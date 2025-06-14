@@ -3,6 +3,7 @@ package kodanect.domain.heaven.controller;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.heaven.dto.request.HeavenCommentCreateRequest;
+import kodanect.domain.heaven.dto.request.HeavenCommentVerifyRequest;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/heavenLetters/{letterSeq}")
+@RequestMapping("/heavenLetters/{letterSeq}/comments")
 @AllArgsConstructor
 public class HeavenCommentController {
 
@@ -20,7 +21,7 @@ public class HeavenCommentController {
     private final MessageSourceAccessor messageSourceAccessor;
 
     /* 댓글 더보기 */
-    @GetMapping("/comments")
+    @GetMapping
     public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<HeavenCommentResponse, Integer>>> getMoreCommentList(
             @PathVariable Integer letterSeq,
             @RequestParam Integer cursor,
@@ -33,7 +34,8 @@ public class HeavenCommentController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, commentList));
     }
 
-    @PostMapping("/comments")
+    /* 댓글 등록 */
+    @PostMapping
     public ResponseEntity<ApiResponse<Void>> createHeavenComment(
             @PathVariable Integer letterSeq,
             @RequestBody HeavenCommentCreateRequest heavenCommentCreateRequest
@@ -43,5 +45,19 @@ public class HeavenCommentController {
         String message = messageSourceAccessor.getMessage("heaven.comment.create.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
+    }
+
+    /* 댓글 삭제 */
+    @DeleteMapping("/{commentSeq}")
+    public ResponseEntity<ApiResponse<Void>> deleteHeavenComment(
+            @PathVariable Integer letterSeq,
+            @PathVariable Integer commentSeq,
+            @RequestBody HeavenCommentVerifyRequest heavenCommentVerifyRequest
+    ) {
+        heavenCommentService.deleteHeavenComment(letterSeq, commentSeq, heavenCommentVerifyRequest);
+
+        String message = messageSourceAccessor.getMessage("heaven.comment.delete.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 }

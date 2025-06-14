@@ -45,6 +45,7 @@ public final class MessageKeys {
     public static final String HEAVEN_TYPE_INVALID = "heaven.type.invalid.error";
     public static final String HEAVEN_FILE_SAVE_FAIL = "heaven.file.save.error";
     public static final String HEAVEN_NOT_FOUND = "heaven.notFound.error";
+    public static final String HEAVEN_COMMENT_NOT_FOUND = "heaven.comment.notFound.error";
 
     private MessageKeys() {}
 

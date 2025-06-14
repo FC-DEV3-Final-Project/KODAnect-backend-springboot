@@ -17,7 +17,7 @@ public interface HeavenService {
     /* 게시물 상세 조회 */
     HeavenDetailResponse getHeavenDetail(Integer letterSeq);
 
-    /* 게시물 비밀번호 일치 여부 */
+    /* 게시물 수정 인증 */
     void verifyPasscode(Integer letterSeq, String letterPasscode);
 
     /* 게시물 생성 */

@@ -91,7 +91,7 @@ public class HeavenServiceImpl implements HeavenService {
         return HeavenDetailResponse.of(heaven, cursorCommentCountPaginationResponse);
     }
 
-    /* 게시물 비밀번호 일치 여부 */
+    /* 게시물 수정 인증 */
     @Override
     public void verifyPasscode(Integer letterSeq, String letterPasscode) {
         Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow(); // 예외 (추후 구현)
@@ -151,7 +151,7 @@ public class HeavenServiceImpl implements HeavenService {
 
         heaven.verifyPasscode(letterPasscode);
 
-        heavenRepository.deleteById(letterSeq);
+        heavenRepository.delete(heaven);
     }
 
     /* 검색 조건에 따른 게시물 개수 조회 */
