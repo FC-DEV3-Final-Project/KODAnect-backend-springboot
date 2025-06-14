@@ -3,10 +3,11 @@ package kodanect.domain.heaven.service.impl;
 import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
-import kodanect.common.validation.HeavenCreateRequestValidator;
+import kodanect.common.validation.HeavenDonorValidator;
 import kodanect.domain.heaven.dto.*;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.exception.FileStorageException;
+import kodanect.domain.heaven.exception.HeavenNotFoundException;
 import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -36,8 +38,8 @@ public class HeavenServiceImpl implements HeavenService {
 
     private final HeavenRepository heavenRepository;
     private final HeavenCommentRepository heavenCommentRepository;
-    private final MemorialRepository memorialRepository;
     private final HeavenCommentService heavenCommentService;
+    private final MemorialRepository memorialRepository;
 
     /* 게시물 전체 조회 (페이징) */
     @Override
@@ -96,21 +98,15 @@ public class HeavenServiceImpl implements HeavenService {
     /* 게시물 생성 */
     @Override
     public void createHeaven(HeavenCreateRequest heavenCreateRequest) {
-
         Memorial memorial = memorialRepository.findById(heavenCreateRequest.getDonateSeq()).orElse(null);
-        MultipartFile file = heavenCreateRequest.getFile();
-        String fileName = "";
-        String orgFileName = "";
 
         /* memorial과 Request DonorName 유효성 검사 */
-        HeavenCreateRequestValidator.validateHeavenCreateRequest(heavenCreateRequest.getDonorName(), memorial);
+        HeavenDonorValidator.validateDonorNameMatches(heavenCreateRequest.getDonorName(), memorial);
 
         /* 파일 생성 */
-        if (file != null && !file.isEmpty()) {
-            Map<String, String> fileMap = saveFile(file);
-            fileName = fileMap.get("fileName");
-            orgFileName = fileMap.get("orgFileName");
-        }
+        Map<String, String> fileMap = saveFile(heavenCreateRequest.getFile());
+        String fileName = fileMap.get("fileName");
+        String orgFileName = fileMap.get("orgFileName");
 
         Heaven heaven = Heaven.builder()
                 .memorial(memorial)
@@ -128,10 +124,26 @@ public class HeavenServiceImpl implements HeavenService {
         heavenRepository.save(heaven);
     }
 
+    /* 게시물 수정 */
+    @Override
+    public void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
+        Heaven heaven = heavenRepository.findById(letterSeq)
+                .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
+        Memorial memorial = memorialRepository.findById(heavenUpdateRequest.getDonateSeq()).orElse(null);
+
+        /* 유효성 검사 */
+        HeavenDonorValidator.validateDonorNameMatches(heavenUpdateRequest.getDonorName(), memorial);
+
+        Map<String, String> fileMap = updateFile(heavenUpdateRequest.getFile(), heaven);
+
+        heaven.updateHeaven(heavenUpdateRequest, memorial, fileMap);
+    }
+
     /* 게시물 삭제 */
     @Override
     public void deleteHeaven(Integer letterSeq, String letterPasscode) {
-        Heaven heaven = heavenRepository.findById(letterSeq).orElseThrow(); // 예외 (추후 구현)
+        Heaven heaven = heavenRepository.findById(letterSeq)
+                .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
 
         heaven.verifyPasscode(letterPasscode);
 
@@ -160,19 +172,63 @@ public class HeavenServiceImpl implements HeavenService {
 
     /* 파일 저장 및 문자열 처리 */
     private Map<String, String> saveFile(MultipartFile file) {
-        String orgFileName = file.getOriginalFilename();
-        String extension = orgFileName.substring(orgFileName.lastIndexOf("."));
-        String fileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
+        String orgFileName = "";
+        String fileName = "";
 
+        if (file != null && !file.isEmpty()) {
+            orgFileName = file.getOriginalFilename();
+            String extension = orgFileName.substring(orgFileName.lastIndexOf("."));
+            fileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
+
+            Path path = Paths.get(FILE_PATH);
+            Path filePath = path.resolve(fileName);
+
+            try {
+                file.transferTo(filePath);
+            } catch (IOException e) {
+                throw new FileStorageException(filePath, orgFileName);
+            }
+        }
+
+        return Map.of("fileName", fileName, "orgFileName", orgFileName);
+    }
+
+    /* 파일 수정 -> 같은 파일인지 확인 후 같은 거면 그대로 반환 */
+    private Map<String, String> updateFile(MultipartFile newFile, Heaven heaven) {
+        String newOrgFileName = newFile.getOriginalFilename();
+        String currentOrgFileName = heaven.getOrgFileName();
+        String currentFileName = heaven.getFileName();
+
+        // 동일 파일인지 비교 (이름만으로 판단하는 경우)
+        if (newOrgFileName != null && newOrgFileName.equals(currentOrgFileName)) {
+            // 동일한 파일명이면 기존 파일 그대로 사용
+            return Map.of("fileName", currentFileName, "orgFileName", currentOrgFileName);
+        }
+
+        // 기존 파일 삭제
         Path path = Paths.get(FILE_PATH);
-        Path filePath = path.resolve(fileName);
+        Path oldFilePath = path.resolve(currentFileName);
 
         try {
-            file.transferTo(filePath);
-
-            return Map.of("fileName", fileName, "orgFileName", orgFileName);
+            if (Files.exists(oldFilePath)) {
+                Files.delete(oldFilePath);
+            }
         } catch (IOException e) {
-            throw new FileStorageException(filePath, orgFileName);
+            throw new FileStorageException(oldFilePath, "기존 파일 삭제 실패: " + currentFileName);
+        }
+
+        // 새 파일 저장
+        String extension = newOrgFileName.substring(newOrgFileName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
+        Path newFilePath = path.resolve(newFileName);
+
+        try {
+            Files.createDirectories(path);
+            newFile.transferTo(newFilePath);
+
+            return Map.of("fileName", newFileName, "orgFileName", newOrgFileName);
+        } catch (IOException e) {
+            throw new FileStorageException(newFilePath, "새 파일 저장 실패: " + newOrgFileName);
         }
     }
 }

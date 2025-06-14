@@ -79,9 +79,24 @@ public class HeavenController {
     ) {
         heavenService.createHeaven(heavenCreateRequest);
 
+        System.out.println("heavenCreateRequest.getFile() = " + heavenCreateRequest.getFile());
+
         String message = messageSourceAccessor.getMessage("heaven.create.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
+    }
+
+    /* 게시물 수정 */
+    @PatchMapping(value = "/{letterSeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Void>> updateHeaven(
+        @PathVariable Integer letterSeq,
+        @ModelAttribute HeavenUpdateRequest heavenUpdateRequest
+    ) {
+        heavenService.updateHeaven(letterSeq, heavenUpdateRequest);
+
+        String message = messageSourceAccessor.getMessage("heaven.update.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
     /* 게시물 삭제 */

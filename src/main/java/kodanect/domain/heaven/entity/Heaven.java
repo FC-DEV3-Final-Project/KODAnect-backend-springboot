@@ -1,6 +1,7 @@
 package kodanect.domain.heaven.entity;
 
 import kodanect.domain.donation.dto.response.AreaCode;
+import kodanect.domain.heaven.dto.HeavenUpdateRequest;
 import kodanect.domain.heaven.exception.PasswordMissmatchException;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
@@ -9,6 +10,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity(name = "Heaven")
@@ -125,5 +127,17 @@ public class Heaven {
         if (!Objects.equals(this.letterPasscode, passcode)) {
             throw new PasswordMissmatchException(passcode);
         }
+    }
+
+    /* 편지 수정 */
+    public void updateHeaven(HeavenUpdateRequest heavenUpdateRequest, Memorial memorial, Map<String, String> fileMap) {
+        letterWriter = heavenUpdateRequest.getLetterWriter();
+        anonymityFlag = heavenUpdateRequest.getAnonymityFlag();
+        donorName = heavenUpdateRequest.getDonorName();
+        this.memorial = memorial;
+        letterTitle = heavenUpdateRequest.getLetterTitle();
+        letterContents = heavenUpdateRequest.getLetterContents();
+        fileName = fileMap.get("fileName");
+        orgFileName = fileMap.get("orgFileName");
     }
 }

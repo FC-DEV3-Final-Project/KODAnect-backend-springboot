@@ -4,6 +4,7 @@ import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.heaven.dto.HeavenCreateRequest;
 import kodanect.domain.heaven.dto.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.HeavenResponse;
+import kodanect.domain.heaven.dto.HeavenUpdateRequest;
 
 public interface HeavenService {
 
@@ -21,6 +22,9 @@ public interface HeavenService {
 
     /* 게시물 생성 */
     void createHeaven(HeavenCreateRequest heavenCreateRequest);
+
+    /* 게시물 수정 */
+    void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest);
 
     /* 게시물 삭제 */
     void deleteHeaven(Integer letterSeq, String letterPasscode);
