@@ -10,6 +10,7 @@ import kodanect.domain.remembrance.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -235,6 +236,19 @@ public class GlobalExcepHndlr {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, message));
+    }
+
+
+    /**
+     * enum 바인딩 실패 처리(valid 오류 터트 리기 위함)
+     */
+
+    @ExceptionHandler(ConversionFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleEnumConversionError(ConversionFailedException ex) {
+        String message = messageSourceAccessor.getMessage("donation.story.areaCode.invalid", null, "잘못된 권역 코드입니다.");
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, message));
     }
 
 

@@ -88,6 +88,7 @@ public class DonationServiceImpl implements DonationService {
         // 이미지가 여러개 저장될 수 도 있음.
 
         String [] imgNames = imgParsing(requestDto.getStoryContents());
+
         DonationStory story = DonationStory.builder()
                 .areaCode(requestDto.getAreaCode())
                 .storyTitle(requestDto.getStoryTitle())
@@ -106,6 +107,9 @@ public class DonationServiceImpl implements DonationService {
         List<String> orgFileNames = new ArrayList<>();
         List<String> fileNames = new ArrayList<>();
 
+        if (storyContents == null || storyContents.isBlank()) { //null 체크
+            return new String[]{"", ""};
+        }
         log.info("==== storyContents ====");
         log.info(storyContents);
 
@@ -173,7 +177,7 @@ public class DonationServiceImpl implements DonationService {
         }
     }
     /** 스토리 수정 */
-    public void     updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
+    public void  updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
         log.info("===== updateDonationStory 호출됨 =====");
 
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
@@ -189,6 +193,9 @@ public class DonationServiceImpl implements DonationService {
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
+        if (storyPasscodeDto.getStoryPasscode() == null || storyPasscodeDto.getStoryPasscode().isBlank()) {
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.required.passcode"));
+        }
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }

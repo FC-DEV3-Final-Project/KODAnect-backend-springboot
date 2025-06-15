@@ -11,6 +11,7 @@ import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.PasscodeMismatchException;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
@@ -52,6 +54,11 @@ class DonationControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeAll
+    static void setUpLocale() {
+        Locale.setDefault(Locale.KOREA); // 또는 new Locale("ko", "KR")
+    }
 
     // 1) GET /donationLetters – 전체 목록
     @Test

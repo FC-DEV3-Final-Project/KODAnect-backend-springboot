@@ -22,8 +22,6 @@ import java.util.Map;
 @RequestMapping("/donationLetters")
 public class  DonationController {
 
-    private static final String DEFAULT_STRING = "result";
-
     private final DonationService donationService;
     private final DonationCommentService donationCommentService;
     private final MessageSourceAccessor messageSourceAccessor;
@@ -100,7 +98,7 @@ public class  DonationController {
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
 
         String message = messageSourceAccessor.getMessage("donation.password.match");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
 
@@ -127,7 +125,7 @@ public class  DonationController {
 
         donationService.deleteDonationStory(storySeq, storyPasscodeDto);
         String message = messageSourceAccessor.getMessage("donation.delete.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
     /**
@@ -173,7 +171,7 @@ public class  DonationController {
         donationCommentService.verifyPasswordWithPassword(storySeq, commentSeq, passCodeDto);
         String message = messageSourceAccessor.getMessage("donation.password.match");
 
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
 

@@ -74,6 +74,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         if (!validatePassword(requestDto.getCommentPasscode())) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.passcode.format"));
         }
+
         // 댓글 생성 및 연관 관계 설정
         DonationStoryComment comment = DonationStoryComment.builder()
                 .commentWriter(requestDto.getCommentWriter())
