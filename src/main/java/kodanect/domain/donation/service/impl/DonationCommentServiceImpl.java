@@ -60,7 +60,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
             throws NotFoundException, BadRequestException, DonationCommentNotFoundException {
 
         DonationStory story = storyRepository.findById(storySeq)
-                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_NOT_FOUND_MESSAGE)));;
+                .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_NOT_FOUND_MESSAGE)));
 
         // 작성자 필수 검증
         if (requestDto.getCommentWriter() == null || requestDto.getCommentWriter().isBlank()) {
