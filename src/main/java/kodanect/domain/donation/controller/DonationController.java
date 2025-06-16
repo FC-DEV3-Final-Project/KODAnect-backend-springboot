@@ -91,14 +91,18 @@ public class  DonationController {
      * 기증 스토리 수정 인증
      */
     @PostMapping("/{storySeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> verifyStoryPassword(
+    public ResponseEntity<ApiResponse<DonationStoryModifyDto>> verifyStoryPassword(
             @PathVariable Long storySeq,
             @RequestBody @Valid VerifyStoryPasscodeDto passCodeDto) {
 
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
 
+        //입력된 값 가져오기
+        DonationStoryDetailDto detailDto = donationService.findDonationStoryWithStoryId(storySeq);
+        DonationStoryModifyDto modifyDto = DonationStoryModifyDto.fromEntity(detailDto);
+
         String message = messageSourceAccessor.getMessage("donation.password.match");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, modifyDto));
     }
 
 

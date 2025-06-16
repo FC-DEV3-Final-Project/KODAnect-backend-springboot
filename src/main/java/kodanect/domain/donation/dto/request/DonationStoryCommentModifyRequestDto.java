@@ -13,9 +13,9 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @Builder
 public class DonationStoryCommentModifyRequestDto {
-    @NotBlank(message="donation.error.required.writer")
+    @NotBlank(message="{donation.error.required.writer}")
     private String commentWriter;
-    @NotBlank(message="donation.content.blank")
-    private String commentContents;
+    @NotBlank(message="{donation.content.blank}")
+    private String contents;
 
 }

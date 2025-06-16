@@ -58,10 +58,10 @@ public class DonationServiceImpl implements DonationService {
         List<DonationStoryListDto> results;
         long totalCount = 0;
 
-        if ("title".equalsIgnoreCase(type)) {
+        if ("TITLE".equalsIgnoreCase(type)) {
             results = donationRepository.findByTitleCursor(keyword, cursor, pageable);
             totalCount = donationRepository.countByTitle(keyword);
-        } else if ("contents".equalsIgnoreCase(type)) {
+        } else if ("CONTENTS".equalsIgnoreCase(type)) {
             results = donationRepository.findByContentsCursor(keyword, cursor, pageable);
             totalCount = donationRepository.countByContents(keyword);
         } else {
@@ -162,6 +162,7 @@ public class DonationServiceImpl implements DonationService {
 
         return dto;
     }
+
 
 
     /** 비밀번호 검증 */

@@ -418,7 +418,7 @@ class DonationControllerTest {
     void modifyComment_success() throws Exception {
         DonationStoryCommentModifyRequestDto req = DonationStoryCommentModifyRequestDto.builder()
                 .commentWriter("X")
-                .commentContents("수정댓글")
+                .contents("수정댓글")
                 .build();
         given(messageSourceAccessor.getMessage("donation.comment.update.success"))
                 .willReturn("댓글 수정 성공");
