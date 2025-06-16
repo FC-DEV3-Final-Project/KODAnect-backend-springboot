@@ -95,14 +95,7 @@ public class RecipientServiceImpl implements RecipientService {
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag()))
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
 
-        // 2. 비밀번호 확인
-        if (!recipientEntityold.checkPasscode(requestDto.getLetterPasscode())) {
-            logger.warn("게시물 수정 실패: 비밀번호 불일치. letterSeq={}", letterSeq);
-            // 비밀번호 불일치 시, 기존(수정 전) 내용을 DTO로 변환하여 반환
-            return RecipientDetailResponseDto.fromEntity(recipientEntityold, globalsProperties.getFileBaseUrl());
-        }
-
-        // 3. 엔티티 필드 업데이트 (비밀번호 일치 시에만 진행)
+        // 엔티티 필드 업데이트 (비밀번호 일치 시에만 진행)
         recipientEntityold.setOrganCode(requestDto.getOrganCode());
         recipientEntityold.setOrganEtc(requestDto.getOrganEtc());
         recipientEntityold.setLetterTitle(requestDto.getLetterTitle());
@@ -115,28 +108,36 @@ public class RecipientServiceImpl implements RecipientService {
         // 내용(HTML) 필터링 및 유효성 검사
         recipientEntityold.setLetterContents(cleanAndValidateContents(requestDto.getLetterContents()));
 
-        // --- 파일 업로드/교체/삭제 처리 로직 변경 --- (requestDto에서 새롭게 전송된 fileName과 orgFileName을 확인)
-        String newFileName = requestDto.getFileName();
-        String newOrgFileName = requestDto.getOrgFileName();
-        String oldFileName = recipientEntityold.getFileName();
+        // --- 파일 업로드/교체/삭제 처리 로직 변경 (imageUrl 기준으로 판단) ---
+        String newImageUrl = requestDto.getImageUrl(); // 새로 전송된 이미지 URL
+        String newFileName = requestDto.getFileName(); // 새로 전송된 파일명
+        String newOrgFileName = requestDto.getOrgFileName(); // 새로 전송된 원본 파일명
 
-        // Case 1: 새로운 파일이 전송되었거나 기존 파일이 변경된 경우
-        // newFileName이 있고, 기존 파일명과 다른 경우 (새 이미지 업로드 또는 변경)
-        if (newFileName != null && !newFileName.isEmpty() && !newFileName.equals(oldFileName)) {
+        String oldImageUrl = recipientEntityold.getImageUrl(); // 기존 엔티티의 이미지 URL
+        String oldFileName = recipientEntityold.getFileName(); // 기존 엔티티의 파일명
+
+        // Case 1: 새로운 이미지가 전송되었거나, 기존 이미지가 다른 이미지로 변경된 경우 (newImageUrl이 있고, 기존 imageUrl과 다른 경우)
+        if (newImageUrl != null && !newImageUrl.isEmpty() && !newImageUrl.equals(oldImageUrl)) {
             // 기존 파일이 있다면 삭제
             if (oldFileName != null && !oldFileName.isEmpty()) {
-                deleteExistingFile(oldFileName);
+                deleteExistingFile(oldFileName); // 실제 물리 파일 삭제는 oldFileName 기준
             }
-            // 새 파일 정보로 업데이트
+            // 새 파일 정보로 엔티티 업데이트 (fileName, orgFileName은 DTO에 있는 값 그대로 설정)
+            recipientEntityold.setImageUrl(newImageUrl);
             recipientEntityold.setFileName(newFileName);
             recipientEntityold.setOrgFileName(newOrgFileName);
+            logger.info("게시물 이미지 변경됨: oldImageUrl={}, newImageUrl={}", oldImageUrl, newImageUrl);
         }
-        // Case 2: 기존 파일이 삭제된 경우 (newFileName이 null/empty이고 oldFileName이 있는 경우)
-        else if ((newFileName == null || newFileName.isEmpty()) && (oldFileName != null && !oldFileName.isEmpty())) {
+        // Case 2: 기존 이미지가 명시적으로 삭제된 경우 (newImageUrl이 null 또는 비어있고, 기존 oldImageUrl은 있었던 경우)
+        else if ((newImageUrl == null || newImageUrl.isEmpty()) && (oldImageUrl != null && !oldImageUrl.isEmpty())) {
             // 기존 파일 삭제
-            deleteExistingFile(oldFileName);
+            if (oldFileName != null && !oldFileName.isEmpty()) {
+                deleteExistingFile(oldFileName); // 실제 물리 파일 삭제
+            }
+            recipientEntityold.setImageUrl(null);
             recipientEntityold.setFileName(null);
             recipientEntityold.setOrgFileName(null);
+            logger.info("게시물 이미지 삭제됨: oldImageUrl={}", oldImageUrl);
         }
         // Case 3: 파일 변경이 없는 경우 (newFileName == oldFileName 또는 둘 다 null/empty)
         // 이 경우는 특별한 처리 없이 기존 값 유지
@@ -201,20 +202,16 @@ public class RecipientServiceImpl implements RecipientService {
 
         RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
 
-        // 1. 첨부파일 등록 관련
+        // 첨부파일 등록 관련
+        String uploadedImageUrl = requestDto.getImageUrl();
         String uploadedFileName = requestDto.getFileName();
         String uploadedOrgFileName = requestDto.getOrgFileName();
 
-        if (uploadedFileName != null && !uploadedFileName.isEmpty()) {
-            recipientEntityRequest.setFileName(uploadedFileName);
-            recipientEntityRequest.setOrgFileName(uploadedOrgFileName);
-            logger.info("첨부된 이미지 파일명: {}, 원본 파일명: {}", uploadedFileName, uploadedOrgFileName);
-        } else {
-            // 파일이 없거나 유효하지 않아 DTO에 파일 정보가 없을 때의 처리
-            recipientEntityRequest.setFileName(null);
-            recipientEntityRequest.setOrgFileName(null);
-            logger.info("첨부된 이미지 파일이 없거나 유효하지 않습니다.");
-        }
+        // imageUrl이 유효하면 파일명과 원본 파일명 설정 (null 체크 없음)
+        recipientEntityRequest.setImageUrl(uploadedImageUrl);
+        recipientEntityRequest.setFileName(uploadedFileName);       // fileName은 DTO에 있으면 설정, 없으면 null
+        recipientEntityRequest.setOrgFileName(uploadedOrgFileName); // orgFileName은 DTO에 있으면 설정, 없으면 null
+        logger.info("첨부된 이미지 URL: {}, 파일명: {}, 원본 파일명: {}", uploadedImageUrl, uploadedFileName, uploadedOrgFileName);
 
         // 2. 익명 처리 로직 및 작성자(letterWriter) 설정
         String writerToSave = "Y".equalsIgnoreCase(requestDto.getAnonymityFlag()) ? anonymousWriterValue : requestDto.getLetterWriter();

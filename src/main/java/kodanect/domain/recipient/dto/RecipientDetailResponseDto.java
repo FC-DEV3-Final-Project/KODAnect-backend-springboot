@@ -42,10 +42,7 @@ public class RecipientDetailResponseDto {
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String fileBaseUrl) {
-        // 이미지 URL 생성 로직
-        String fullImageUrl = (entity.getFileName() != null && !entity.getFileName().isEmpty())
-                ? fileBaseUrl + "/" + entity.getFileName()
-                : null;
+
 
         return RecipientDetailResponseDto.builder() // 빌더로 객체를 생성한 결과를 바로 반환
                 .letterSeq(entity.getLetterSeq())
@@ -66,7 +63,7 @@ public class RecipientDetailResponseDto {
                 .delFlag(entity.getDelFlag())
                 .commentCount(0)
                 .hasMoreComments(false)
-                .imageUrl(fullImageUrl)
+                .imageUrl(entity.getImageUrl())
                 // 초기에는 댓글 데이터를 비워두고, 서비스 계층에서 설정
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
                 .build();
@@ -83,6 +80,9 @@ public class RecipientDetailResponseDto {
                 .letterWriter(requestDto.getLetterWriter())
                 .anonymityFlag(requestDto.getAnonymityFlag())
                 .letterContents(requestDto.getLetterContents())
+                .imageUrl(requestDto.getImageUrl())
+                .fileName(requestDto.getFileName())
+                .orgFileName(requestDto.getOrgFileName())
                 // readCount, fileName, orgFileName, writeTime 등은 requestDto에 없으므로 기본값/null로 유지됩니다.
                 // 만약 이 필드들도 필요하다면, 이 메소드를 호출하기 전에 기존 엔티티에서 값을 가져와 requestDto에 추가하거나,
                 // 이 메소드에 파라미터로 전달해야 합니다. 현재는 "작성 중이던 내용"에 집중합니다.

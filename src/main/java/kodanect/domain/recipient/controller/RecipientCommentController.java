@@ -75,7 +75,7 @@ public class RecipientCommentController {
         // 비밀번호 인증은 이미 authenticate 엔드포인트를 통해 완료되었다고 가정
         RecipientCommentResponseDto updatedComment = recipientCommentService.updateComment(
                 commentSeq, // 댓글 시퀀스
-                requestDto.getCommentContents(), // 업데이트할 내용
+                requestDto.getContents(), // 업데이트할 내용
                 requestDto.getCommentWriter() // 업데이트할 작성자
         );
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "댓글이 성공적으로 수정되었습니다.", updatedComment));

@@ -198,11 +198,6 @@ public class RecipientControllerTest {
         when(recipientService.updateRecipient(anyInt(), any(RecipientRequestDto.class)))
                 .thenReturn(updatedDto);
 
-        // Mock MultipartFile 생성 (이제 DTO에서 직접 받지 않으므로, 테스트 목적에 따라 Mock 파일은 제외하거나 fileName/orgFileName 파라미터로 넘김)
-        // 기존 MultipartFile 대신, fileName과 orgFileName 파라미터로 직접 전달합니다.
-        // MockMultipartFile imageFile = new MockMultipartFile("imageFile", "update.jpg",
-        //         MediaType.IMAGE_JPEG_VALUE, "update content".getBytes());
-
         mockMvc.perform(multipart("/recipientLetters/{letterSeq}", letterSeq)
                         // .file(imageFile) // 이제 imageFile 직접 전송하지 않음
                         .param("organCode", "ORGAN001") // 필수값 추가

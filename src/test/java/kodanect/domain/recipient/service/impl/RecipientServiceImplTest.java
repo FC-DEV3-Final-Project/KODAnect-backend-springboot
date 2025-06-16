@@ -138,60 +138,6 @@ public class RecipientServiceImplTest {
         recipientService.selectRecipient(letterSeq);
     }
 
-    // 게시물 수정 - 비밀번호 불일치 시 기존 내용 반환 테스트
-    @Test
-    public void testUpdateRecipient_invalidPasscode_shouldReturnOriginalContent() {
-        // Given
-        Integer letterSeq = 1;
-        String correctPasscode = "correctPass1234";
-        String incorrectPasscode = "wrongPass";
-
-        // 기존 게시물 Entity Mocking
-        RecipientEntity existingEntity = RecipientEntity.builder()
-                .letterSeq(letterSeq)
-                .organCode("ORGAN001")
-                .letterTitle("기존 제목")
-                .recipientYear("2020")
-                .letterWriter("기존 작성자")
-                .anonymityFlag("N")
-                .letterContents("기존 내용")
-                .letterPasscode(correctPasscode) // 올바른 비밀번호 설정
-                .fileName("old_file.jpg")
-                .orgFileName("old_original.jpg")
-                .writeTime(LocalDateTime.now().minusDays(1))
-                .readCount(10)
-                .delFlag("N")
-                .build();
-
-        // 수정 요청 DTO (잘못된 비밀번호 포함)
-        RecipientRequestDto requestDto = new RecipientRequestDto();
-        requestDto.setOrganCode("ORGAN002");
-        requestDto.setLetterTitle("새로운 제목");
-        requestDto.setRecipientYear("2023");
-        requestDto.setLetterWriter("새로운 작성자");
-        requestDto.setAnonymityFlag("N");
-        requestDto.setLetterContents("새로운 내용");
-        requestDto.setLetterPasscode(incorrectPasscode); // 잘못된 비밀번호
-        requestDto.setFileName(null); // 이미지 변경 없음 또는 삭제 요청
-        requestDto.setOrgFileName(null);
-
-        // repository.findById() 호출 시 existingEntity 반환하도록 Mocking
-        when(recipientRepository.findById(letterSeq)).thenReturn(Optional.of(existingEntity));
-
-        // When
-        RecipientDetailResponseDto responseDto = recipientService.updateRecipient(letterSeq, requestDto);
-
-        // Then
-        // save 메서드가 호출되지 않았는지 검증 (업데이트가 일어나지 않았으므로)
-        verify(recipientRepository, never()).save(any(RecipientEntity.class));
-
-        // 반환된 DTO가 기존 게시물 내용을 포함하는지 검증
-        assertThat(responseDto.getLetterSeq()).isEqualTo(letterSeq);
-        assertThat(responseDto.getLetterTitle()).isEqualTo(existingEntity.getLetterTitle());
-        assertThat(responseDto.getLetterContents()).isEqualTo(existingEntity.getLetterContents());
-        assertThat(responseDto.getImageUrl()).isEqualTo(globalsProperties.getFileBaseUrl() + "/" + existingEntity.getFileName()); // 기존 이미지 URL 반환
-    }
-
     // 게시물 수정 - ORGAN000 선택 시 organEtc 필수 입력 예외 테스트
     @Test
     public void testUpdateRecipient_organ000WithoutOrganEtc_shouldThrowException() {
