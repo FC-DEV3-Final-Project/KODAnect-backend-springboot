@@ -1,14 +1,12 @@
 package kodanect.domain.logging.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kodanect.domain.logging.dto.ActionLogPayload;
+import kodanect.domain.logging.dto.FrontendLogDto;
+import kodanect.domain.logging.dto.FrontendLogRequestDto;
 import kodanect.domain.logging.service.ActionLogService;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,11 +18,17 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * {@link ActionLogController}의 REST API 동작을 검증하는 단위 테스트입니다.
+ *
+ * - HTTP 요청/응답 구조 확인
+ * - 서비스 호출 여부 확인
+ * - 응답 메시지 및 상태 코드 검증
+ */
 @RunWith(SpringRunner.class)
 @WebMvcTest(ActionLogController.class)
 public class ActionLogControllerTest {
@@ -33,18 +37,17 @@ public class ActionLogControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private ActionLogService actionLogService;
+    private ActionLogService service;
 
     @MockBean
     private MessageSourceAccessor messageSource;
 
-    @Captor
-    private ArgumentCaptor<List<ActionLogPayload>> payloadCaptor;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
-     * 테스트 실행 전 Mock 초기화 및 메시지 설정
+     * 테스트 실행 전에 {@link MessageSourceAccessor} Mock 객체를 초기화하고,
+     * 특정 메시지 키에 대한 반환값을 사전 설정합니다.
      */
     @Before
     public void setUp() {
@@ -55,35 +58,29 @@ public class ActionLogControllerTest {
     }
 
     /**
-     * GIVEN: ActionLogPayload 리스트가 요청으로 들어오고
-     * WHEN: POST /action-log 호출 시
-     * THEN: 서비스가 호출되고, 성공 응답이 반환되어야 한다
+     * GIVEN: 세션 ID와 프론트엔드 로그 데이터가 주어졌을 때
+     * WHEN: /action-logs 엔드포인트에 POST 요청을 보내면
+     * THEN: 서비스가 호출되고 200 OK 응답이 반환되어야 한다.
      */
     @Test
-    @DisplayName("액션 로그 수집 요청 처리 테스트")
-    public void shouldCollectActionLogsSuccessfully() throws Exception {
-        List<ActionLogPayload> payloads = List.of(
-                ActionLogPayload.builder().type("read").target("button1").build(),
-                ActionLogPayload.builder().type("create").target("button2").build()
-        );
+    public void collectFrontendLogs_shouldReturnOkAndCallServices() throws Exception {
+        String sessionId = "session-abc";
+        FrontendLogDto log = FrontendLogDto.builder().eventType("click").pageUrl("/home").build();
+        FrontendLogRequestDto requestDto = new FrontendLogRequestDto(List.of(log));
 
-        mockMvc.perform(post("/action-log")
+        when(messageSource.getMessage(eq("log.save.success"), any(Object[].class)))
+                .thenReturn("로그를 성공적으로 저장했습니다.");
+
+        mockMvc.perform(post("/action-logs")
+                        .header("X-Session-Id", sessionId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payloads)))
+                        .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("로그를 성공적으로 저장했습니다."))
-                .andExpect(jsonPath("$.data").doesNotExist());
+                .andExpect(jsonPath("$.message").value("로그를 성공적으로 저장했습니다."));
 
-        verify(actionLogService).enqueueLogs(payloadCaptor.capture());
-
-        List<ActionLogPayload> actual = payloadCaptor.getValue();
-        assertEquals(payloads.size(), actual.size());
-
-        for (int i = 0; i < payloads.size(); i++) {
-            assertEquals(payloads.get(i).getType(), actual.get(i).getType());
-            assertEquals(payloads.get(i).getTarget(), actual.get(i).getTarget());
-        }
+        verify(service).saveFrontendLog(eq(sessionId), anyList());
+        verify(service).saveBackendLog(sessionId);
+        verify(service).saveSystemInfo(sessionId);
     }
 
 }

@@ -1,6 +1,6 @@
 package kodanect.common.config;
 
-import kodanect.domain.logging.support.MdcTaskDecorator;
+import kodanect.domain.logging.decorator.MdcTaskDecorator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;

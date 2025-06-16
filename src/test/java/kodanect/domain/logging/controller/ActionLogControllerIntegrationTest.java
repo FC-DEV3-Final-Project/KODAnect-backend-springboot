@@ -1,12 +1,11 @@
 package kodanect.domain.logging.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kodanect.domain.logging.dto.ActionLogPayload;
+import kodanect.domain.logging.dto.FrontendLogDto;
+import kodanect.domain.logging.dto.FrontendLogRequestDto;
 import kodanect.domain.logging.entity.ActionLog;
+import kodanect.domain.logging.flusher.ActionLogFlusher;
 import kodanect.domain.logging.repository.ActionLogRepository;
-import kodanect.domain.logging.service.ActionLogScheduler;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,14 +15,19 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * {@link ActionLogController}의 전체 흐름을 검증하는 통합 테스트입니다.
+ *
+ * - 프론트엔드 로그가 정상적으로 수신되고
+ * - 백엔드 AOP 로직과 버퍼 저장이 작동한 후
+ * - {@link ActionLogFlusher}를 통해 DB에 최종 저장되는 과정을 확인합니다.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -31,53 +35,70 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ActionLogControllerIntegrationTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    ObjectMapper objectMapper;
 
     @Autowired
-    private ActionLogRepository actionLogRepository;
+    ActionLogRepository actionLogRepository;
 
     @Autowired
-    private ActionLogScheduler actionLogScheduler;
+    ActionLogFlusher flusher;
 
     /**
-     * 각 테스트 전 DB 초기화
+     * GIVEN: 세션 ID와 프론트엔드 로그 3건이 준비되어 있고
+     * WHEN: 클라이언트가 /action-logs 엔드포인트에 POST 요청을 보내고,
+     *       로그 수집 후 flushAll()이 호출되면
+     * THEN: ActionLog가 DB에 저장되며, logText에 "click" 문자열이 포함되어야 한다.
      */
-    @BeforeEach
-    void setUp() {
-        actionLogRepository.deleteAll();
+    @Test
+    void fullFlow_shouldFlushAllLogsToDatabase() throws Exception {
+        String sessionId = "session-full-123";
+
+        FrontendLogDto log1 = buildFrontendLogDto("clickButton", "btn-1", "/page-1", "/referrer-1", "2025-06-16T23:00:00");
+        FrontendLogDto log2 = buildFrontendLogDto("clickMenu", "menu-1", "/page-2", "/referrer-2", "2025-06-16T23:00:10");
+        FrontendLogDto log3 = buildFrontendLogDto("clickTab", "tab-1", "/page-3", "/referrer-3", "2025-06-16T23:00:20");
+
+        FrontendLogRequestDto request = new FrontendLogRequestDto(List.of(log1, log2, log3));
+
+        mockMvc.perform(post("/action-logs")
+                        .header("X-Session-Id", sessionId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        flusher.flushAll();
+
+        List<ActionLog> savedLogs = actionLogRepository.findAll();
+        assertThat(savedLogs).isNotEmpty();
+        assertThat(savedLogs.get(0).getLogText()).contains("click");
     }
 
     /**
-     * GIVEN: 클라이언트가 두 개의 유효한 액션 로그를 전송하고
-     * WHEN: 컨트롤러가 해당 로그를 수신하여 메모리 버퍼에 적재한 후
-     *       스케줄러가 강제로 flushAllLogsForcefully()를 호출해 로그를 DB에 저장하면
-     * THEN: CRUD 유형별로 2개의 로그 엔티티가 DB에 저장되어야 하며,
-     *       각 엔티티의 logText에는 상세 로그 정보가 포함되어야 한다
+     * 테스트용 프론트엔드 로그 DTO를 생성합니다.
+     *
+     * @param eventType 이벤트 유형
+     * @param elementId 요소 ID
+     * @param pageUrl 페이지 URL
+     * @param referrerUrl 이전 페이지 URL
+     * @param timestamp 이벤트 발생 시각
+     * @return 생성된 {@link FrontendLogDto}
      */
-    @Test
-    @DisplayName("액션 로그 수집 통합 테스트")
-    void shouldSaveActionLogsThroughApi() throws Exception {
-        List<ActionLogPayload> payloads = List.of(
-                ActionLogPayload.builder().type("read").target("btn1").build(),
-                ActionLogPayload.builder().type("click").target("btn2").build()
-        );
-
-        mockMvc.perform(post("/action-log")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(payloads)))
-                .andExpect(status().isOk());
-
-        await().atMost(Duration.ofSeconds(2)).untilAsserted(() -> {
-            actionLogScheduler.flushAllLogsForcefully();
-            List<ActionLog> saved = actionLogRepository.findAll();
-            assertThat(saved).isNotEmpty();
-        });
-
-        List<ActionLog> savedLogs = actionLogRepository.findAll();
-        assertThat(savedLogs).hasSize(2);
+    private FrontendLogDto buildFrontendLogDto(
+            String eventType,
+            String elementId,
+            String pageUrl,
+            String referrerUrl,
+            String timestamp
+    ) {
+        return FrontendLogDto.builder()
+                .eventType(eventType)
+                .elementId(elementId)
+                .pageUrl(pageUrl)
+                .referrerUrl(referrerUrl)
+                .timestamp(timestamp)
+                .build();
     }
 
 }

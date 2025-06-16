@@ -4,7 +4,8 @@ import kodanect.common.response.ApiResponse;
 import kodanect.domain.donation.exception.BadRequestException;
 import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.ValidationFailedException;
-import kodanect.domain.logging.exception.ActionLogConversionException;
+import kodanect.domain.logging.exception.ActionLogJsonSerializationException;
+import kodanect.domain.logging.exception.EmptyFrontendLogListException;
 import kodanect.domain.remembrance.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.NoSuchMessageException;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -47,6 +49,7 @@ public class GlobalExcepHndlr {
     public GlobalExcepHndlr(MessageSourceAccessor messageSourceAccessor) {
         this.messageSourceAccessor = messageSourceAccessor;
     }
+
     /**
      * 400 예외 처리
      *
@@ -64,7 +67,9 @@ public class GlobalExcepHndlr {
         MissingReplyWriterException.class,
         MissingSearchDateParameterException.class,
         ReplyIdMismatchException.class,
-        ReplyPostMismatchException.class
+        ReplyPostMismatchException.class,
+        MissingRequestHeaderException.class,
+        EmptyFrontendLogListException.class
     })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -261,10 +266,10 @@ public class GlobalExcepHndlr {
     /**
      * 500 예외 처리
      *
-     * 액션 로그 직렬화 실패
+     * 액션 로그 직렬화 실패 시 발생하는 예외 처리
      */
-    @ExceptionHandler(ActionLogConversionException.class)
-    public ResponseEntity<ApiResponse<Void>> handleActionLogConversion(ActionLogConversionException ex) {
+    @ExceptionHandler(ActionLogJsonSerializationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleActionLogConversion(ActionLogJsonSerializationException ex) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "로그 데이터를 저장하는 도중 오류가 발생했습니다."));
