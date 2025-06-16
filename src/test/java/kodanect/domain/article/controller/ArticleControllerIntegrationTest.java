@@ -63,17 +63,17 @@ class ArticleControllerIntegrationTest {
     BoardCategoryCache boardCategoryCache;
 
     @MockBean
-    private HttpServletRequest request;
+    private HttpServletRequest req;
 
     @MockBean
-    private RequestBasedHitLimiter requestBasedHitLimiter;
+    private RequestBasedHitLimiter reqBasedHitLimiter;
 
     @TempDir
     Path tempDir;
 
     @BeforeEach
     void setUp() {
-        given(requestBasedHitLimiter.isFirstView(anyString(), anyInt(), anyString())).willReturn(true);
+        given(reqBasedHitLimiter.isFirstView(anyString(), anyInt(), anyString())).willReturn(true);
         MockHttpServletRequest mockRequest = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(mockRequest));
 
@@ -151,9 +151,9 @@ class ArticleControllerIntegrationTest {
                         .param("optionStr", "1")
                         .param("type", "title")
                         .param("keyword", "트랜잭션")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -167,9 +167,9 @@ class ArticleControllerIntegrationTest {
         mockMvc.perform(get("/makePublic")
                         .param("type", "title")
                         .param("keyword", "사전정보공개")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -181,9 +181,9 @@ class ArticleControllerIntegrationTest {
     @DisplayName("사전 정보 게시판 상세 조회")
     void getOtherBoardArticleDetail() throws Exception {
         mockMvc.perform(get("/makePublic/2")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -196,9 +196,9 @@ class ArticleControllerIntegrationTest {
     void getArticleDetail() throws Exception {
         mockMvc.perform(get("/notices/1")
                         .param("optionStr", "1")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -231,9 +231,9 @@ class ArticleControllerIntegrationTest {
         articleFileRepository.save(file);
 
         mockMvc.perform(get("/makePublic/2/files/sample.txt")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         }))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
@@ -248,9 +248,9 @@ class ArticleControllerIntegrationTest {
     @DisplayName("사전정보 게시판 첨부파일 다운로드 - 파일 없음")
     void downloadOtherBoardFileNotFound() throws Exception {
         mockMvc.perform(get("/makePublic/2/files/notfound.txt")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -263,9 +263,9 @@ class ArticleControllerIntegrationTest {
     void downloadFileNotFound() throws Exception {
         mockMvc.perform(get("/notices/1/files/nonexistent.txt")
                         .param("optionStr", "1")
-                        .with(request -> {
-                            request.setRemoteAddr("127.0.0.1");
-                            return request;
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
                         })
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())

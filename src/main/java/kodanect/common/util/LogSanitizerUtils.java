@@ -15,6 +15,10 @@ public class LogSanitizerUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private LogSanitizerUtils() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     /**
      * 문자열 내 \r, \n 제거
      *
@@ -32,8 +36,8 @@ public class LogSanitizerUtils {
      * @return 정제된 JSON 문자열, 또는 직렬화 실패 시 오류 메시지 문자열
      */
     public static Object sanitizeObject(Object obj) {
-        if (obj instanceof String) {
-            return sanitize((String) obj);
+        if (obj instanceof String string) {
+            return sanitize(string);
         }
         try {
             String json = objectMapper.writeValueAsString(obj);

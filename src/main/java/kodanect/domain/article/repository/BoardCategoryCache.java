@@ -76,7 +76,7 @@ public class BoardCategoryCache {
     public BoardCategory getByUrlParam(String urlParam) {
         BoardCategory category = urlParamMap.get(urlParam.toLowerCase());
         if (category == null) {
-            log.warn("잘못된 optionStr 요청: {}", urlParam);
+            log.warn("잘못된 optionStr 요청");
             throw new InvalidBoardCodeException(urlParam);
         }
         return category;

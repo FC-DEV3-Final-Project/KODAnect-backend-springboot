@@ -42,7 +42,7 @@ import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 public class RecipientServiceImpl implements RecipientService {
 
     // 로거 선언 (가장 먼저)
-    private static final SecureLogger logger = SecureLogger.getLogger(RecipientExceptionHandler.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientServiceImpl.class);
 
     // 정적(static) 상수 정의
     private static final String RECIPIENT_NOT_FOUND_MESSAGE = "해당 게시물이 존재하지 않거나 이미 삭제되었습니다.";

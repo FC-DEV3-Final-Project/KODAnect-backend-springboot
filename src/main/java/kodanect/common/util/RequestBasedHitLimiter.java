@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RequestBasedHitLimiter {
 
-    private static final long VIEW_LIMIT_DURATION_MILLIS = 10 * 60 * 1000;
+    private static final long VIEW_LIMIT_DURATION_MILLIS = 10L * 60 * 1000;
     private static final Map<String, Long> hitTimeMap = new ConcurrentHashMap<>();
 
     public boolean isFirstView(String boardCode, int articleSeq, String ip) {
