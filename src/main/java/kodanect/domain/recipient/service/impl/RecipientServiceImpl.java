@@ -277,14 +277,14 @@ public class RecipientServiceImpl implements RecipientService {
     /**
      * 게시물 목록 조회 (검색 및 커서 기반 페이징으로 변경)
      * @param searchCondition 검색 조건 (searchType, searchKeyword)
-     * @param cusor "더 보기" 기능을 위한 마지막 게시물 ID (null 또는 0이면 첫 페이지 조회)
+     * @param cursor "더 보기" 기능을 위한 마지막 게시물 ID (null 또는 0이면 첫 페이지 조회)
      * @param size 한 번에 가져올 게시물 수
      * @return 커서 기반 페이지네이션 응답 (게시물)
      */
     @Override
     public CursorPaginationResponse<RecipientListResponseDto, Integer> selectRecipientList(
             RecipientSearchCondition searchCondition,
-            Integer cusor,
+            Integer cursor,
             int size) {
 
         // 1. 쿼리할 데이터의 실제 size (클라이언트 요청 size + 1 하여 다음 커서 존재 여부 확인)
@@ -293,9 +293,9 @@ public class RecipientServiceImpl implements RecipientService {
         // 2. 기본 Specification 생성 (검색 조건 적용)
         Specification<RecipientEntity> spec = getRecipientSpecification(searchCondition);
 
-        // 3. "더 보기" 기능 (cusor) 조건 추가: letterSeq 기준 내림차순이므로 cusor보다 작은 것 조회
-        if (cusor != null && cusor > 0) {
-            spec = spec.and((root, query, cb) -> cb.lessThan(root.get(LETTER_SEQ), cusor));
+        // 3. "더 보기" 기능 (cursor) 조건 추가: letterSeq 기준 내림차순이므로 cursor보다 작은 것 조회
+        if (cursor != null && cursor > 0) {
+            spec = spec.and((root, query, cb) -> cb.lessThan(root.get(LETTER_SEQ), cursor));
         }
 
         // 4. 정렬 조건 설정 (letterSeq 기준 내림차순 - 최신 게시물부터)
@@ -307,25 +307,32 @@ public class RecipientServiceImpl implements RecipientService {
         // 6. 게시물 조회
         List<RecipientEntity> recipientList = recipientRepository.findAll(spec, pageable).getContent(); // Page 객체에서 List 추출
 
-        // 댓글 수 매핑을 위해 getCommentCountMap 메서드 활용 **
+        // 7. 댓글 수 매핑을 위해 getCommentCountMap 메서드 활용 **
         Map<Integer, Integer> commentCountMap = getCommentCountMap(recipientList);
 
-        // 7. RecipientEntity를 RecipientResponseDto로 변환하고 commentCount 필드를 채우기
-        List<RecipientListResponseDto> recipientResponseDtos = recipientList.stream()
-                .map(entity -> {
-                    RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity);
-                    // getCommentCountMap에서 가져온 댓글 수를 사용
-                    dto.setCommentCount(commentCountMap.getOrDefault(entity.getLetterSeq(), 0));
-                    return dto;
-                })
-                .toList();
+        // 8. RecipientEntity를 RecipientResponseDto로 변환하고 displayLetterNum 및 commentCount 필드를 채우기
+        List<RecipientListResponseDto> recipientResponseDtos = new ArrayList<>();
+        int currentListSize = recipientList.size(); // 현재 조회된 게시물 개수
 
-        // 8. 검색 조건에 맞는 전체 게시물 총 개수 조회
+        for (int i = 0; i < currentListSize; i++) {
+            RecipientEntity entity = recipientList.get(i);
+            RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity);
+
+            // 댓글 수 매핑
+            dto.setCommentCount(commentCountMap.getOrDefault(entity.getLetterSeq(), 0));
+
+            // displayLetterNum 할당: 현재 목록에서 역순으로 번호 부여
+            dto.setDisplayLetterNum(currentListSize - i);
+
+            recipientResponseDtos.add(dto);
+        }
+
+        // 9. 검색 조건에 맞는 전체 게시물 총 개수 조회
         Integer totalCount = (int) recipientRepository.count(getRecipientSpecification(searchCondition)
                 .and((root, query, cb) -> cb.equal(root.get(DEL_FLAG), "N")) // 전체 개수 셀 때도 delFlag 조건 추가
         );
 
-        // 9. CursorFormatter 사용하여 응답 포맷팅
+        // 10. CursorFormatter 사용하여 응답 포맷팅
         return CursorFormatter.<RecipientListResponseDto, Integer>cursorFormat(recipientResponseDtos, size, totalCount);
     }
 

@@ -34,6 +34,7 @@ public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
     private String modifierId;
     private String delFlag; // char 타입으로 유지
     private int commentCount; // 댓글 수는 조회 시 필요한 정보이므로 DTO에 포함
+    private Integer displayLetterNum;
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientListResponseDto fromEntity(RecipientEntity entity) {
@@ -54,6 +55,7 @@ public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
                 .modifierId(entity.getModifierId())
                 .delFlag(entity.getDelFlag())
                 .commentCount(0)
+                .displayLetterNum(null)
                 .build();
     }
 
