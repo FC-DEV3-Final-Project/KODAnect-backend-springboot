@@ -23,7 +23,7 @@ public interface ArticleService {
      * @param pageable     페이징 및 정렬 정보
      * @return {@link Page} 결과 게시글 목록 (게시판 유형에 따라 {@link ArticleDTO} 또는 하위 타입 반환)
      */
-    Page<? extends ArticleDTO> getArticles(List<String> boardCodes, String type, String keyWord, Pageable pageable);
+    Page<ArticleDTO> getArticles(List<String> boardCodes, String type, String keyWord, Pageable pageable);
 
     /**
      * 단일 게시글 상세 정보를 조회합니다.
@@ -35,5 +35,5 @@ public interface ArticleService {
      * @return {@link ArticleDetailDto} 게시글 상세 정보 + 이전/다음 게시글 참조 정보
      * @throws kodanect.domain.article.exception.ArticleNotFoundException 게시글이 존재하지 않을 경우
      */
-    ArticleDetailDto getArticle(String boardCode, Integer articleSeq);
+    ArticleDetailDto getArticle(String boardCode, Integer articleSeq, String clientIpAddress);
 }

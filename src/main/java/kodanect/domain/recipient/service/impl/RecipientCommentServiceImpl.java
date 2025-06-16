@@ -1,5 +1,6 @@
 package kodanect.domain.recipient.service.impl;
 
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
@@ -16,8 +17,6 @@ import kodanect.domain.recipient.service.RecipientCommentService;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +34,8 @@ import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 @RequiredArgsConstructor // final 필드에 대한 생성자 주입
 public class RecipientCommentServiceImpl implements RecipientCommentService {
 
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientCommentServiceImpl.class);
+
     // 중복되는 에러 메시지
     private static final String COMMENT_NOT_FOUND_MESSAGE = "댓글을 찾을 수 없거나 이미 삭제되었습니다.";
     private static final String RECIPIENT_NOT_FOUND_MESSAGE = "게시물을 찾을 수 없거나 이미 삭제된 게시물입니다.";
@@ -47,8 +48,6 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
     @Resource(name = "recipientCommentRepository")
     private final RecipientCommentRepository recipientCommentRepository;
     private final RecipientRepository recipientRepository;
-
-    private final Logger logger = LoggerFactory.getLogger(RecipientCommentServiceImpl.class);
 
     // --- 헬퍼 메서드 추출 ---
     /**
