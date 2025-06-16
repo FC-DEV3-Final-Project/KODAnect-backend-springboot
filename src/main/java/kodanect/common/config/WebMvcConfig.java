@@ -45,15 +45,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String fileStorePath = appendSlashIfMissing(globalsProperties.getFileStorePath()); // ./uploads/
-        String fileBaseUrl = appendSlashIfMissing(globalsProperties.getFileBaseUrl());     // /image/uploads/
+        // null 방지 및 끝에 "/" 붙이기
+        String fileStorePath = ensureEndsWithSlash(globalsProperties.getFileStorePath(), "./uploads");
+        String fileBaseUrl = ensureEndsWithSlash(globalsProperties.getFileBaseUrl(), "/image/uploads");
 
-        // CKEditor 등에서 업로드한 이미지 포함하여 모든 정적 리소스 파일 핸들링
-        registry.addResourceHandler(fileBaseUrl + "**")  // /image/uploads/**
-                .addResourceLocations("file:" + fileStorePath);     // file:./uploads/
+        registry.addResourceHandler(fileBaseUrl + "**")
+                .addResourceLocations("file:" + fileStorePath);
     }
 
-    private String appendSlashIfMissing(String path) {
+    private String ensureEndsWithSlash(String path, String defaultValue) {
+        if (path == null || path.isBlank()) {
+            return defaultValue.endsWith("/") ? defaultValue : defaultValue + "/";
+        }
         return path.endsWith("/") ? path : path + "/";
     }
 }
