@@ -8,7 +8,7 @@ import kodanect.domain.recipient.dto.RecipientSearchCondition;
 
 public interface RecipientService {
     // 게시물 비밀번호 확인
-    boolean verifyLetterPassword(Integer letterSeq, String letterPasscode);
+    void verifyLetterPassword(Integer letterSeq, String letterPasscode);
 
     // 게시물 수정
     RecipientDetailResponseDto updateRecipient(Integer letterSeq, RecipientRequestDto requestDto);

@@ -95,8 +95,8 @@ public class RecipientController {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        boolean isVerified = recipientService.verifyLetterPassword(letterSeq, letterPasscode);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인 결과", isVerified));
+        recipientService.verifyLetterPassword(letterSeq, letterPasscode);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인"));
     }
 
     /** ## 게시물 수정

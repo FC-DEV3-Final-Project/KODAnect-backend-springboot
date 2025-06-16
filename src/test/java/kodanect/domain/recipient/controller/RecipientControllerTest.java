@@ -6,6 +6,7 @@ import kodanect.domain.recipient.service.RecipientCommentService;
 import kodanect.domain.recipient.service.RecipientService;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -145,24 +146,26 @@ public class RecipientControllerTest {
 
     //    POST /recipientLetters/{letterSeq}/verifyPwd - 비밀번호 인증
     @Test
+    @DisplayName("게시물 비밀번호 확인 성공 테스트")
     public void testVerifyPassword_Success() throws Exception {
         Integer letterSeq = 1;
-        String passcode = "1234";
+        String passcode = "abc12345";
 
-        when(recipientService.verifyLetterPassword(letterSeq, passcode)).thenReturn(true);
-
-        String requestBody = "{\"letterPasscode\":\"1234\"}";
+        // verifyLetterPassword가 void를 반환하므로 doNothing()을 사용
+        doNothing().when(recipientService).verifyLetterPassword(letterSeq, passcode);
+        String requestBody = "{\"letterPasscode\":\"" + passcode + "\"}";
 
         mockMvc.perform(post("/recipientLetters/{letterSeq}/verifyPwd", letterSeq)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("비밀번호 확인 결과"))
-                .andExpect(jsonPath("$.data").value(true));
+                .andExpect(jsonPath("$.message").value("비밀번호 확인"))
+                .andExpect(jsonPath("$.data").doesNotExist());
 
         verify(recipientService, times(1)).verifyLetterPassword(letterSeq, passcode);
     }
+
 
     //    PATCH /recipientLetters/{letterSeq} - 게시물 수정 (multipart/form-data)
     @Test

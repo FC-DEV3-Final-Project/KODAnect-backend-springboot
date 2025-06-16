@@ -91,19 +91,6 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
     }
 
     /**
-     * 댓글 비밀번호를 검증합니다.
-     * @param existingComment 기존 댓글 엔티티
-     * @param inputPasscode 사용자 입력 비밀번호
-     * @throws RecipientInvalidPasscodeException 비밀번호가 일치하지 않는 경우
-     */
-    private void validateCommentPasscode(RecipientCommentEntity existingComment, String inputPasscode) {
-        if (!existingComment.checkPasscode(inputPasscode)) {
-            logger.warn("댓글 비밀번호 불일치: commentSeq={}", existingComment.getCommentSeq());
-            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
-        }
-    }
-
-    /**
      * 특정 시퀀스에 해당하는 삭제되지 않은 댓글을 조회합니다.
      * @param commentSeq 댓글 시퀀스
      * @return 삭제되지 않은 RecipientCommentEntity
@@ -143,6 +130,12 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         return RecipientCommentResponseDto.fromEntity(savedComment);
     }
 
+    /**
+     * 댓글 비밀번호를 검증합니다.
+     * @param existingComment 기존 댓글 엔티티
+     * @param inputPasscode 사용자 입력 비밀번호
+     * @throws RecipientInvalidPasscodeException 비밀번호가 일치하지 않는 경우
+     */
     @Override
     public boolean authenticateComment(Integer commentSeq, String inputPasscode) {
         logger.info("댓글 인증 요청 시작: commentSeq={}", commentSeq);
@@ -150,13 +143,17 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         // 1. 삭제되지 않은 기존 댓글 조회
         RecipientCommentEntity existingComment = getActiveComment(commentSeq);
 
-        // 2. 비밀번호 검증
-        validateCommentPasscode(existingComment, inputPasscode); // 비밀번호 불일치 시 예외 발생
+        // 2. 비밀번호 검증 (validateCommentPasscode 로직을 여기에 통합)
+        if (!existingComment.checkPasscode(inputPasscode)) {
+            logger.warn("댓글 비밀번호 불일치: commentSeq={}", existingComment.getCommentSeq());
+            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
+        }
 
         logger.info("댓글 인증 성공: commentSeq={}", commentSeq);
         return true; // 인증 성공
     }
 
+    // 댓글 수정
     @Override
     public RecipientCommentResponseDto updateComment(Integer commentSeq, String newContents, String newWriter) {
         logger.info("댓글 수정 요청 시작 (인증 후): commentSeq={}", commentSeq);
@@ -186,8 +183,11 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         // 1. 삭제되지 않은 기존 댓글 조회 (헬퍼 메서드 사용)
         RecipientCommentEntity existingComment = getActiveComment(commentSeq);
 
-        // 2. 비밀번호 확인 (헬퍼 메서드 사용)
-        validateCommentPasscode(existingComment, inputPasscode);
+        // 2. 비밀번호 검증 (validateCommentPasscode 로직을 여기에 통합)
+        if (!existingComment.checkPasscode(inputPasscode)) {
+            logger.warn("댓글 비밀번호 불일치: commentSeq={}", existingComment.getCommentSeq());
+            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
+        }
 
         // 3. 댓글 소프트 삭제
         existingComment.setDelFlag("Y");

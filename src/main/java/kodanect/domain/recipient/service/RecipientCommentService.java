@@ -10,6 +10,7 @@ public interface RecipientCommentService {
 
     boolean authenticateComment(Integer commentSeq, String inputPasscode);
 
+    // 댓글 수정
     RecipientCommentResponseDto updateComment(Integer commentSeq, String newContents, String newWriter);
 
     // 댓글 삭제
