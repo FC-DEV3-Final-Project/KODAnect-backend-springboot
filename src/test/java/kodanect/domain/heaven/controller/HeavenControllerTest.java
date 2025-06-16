@@ -110,11 +110,11 @@ public class HeavenControllerTest {
                 .totalCount(totalCount)
                 .build();
 
-        when(heavenService.getHeavenListSearchResult("all", "제목", 10,20)).thenReturn(cursorPaginationResponse);
+        when(heavenService.getHeavenListSearchResult("ALL", "제목", 10,20)).thenReturn(cursorPaginationResponse);
 
         /* when & then */
         mockMvc.perform(get("/heavenLetters/search")
-                    .param("type", "all")
+                    .param("type", "ALL")
                     .param("keyWord", "제목")
                     .param("cursor", "10")
                     .param("size", "20"))

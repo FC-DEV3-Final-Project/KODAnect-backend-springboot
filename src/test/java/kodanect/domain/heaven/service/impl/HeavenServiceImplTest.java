@@ -86,7 +86,7 @@ public class HeavenServiceImplTest {
     @DisplayName("검색을 통한 게시물 전체 조회 테스트")
     public void getHeavenListSearchResultTest() {
         /* given */
-        String type = "all";
+        String type = "ALL";
         String keyWord = "제목";
         Integer cursor = 1000;
         int size = 20;

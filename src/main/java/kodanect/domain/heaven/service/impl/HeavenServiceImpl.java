@@ -173,9 +173,9 @@ public class HeavenServiceImpl implements HeavenService {
     /* 검색 조건에 따른 게시물 개수 조회 */
     private long countByType(String type, String keyWord) {
         return switch (type) {
-            case "all"    -> heavenRepository.countByTitleOrContentsContaining(keyWord);
-            case "title"  -> heavenRepository.countByTitleContaining(keyWord);
-            case "content"-> heavenRepository.countByContentsContaining(keyWord);
+            case "ALL"    -> heavenRepository.countByTitleOrContentsContaining(keyWord);
+            case "TITLE"  -> heavenRepository.countByTitleContaining(keyWord);
+            case "CONTENTS"-> heavenRepository.countByContentsContaining(keyWord);
             default       -> throw new InvalidTypeException(type);
         };
     }
@@ -183,9 +183,9 @@ public class HeavenServiceImpl implements HeavenService {
     /* 검색 조건에 따른 게시물 조회 */
     private List<HeavenResponse> findByType(String type, String keyWord, Integer cursor, Pageable pageable) {
         return switch (type) {
-            case "all"    -> heavenRepository.findByTitleOrContentsContaining(keyWord, cursor, pageable);
-            case "title"  -> heavenRepository.findByTitleContaining(keyWord, cursor, pageable);
-            case "content"-> heavenRepository.findByContentsContaining(keyWord, cursor, pageable);
+            case "ALL"    -> heavenRepository.findByTitleOrContentsContaining(keyWord, cursor, pageable);
+            case "TITLE"  -> heavenRepository.findByTitleContaining(keyWord, cursor, pageable);
+            case "CONTENTS"-> heavenRepository.findByContentsContaining(keyWord, cursor, pageable);
             default       -> throw new InvalidTypeException(type);
         };
     }
