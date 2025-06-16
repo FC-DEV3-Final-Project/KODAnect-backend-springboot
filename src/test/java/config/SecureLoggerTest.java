@@ -64,6 +64,6 @@ public class SecureLoggerTest {
 
         secureLogger.debug(null, (Object[]) null);
 
-        verify(mockLogger).debug(eq((String) null), eq((Object[]) null));
+        verify(mockLogger).debug(null, (Object[]) null);
     }
 }

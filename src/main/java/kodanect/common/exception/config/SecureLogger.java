@@ -75,7 +75,9 @@ public class SecureLogger {
      * CRLF 문자 제거
      */
     private String sanitize(String input) {
-        if (input == null) return null;
+        if (input == null) {
+            return null;
+        }
         return input
                 .replaceAll("[\r\n\t]", "")
                 .replaceAll("\\p{Cntrl}", "")

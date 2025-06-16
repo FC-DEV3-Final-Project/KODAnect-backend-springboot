@@ -17,36 +17,40 @@ pipeline {
         MAVEN_OPTS = '-Xmx2g -XX:+UseG1GC -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
     }
 
-stage('Checkout') {
-    steps {
-        script {
-            githubNotify context: 'checkout', status: 'PENDING', description: '코드 체크아웃 중...'
+           stage('Checkout') {
+               steps {
+                   script {
+                       githubNotify context: 'checkout', status: 'PENDING', description: '코드 체크아웃 중...'
 
-            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: "*/${env.BRANCH_NAME}"]],
-                    userRemoteConfigs: [[
-                        url: 'git@github.com:FC-DEV3-Final-Project/KODAnect-backend-springboot.git',
-                    ]],
-                    extensions: [
-                        [$class: 'CloneOption', shallow: false, noTags: false, depth: 0],
-                        [$class: 'PruneStaleBranch'],
-                        [$class: 'CleanBeforeCheckout']
-                    ]
-                ])
-            }
+                       def branchToCheckout = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+                       echo "Checking out branch: ${branchToCheckout}"
 
-            if (currentBuild.currentResult == 'FAILURE') {
-                githubNotify context: 'checkout', status: 'FAILURE', description: '체크아웃 실패'
-                env.CI_FAILED = 'true'
-                error('Checkout 실패')
-            } else {
-                githubNotify context: 'checkout', status: 'SUCCESS', description: '체크아웃 완료'
-            }
-        }
-    }
-}
+                       catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                           checkout([
+                               $class: 'GitSCM',
+                               branches: [[name: "*/${branchToCheckout}"]],
+                               userRemoteConfigs: [[
+                                   url: 'https://github.com/FC-DEV3-Final-Project/KODAnect-backend-springboot.git',
+                                   credentialsId: 'github-token'
+                               ]],
+                               extensions: [
+                                   [$class: 'CloneOption', shallow: false, noTags: false, depth: 0],
+                                   [$class: 'PruneStaleBranch'],
+                                   [$class: 'CleanBeforeCheckout']
+                               ]
+                           ])
+                       }
+
+                       if (currentBuild.currentResult == 'FAILURE') {
+                           githubNotify context: 'checkout', status: 'FAILURE', description: '체크아웃 실패'
+                           env.CI_FAILED = 'true'
+                           error('Checkout 실패')
+                       } else {
+                           githubNotify context: 'checkout', status: 'SUCCESS', description: '체크아웃 완료'
+                       }
+                   }
+               }
+           }
 
 
         stage('Checkstyle') {

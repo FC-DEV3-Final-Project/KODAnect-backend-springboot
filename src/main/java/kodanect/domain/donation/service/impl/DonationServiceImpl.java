@@ -1,7 +1,6 @@
 package kodanect.domain.donation.service.impl;
 
 import kodanect.common.exception.config.SecureLogger;
-import kodanect.common.exception.config.RecipientExceptionHandler;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
@@ -34,7 +33,7 @@ import java.util.UUID;
 public class DonationServiceImpl implements DonationService {
 
     /** Cursor 기반 기본 Size */
-    private static final SecureLogger log = SecureLogger.getLogger(RecipientExceptionHandler.class);
+    private static final SecureLogger log = SecureLogger.getLogger(DonationServiceImpl.class);
     private static final int DEFAULT_SIZE = 3;
     private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
 

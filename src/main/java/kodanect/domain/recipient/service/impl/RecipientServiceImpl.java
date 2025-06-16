@@ -2,7 +2,6 @@ package kodanect.domain.recipient.service.impl;
 
 import kodanect.common.config.GlobalsProperties;
 import kodanect.common.exception.config.SecureLogger;
-import kodanect.common.exception.config.RecipientExceptionHandler;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
