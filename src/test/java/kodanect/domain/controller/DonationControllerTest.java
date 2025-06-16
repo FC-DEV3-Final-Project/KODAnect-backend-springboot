@@ -240,8 +240,18 @@ class DonationControllerTest {
     @DisplayName("POST /donationLetters/{storySeq}/verifyPwd - 성공")
     void verifyStoryPassword_success() throws Exception {
         VerifyStoryPasscodeDto req = new VerifyStoryPasscodeDto("abcd1234");
+        DonationStoryDetailDto detailDto = DonationStoryDetailDto.builder()
+                .storySeq(1L).title("제목").storyWriter("글쓴이").storyContent("내용1").build();
+        DonationStoryModifyDto modifyDto = DonationStoryModifyDto.builder()
+                .storyTitle("제목").storyWriter("글쓴이").storyContents("내용1").build();
+
+
         given(messageSourceAccessor.getMessage("donation.password.match"))
                 .willReturn("비밀번호 일치");
+        given(donationService.findDonationStoryWithStoryId(1L)).willReturn(detailDto);
+        given(DonationStoryModifyDto.fromEntity(detailDto)).willReturn(modifyDto); // 정적 팩토리는 mocking 불가 → stub 직접 생성
+
+
         doNothing().when(donationService).verifyPasswordWithPassword(eq(1L), any(VerifyStoryPasscodeDto.class));
 
         mockMvc.perform(post("/donationLetters/1/verifyPwd")
@@ -249,7 +259,7 @@ class DonationControllerTest {
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.data.result").value(1));
+                .andExpect(jsonPath("$.data").isNotEmpty());
     }
 
     @Test
