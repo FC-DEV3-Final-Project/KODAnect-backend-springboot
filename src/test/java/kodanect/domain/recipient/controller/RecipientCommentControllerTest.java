@@ -3,10 +3,8 @@ package kodanect.domain.recipient.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.dto.CommentDeleteRequestDto;
-import kodanect.domain.recipient.dto.RecipientCommentAuthRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
-import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,7 +53,7 @@ class RecipientCommentControllerTest {
     void testGetPaginatedComments() throws Exception {
         RecipientCommentResponseDto comment = new RecipientCommentResponseDto();
         comment.setCommentSeq(1);
-        comment.setCommentContents("테스트 댓글");
+        comment.setContents("테스트 댓글");
         comment.setWriteTime(LocalDateTime.now());
         comment.setModifyTime(LocalDateTime.now());
         // 필요한 필드 셋팅 추가
@@ -89,7 +87,7 @@ class RecipientCommentControllerTest {
 
         RecipientCommentResponseDto responseDto = new RecipientCommentResponseDto();
         responseDto.setCommentSeq(1);
-        responseDto.setCommentContents("새 댓글");
+        responseDto.setContents("새 댓글");
         responseDto.setCommentWriter("작성자");
         responseDto.setWriteTime(LocalDateTime.now());
         responseDto.setModifyTime(LocalDateTime.now());

@@ -318,9 +318,6 @@ public class RecipientServiceImpl implements RecipientService {
             RecipientEntity entity = recipientList.get(i);
             RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity);
 
-            // 댓글 수 매핑
-            dto.setCommentCount(commentCountMap.getOrDefault(entity.getLetterSeq(), 0));
-
             // displayLetterNum 할당: 현재 목록에서 역순으로 번호 부여
             dto.setDisplayLetterNum(currentListSize - i);
 

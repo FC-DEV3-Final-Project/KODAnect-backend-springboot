@@ -133,7 +133,7 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         // 3. DTO를 Entity로 변환 (댓글 내용, 작성자, 비밀번호 설정)
         RecipientCommentEntity commentEntity = requestDto.toEntity();
         commentEntity.setLetterSeq(parentLetter); // 부모 게시물 엔티티 연결
-        commentEntity.setCommentContents(finalContents); // 클린한 내용으로 설정
+        commentEntity.setContents(finalContents); // 클린한 내용으로 설정
 
         // 4. writerId는 사용하지 않을 경우, 필요하다면 여기에 null 또는 특정 값 설정
         commentEntity.setWriterId(null); // 사용하지 않을 필드라면 null 처리
@@ -168,7 +168,7 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         // HTML 태그 필터링 및 내용 검증 (헬퍼 메서드 사용)
         String finalContents = cleanAndValidateCommentContents(newContents);
 
-        existingComment.setCommentContents(finalContents);
+        existingComment.setContents(finalContents);
         existingComment.setCommentWriter(newWriter); // 작성자 수정 허용
         existingComment.setModifyTime(LocalDateTime.now()); // 수정 시간 업데이트
 

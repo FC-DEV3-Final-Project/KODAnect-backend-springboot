@@ -127,7 +127,7 @@ public class RecipientCommentServiceImplTest {
             // Then
             assertThat(result).isNotNull();
             assertThat(result.getCommentSeq()).isEqualTo(activeComment.getCommentSeq()); // Mocking된 반환 값 확인 (100)
-            assertThat(result.getCommentContents()).isEqualTo("새로운 댓글 내용"); // 클린된 내용으로 저장됐는지 확인
+            assertThat(result.getContents()).isEqualTo("새로운 댓글 내용"); // 클린된 내용으로 저장됐는지 확인
 
             verify(recipientRepository, times(1)).findById(letterSeq);
             verify(recipientCommentRepository, times(1)).save(any(RecipientCommentEntity.class));
@@ -217,7 +217,7 @@ public class RecipientCommentServiceImplTest {
 
             // Then
             assertThat(result).isNotNull();
-            assertThat(result.getCommentContents()).isEqualTo("업데이트된 내용");
+            assertThat(result.getContents()).isEqualTo("업데이트된 내용");
             assertThat(result.getCommentWriter()).isEqualTo(newWriter);
 
             // modifyTime이 서비스 호출 전후 시간 사이에 있는지 확인합니다.
