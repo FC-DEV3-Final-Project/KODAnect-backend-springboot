@@ -41,6 +41,8 @@ public class HeavenServiceImpl implements HeavenService {
     /* 기본값 */
     private static final int COMMENT_SIZE = 3;
     private static final String FILE_PATH = "/app/uploads";
+    private static final String FILE_NAME_KEY = "fileName";
+    private static final String ORG_FILE_NAME_KEY = "orgFileName";
 
     private final HeavenRepository heavenRepository;
     private final HeavenCommentRepository heavenCommentRepository;
@@ -119,8 +121,8 @@ public class HeavenServiceImpl implements HeavenService {
 
         /* 파일 생성 */
         Map<String, String> fileMap = saveFile(heavenCreateRequest.getFile());
-        String fileName = fileMap.get("fileName");
-        String orgFileName = fileMap.get("orgFileName");
+        String fileName = fileMap.get(FILE_NAME_KEY);
+        String orgFileName = fileMap.get(ORG_FILE_NAME_KEY);
 
         Heaven heaven = Heaven.builder()
                 .memorial(memorial)
@@ -210,7 +212,7 @@ public class HeavenServiceImpl implements HeavenService {
             }
         }
 
-        return Map.of("fileName", fileName, "orgFileName", orgFileName);
+        return Map.of(FILE_NAME_KEY, fileName, ORG_FILE_NAME_KEY, orgFileName);
     }
 
     /* 파일 수정 -> 같은 파일인지 확인 후 같은 거면 그대로 반환 */
@@ -222,7 +224,7 @@ public class HeavenServiceImpl implements HeavenService {
         // 동일 파일인지 비교 (이름만으로 판단하는 경우)
         if (newOrgFileName != null && newOrgFileName.equals(currentOrgFileName)) {
             // 동일한 파일명이면 기존 파일 그대로 사용
-            return Map.of("fileName", currentFileName, "orgFileName", currentOrgFileName);
+            return Map.of(FILE_NAME_KEY, currentFileName, ORG_FILE_NAME_KEY, currentOrgFileName);
         }
 
         // 기존 파일 삭제
@@ -246,7 +248,7 @@ public class HeavenServiceImpl implements HeavenService {
             Files.createDirectories(path);
             newFile.transferTo(newFilePath);
 
-            return Map.of("fileName", newFileName, "orgFileName", newOrgFileName);
+            return Map.of(FILE_NAME_KEY, newFileName, ORG_FILE_NAME_KEY, newOrgFileName);
         } catch (IOException e) {
             throw new FileStorageException(newFilePath, "새 파일 저장 실패: " + newOrgFileName);
         }

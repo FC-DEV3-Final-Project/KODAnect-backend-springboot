@@ -1,6 +1,5 @@
 package kodanect.common.util;
 
-import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.entity.HeavenComment;
 import kodanect.domain.heaven.exception.HeavenCommentInformationMismatchException;
 import kodanect.domain.heaven.exception.HeavenCommentNotFoundException;
@@ -19,7 +18,7 @@ public class HeavenCommentFinder {
 
     /* 댓글 존재 여부 및 해당 게시글 댓글 검증 */
     public HeavenComment findByIdAndValidateOwnership(Integer letterSeq, Integer commentSeq) {
-        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
+        heavenFinder.findByIdOrThrow(letterSeq);
 
         HeavenComment heavenComment = heavenCommentRepository.findById(commentSeq)
                 .orElseThrow(() -> new HeavenCommentNotFoundException(commentSeq));

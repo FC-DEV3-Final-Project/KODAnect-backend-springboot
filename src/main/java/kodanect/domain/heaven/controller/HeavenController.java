@@ -85,8 +85,6 @@ public class HeavenController {
     ) {
         heavenService.createHeaven(heavenCreateRequest);
 
-        System.out.println("heavenCreateRequest.getFile() = " + heavenCreateRequest.getFile());
-
         String message = messageSourceAccessor.getMessage("heaven.create.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
