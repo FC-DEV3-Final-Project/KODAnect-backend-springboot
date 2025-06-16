@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,7 +28,7 @@ public class ImageUploadService {
      * @return CKEditor가 사용할 이미지 URL 문자열
      * @throws IOException 파일 저장 중 발생할 수 있는 예외
      */
-    public String saveImageAndGetUrl(MultipartFile file) throws IOException {
+    public Map<String, String> saveImageAndGetInfo(MultipartFile file) throws IOException {
         // 1. 업로드 디렉토리 경로 가져오기 및 생성
         String uploadDirPath = globalsProperties.getFileStorePath();
         Path uploadPath = Paths.get(uploadDirPath).toAbsolutePath().normalize();
@@ -45,12 +47,17 @@ public class ImageUploadService {
         file.transferTo(filePath); // 실제 파일 시스템에 저장
 
         // 4. 저장된 이미지의 웹 접근 URL 생성
-        // globalsProperties.getFileBaseUrl() 예: "/uploads"
-        // 최종 URL 예: http://localhost:8080/uploads/generated-uuid.jpg
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
+        String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path(globalsProperties.getFileBaseUrl()) // CKEditor에서 접근할 기본 URL (ex: /uploads)
                 .path("/")
                 .path(fileName) // 생성된 고유 파일명
                 .toUriString();
+
+        // 5. 필요한 정보를 Map에 담아 반환
+        Map<String, String> result = new HashMap<>();
+        result.put("url", imageUrl);
+        result.put("fileName", fileName); // 저장된 고유 파일명
+        result.put("orgFileName", originalFilename); // 원본 파일명
+        return result;
     }
 }

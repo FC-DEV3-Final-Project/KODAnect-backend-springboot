@@ -22,7 +22,7 @@ public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
     private int readCount;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime writeTime;
-    private Integer displayLetterNum;
+//    private Integer displayLetterNum;
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientListResponseDto fromEntity(RecipientEntity entity) {
@@ -32,7 +32,7 @@ public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
                 .letterWriter(entity.getLetterWriter())
                 .readCount(entity.getReadCount())
                 .writeTime(entity.getWriteTime())
-                .displayLetterNum(null)
+//                .displayLetterNum(null)
                 .build();
     }
 

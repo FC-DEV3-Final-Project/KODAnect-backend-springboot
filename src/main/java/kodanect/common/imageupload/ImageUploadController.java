@@ -15,7 +15,6 @@ import java.util.Map;
 public class ImageUploadController {
 
     private static final String ERROR_KEY = "error";
-    private static final String URL_KEY = "url";
 
     private final ImageUploadService imageUploadService;
 
@@ -27,7 +26,7 @@ public class ImageUploadController {
      * CKEditor 이미지 업로드 API 엔드포인트
      * CKEditor는 'upload'라는 이름으로 MultipartFile을 전송합니다.
      * @param file CKEditor에서 업로드된 이미지 파일
-     * @return CKEditor가 요구하는 JSON 응답 (성공 시 {"url": "이미지 URL"}, 실패 시 {"error": "에러 메시지"})
+     * @return CKEditor가 요구하는 JSON 응답 (성공 시 {"url": "이미지 URL", "fileName": "저장된 파일명", "orgFileName": "원본 파일명"}, 실패 시 {"error": "에러 메시지"})
      */
     @PostMapping("/api/ckeditor/image-upload") // CKEditor의 uploadUrl과 일치시켜야 합니다.
     public ResponseEntity<Map<String, String>> uploadCkeditorImage(
@@ -41,8 +40,9 @@ public class ImageUploadController {
         }
 
         try {
-            String imageUrl = imageUploadService.saveImageAndGetUrl(file);
-            response.put(URL_KEY, imageUrl); // CKEditor가 기대하는 JSON 형식
+            // saveImageAndGetInfo가 Map을 반환하도록 변경되었으므로 그대로 사용
+            Map<String, String> fileInfo = imageUploadService.saveImageAndGetInfo(file);
+            response.putAll(fileInfo); // 모든 파일 정보를 응답에 추가
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (IOException ex) {
             response.put(ERROR_KEY, "파일 업로드 중 오류가 발생했습니다: " + ex.getMessage());

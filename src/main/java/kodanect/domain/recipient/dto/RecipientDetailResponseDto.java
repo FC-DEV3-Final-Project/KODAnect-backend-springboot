@@ -71,6 +71,24 @@ public class RecipientDetailResponseDto {
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
                 .build();
     }
+
+    // RequestDto -> DTO 변환 메서드 (실패 응답 시, 입력 내용을 다시 반환할 때 사용)
+    public static RecipientDetailResponseDto fromRequestDto(Integer letterSeq, RecipientRequestDto requestDto) {
+        return RecipientDetailResponseDto.builder()
+                .letterSeq(letterSeq) // 기존 게시물 ID
+                .organCode(requestDto.getOrganCode())
+                .organEtc(requestDto.getOrganEtc())
+                .letterTitle(requestDto.getLetterTitle())
+                .recipientYear(requestDto.getRecipientYear())
+                .letterWriter(requestDto.getLetterWriter())
+                .anonymityFlag(requestDto.getAnonymityFlag())
+                .letterContents(requestDto.getLetterContents())
+                // readCount, fileName, orgFileName, writeTime 등은 requestDto에 없으므로 기본값/null로 유지됩니다.
+                // 만약 이 필드들도 필요하다면, 이 메소드를 호출하기 전에 기존 엔티티에서 값을 가져와 requestDto에 추가하거나,
+                // 이 메소드에 파라미터로 전달해야 합니다. 현재는 "작성 중이던 내용"에 집중합니다.
+                .build();
+    }
+
     // 서비스 계층에서 초기 댓글 데이터를 설정하기 위한 setter
     public void setInitialCommentData(CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
         this.initialCommentData = initialCommentData;

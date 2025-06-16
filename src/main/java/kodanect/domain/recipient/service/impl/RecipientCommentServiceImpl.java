@@ -114,7 +114,7 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
         RecipientEntity parentLetter = getActiveRecipient(letterSeq);
 
         // 2. HTML 태그 필터링 및 내용 검증 (헬퍼 메서드 사용)
-        String finalContents = cleanAndValidateCommentContents(requestDto.getCommentContents());
+        String finalContents = cleanAndValidateCommentContents(requestDto.getContents());
 
         // 3. DTO를 Entity로 변환 (댓글 내용, 작성자, 비밀번호 설정)
         RecipientCommentEntity commentEntity = requestDto.toEntity();
@@ -131,7 +131,6 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
 
     /**
      * 댓글 비밀번호를 검증합니다.
-     * @param existingComment 기존 댓글 엔티티
      * @param inputPasscode 사용자 입력 비밀번호
      * @throws RecipientInvalidPasscodeException 비밀번호가 일치하지 않는 경우
      */

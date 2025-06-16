@@ -53,10 +53,12 @@ class RecipientCommentControllerTest {
     void testGetPaginatedComments() throws Exception {
         RecipientCommentResponseDto comment = new RecipientCommentResponseDto();
         comment.setCommentSeq(1);
-        comment.setContents("테스트 댓글");
+        comment.setContents("테스트 댓글"); // DTO 필드는 contents 입니다.
         comment.setWriteTime(LocalDateTime.now());
         comment.setModifyTime(LocalDateTime.now());
-        // 필요한 필드 셋팅 추가
+        // 필요한 필드 셋팅 추가 (예: letterSeq, commentWriter 등)
+        comment.setLetterSeq(1); // 댓글이 속한 게시물 ID
+        comment.setCommentWriter("테스트 작성자"); // 댓글 작성자
 
         CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> pageResponse =
                 CursorCommentPaginationResponse.<RecipientCommentResponseDto, Integer>builder()
@@ -65,6 +67,7 @@ class RecipientCommentControllerTest {
                         .commentHasNext(false)
                         .build();
 
+        // 서비스 목킹: letterSeq, lastCommentId(null), size=3
         given(recipientCommentService.selectPaginatedCommentsForRecipient(1, null, 3))
                 .willReturn(pageResponse);
 
@@ -73,15 +76,18 @@ class RecipientCommentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.content[0].commentSeq").value(1))
-                .andExpect(jsonPath("$.data.content[0].commentContents").value("테스트 댓글"))
-                .andExpect(jsonPath("$.data.content[0].writeTime").exists());
+                // 여기를 commentContents -> contents 로 수정합니다.
+                .andExpect(jsonPath("$.data.content[0].contents").value("테스트 댓글"))
+                .andExpect(jsonPath("$.data.content[0].writeTime").exists())
+                .andExpect(jsonPath("$.data.commentNextCursor").value(1)) // commentNextCursor 검증 추가
+                .andExpect(jsonPath("$.data.commentHasNext").value(false)); // commentHasNext 검증 추가
     }
 
     @Test
     @DisplayName("댓글 작성 성공 테스트")
     void testWriteComment() throws Exception {
         RecipientCommentRequestDto requestDto = new RecipientCommentRequestDto();
-        requestDto.setCommentContents("새 댓글");
+        requestDto.setContents("새 댓글");
         requestDto.setCommentWriter("작성자");
         requestDto.setCommentPasscode("asdf1234");
 
@@ -100,7 +106,7 @@ class RecipientCommentControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.commentSeq").value(1))
-                .andExpect(jsonPath("$.data.commentContents").value("새 댓글"));
+                .andExpect(jsonPath("$.data.contents").value("새 댓글")); // 'commentContents' -> 'contents' 수정
     }
 
     @Test

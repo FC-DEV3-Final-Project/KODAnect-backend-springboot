@@ -167,35 +167,65 @@ public class RecipientControllerTest {
     }
 
 
-    //    PATCH /recipientLetters/{letterSeq} - 게시물 수정 (multipart/form-data)
+    // PATCH /recipientLetters/{letterSeq} - 게시물 수정 (multipart/form-data)
     @Test
+    @DisplayName("게시물 수정 성공 테스트") // DisplayName 추가
     public void testEdit_Success() throws Exception {
         Integer letterSeq = 1;
+
+        // Mock Service 응답 DTO 생성
         RecipientDetailResponseDto updatedDto = new RecipientDetailResponseDto();
         updatedDto.setLetterSeq(letterSeq);
-        updatedDto.setLetterTitle("테스트 게시물 제목");
-        updatedDto.setLetterContents("테스트 게시물 내용입니다.");
-        updatedDto.setWriteTime(LocalDateTime.now());
+        updatedDto.setOrganCode("ORGAN001");
+        updatedDto.setLetterTitle("수정 제목");
+        updatedDto.setRecipientYear("2023");
+        updatedDto.setLetterWriter("수정 작성자");
+        updatedDto.setAnonymityFlag("N");
+        updatedDto.setReadCount(1);
+        updatedDto.setLetterContents("수정 내용");
+        updatedDto.setFileName("updated_file.jpg"); // 이미지 파일명도 설정
+        updatedDto.setOrgFileName("updated_original.jpg");
+        updatedDto.setWriteTime(LocalDateTime.now().minusDays(1));
+        updatedDto.setModifierId("modifier");
         updatedDto.setModifyTime(LocalDateTime.now());
-        // updatedDto 세팅
+        updatedDto.setDelFlag("N");
+        updatedDto.setCommentCount(0);
+        updatedDto.setHasMoreComments(false);
+        updatedDto.setImageUrl("/uploads/updated_file.jpg");
 
+
+        // recipientService.updateRecipient 호출 시 updatedDto 반환하도록 스터빙
         when(recipientService.updateRecipient(anyInt(), any(RecipientRequestDto.class)))
                 .thenReturn(updatedDto);
 
-        MockMultipartFile imageFile = new MockMultipartFile("imageFile", "update.jpg",
-                MediaType.IMAGE_JPEG_VALUE, "update content".getBytes());
+        // Mock MultipartFile 생성 (이제 DTO에서 직접 받지 않으므로, 테스트 목적에 따라 Mock 파일은 제외하거나 fileName/orgFileName 파라미터로 넘김)
+        // 기존 MultipartFile 대신, fileName과 orgFileName 파라미터로 직접 전달합니다.
+        // MockMultipartFile imageFile = new MockMultipartFile("imageFile", "update.jpg",
+        //         MediaType.IMAGE_JPEG_VALUE, "update content".getBytes());
 
         mockMvc.perform(multipart("/recipientLetters/{letterSeq}", letterSeq)
-                        .file(imageFile)
-                        .param("letterWriter", "테스트작성자")    // 필수값 추가
+                        // .file(imageFile) // 이제 imageFile 직접 전송하지 않음
+                        .param("organCode", "ORGAN001") // 필수값 추가
                         .param("letterTitle", "수정 제목")
+                        .param("recipientYear", "2023") // 필수값 추가
+                        .param("letterWriter", "테스트작성자")
+                        .param("anonymityFlag", "N") // 필수값 추가
                         .param("letterContents", "수정 내용")
-                        .param("_method", "PATCH")
+                        .param("letterPasscode", "newPass1234") // ⭐ 누락된 비밀번호 필드 추가 (영숫자 8자 이상)
+                        .param("fileName", "new_image_file.jpg") // CKEditor API로 업로드된 파일명
+                        .param("orgFileName", "original_image_name.jpg") // CKEditor API로 업로드된 원본 파일명
+                        .param("_method", "PATCH") // HTTP PATCH 요청을 시뮬레이션하기 위한 HiddenHttpMethodFilter 설정
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("게시물이 성공적으로 수정되었습니다."));
+                .andExpect(status().isOk()) // 200 OK 상태 검증
+                .andExpect(jsonPath("$.success").value(true)) // success 필드 검증
+                .andExpect(jsonPath("$.message").value("게시물이 성공적으로 수정되었습니다.")) // 메시지 검증
+                .andExpect(jsonPath("$.data.letterSeq").value(letterSeq)) // 반환된 DTO 데이터 검증
+                .andExpect(jsonPath("$.data.letterTitle").value("수정 제목"))
+                .andExpect(jsonPath("$.data.letterContents").value("수정 내용"))
+                .andExpect(jsonPath("$.data.fileName").value("updated_file.jpg")) // 업데이트된 파일명 검증
+                .andExpect(jsonPath("$.data.imageUrl").value("/uploads/updated_file.jpg")); // 이미지 URL 검증
 
+        // recipientService.updateRecipient가 올바른 인자로 1번 호출되었는지 검증
         verify(recipientService, times(1))
                 .updateRecipient(eq(letterSeq), any(RecipientRequestDto.class));
     }

@@ -72,7 +72,7 @@ public class RecipientCommentServiceImplTest {
         activeComment = RecipientCommentEntity.builder()
                 .commentSeq(100)
                 .letterSeq(activeRecipient) // 부모 게시물 연결
-                .commentContents("원래 댓글 내용")
+                .contents("원래 댓글 내용")
                 .commentWriter("원래 작성자")
                 .delFlag("N")
                 .writeTime(LocalDateTime.now())
@@ -82,7 +82,7 @@ public class RecipientCommentServiceImplTest {
         deletedComment = RecipientCommentEntity.builder()
                 .commentSeq(101)
                 .letterSeq(activeRecipient) // 부모 게시물 연결
-                .commentContents("삭제된 댓글 내용")
+                .contents("삭제된 댓글 내용")
                 .commentWriter("삭제된 작성자")
                 .delFlag("Y") // 삭제된 상태
                 .writeTime(LocalDateTime.now())
@@ -98,7 +98,7 @@ public class RecipientCommentServiceImplTest {
             // Given
             Integer letterSeq = activeRecipient.getLetterSeq();
             RecipientCommentRequestDto requestDto = RecipientCommentRequestDto.builder()
-                    .commentContents("<p>새로운 댓글 내용</p>")
+                    .contents("<p>새로운 댓글 내용</p>")
                     .commentWriter("새로운 작성자")
                     .commentPasscode("newpass")
                     .build();
@@ -159,7 +159,7 @@ public class RecipientCommentServiceImplTest {
             // Given
             Integer letterSeq = activeRecipient.getLetterSeq();
             RecipientCommentRequestDto requestDto = RecipientCommentRequestDto.builder()
-                    .commentContents("<p></p>") // 내용이 없거나 필터링 후 비어질 내용
+                    .contents("<p></p>") // 내용이 없거나 필터링 후 비어질 내용
                     .commentWriter("test")
                     .commentPasscode("pass")
                     .build();
