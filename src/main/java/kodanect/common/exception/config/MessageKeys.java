@@ -13,6 +13,7 @@ public final class MessageKeys {
     public static final String INVALID_BOARD_CODE = "board.invalidCode";
     public static final String FILE_NOT_FOUND = "file.notFound";
     public static final String FILE_ACCESS_VIOLATION = "file.accessViolation";
+    public static final String INVALID_FILE_NAME = "file.invalidFileName";
     public static final String ARTICLE_DETAIL_SUCCESS = "article.detailSuccess";
     public static final String ARTICLE_LIST_SUCCESS = "article.listSuccess";
     public static final String RECIPIENT_COMMENT_NOT_FOUND = "recipient.comment.notfound";

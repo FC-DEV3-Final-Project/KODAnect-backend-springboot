@@ -59,6 +59,14 @@ pipeline {
             steps {
                 script {
                     githubNotify context: 'build', status: 'PENDING', description: '빌드 시작...'
+
+                    def codeChanged = sh(script: 'scripts/skip-if-no-code-change.sh', returnStatus: true)
+                    if (codeChanged == 0) {
+                        echo "[INFO] 코드 변경 없음. 빌드 스킵"
+                        githubNotify context: 'build', status: 'SUCCESS', description: '코드 변경 없음. 빌드 스킵'
+                        return
+                    }
+
                     catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                         sh env.BRANCH_NAME == 'main' ? './mvnw clean compile' : './mvnw compile'
                     }
@@ -74,25 +82,37 @@ pipeline {
             }
         }
 
+
         stage('Test & Coverage') {
             steps {
                 script {
-                    githubNotify context: 'test', status: 'PENDING', description: '테스트 및 커버리지 실행 중...'
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        sh './mvnw verify'
-                        junit 'target/surefire-reports/*.xml'
+                    githubNotify context: 'test', status: 'PENDING', description: '변경된 테스트 실행 중...'
+
+                    def testChanged = sh(script: 'scripts/run-changed-tests.sh', returnStatus: true)
+                    if (testChanged == 0) {
+                        echo "[INFO] 테스트 변경 없음. 테스트 스킵"
+                        githubNotify context: 'test', status: 'SUCCESS', description: '테스트 변경 없음. 스킵'
+                        return
                     }
+
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        sh 'scripts/run-changed-tests.sh'
+                    }
+
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
 
                     if (currentBuild.currentResult == 'FAILURE') {
                         githubNotify context: 'test', status: 'FAILURE', description: '테스트 실패'
                         env.CI_FAILED = 'true'
                         error('Test 실패')
                     } else {
-                        githubNotify context: 'test', status: 'SUCCESS', description: '테스트 및 커버리지 성공'
+                        githubNotify context: 'test', status: 'SUCCESS', description: '테스트 성공'
                     }
                 }
             }
         }
+
+
 
         stage('SonarCloud Analysis') {
             when {
@@ -104,6 +124,8 @@ pipeline {
                     withSonarQubeEnv('SonarCloud') {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                             catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                                sh './mvnw verify -Pwith-coverage'
+
                                 def sonarCmd = "./mvnw sonar:sonar" +
                                     " -Dsonar.projectKey=kodanect" +
                                     " -Dsonar.organization=fc-dev3-final-project" +
@@ -160,6 +182,40 @@ pipeline {
                 }
             }
         }
+
+        stage('Create GitHub Deployment') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-token-string', variable: 'GITHUB_TOKEN')]) {
+                        def commitSha = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            def response = sh(
+                                script: """
+                                    curl -s -X POST https://api.github.com/repos/FC-DEV3-Final-Project/KODAnect-backend-springboot/deployments \\
+                                    -H "Authorization: token ${GITHUB_TOKEN}" \\
+                                    -H "Accept: application/vnd.github+json" \\
+                                    -d '{
+                                        "ref": "${commitSha}",
+                                        "environment": "production",
+                                        "required_contexts": [],
+                                        "auto_merge": false,
+                                        "description": "Jenkins 배포 트리거"
+                                    }'
+                                """,
+                                returnStdout: true
+                            ).trim()
+                            def deploymentId = new groovy.json.JsonSlurperClassic().parseText(response).id
+                            env.GITHUB_DEPLOYMENT_ID = deploymentId?.toString()
+                        }
+                    }
+                }
+            }
+        }
+
 
         stage('Deploy to Server') {
             when {
@@ -239,6 +295,31 @@ EOF
                             env.CD_FAILED = 'true'
                             error('배포 실패')
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Mark GitHub Deployment as Success') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { return env.GITHUB_DEPLOYMENT_ID != null }
+                }
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'github-token-string', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            curl -X POST https://api.github.com/repos/FC-DEV3-Final-Project/KODAnect-backend-springboot/deployments/${GITHUB_DEPLOYMENT_ID}/statuses \\
+                            -H "Authorization: token ${GITHUB_TOKEN}" \\
+                            -H "Accept: application/vnd.github+json" \\
+                            -d '{
+                                "state": "success",
+                                "environment": "production",
+                                "description": "Jenkins에서 배포 성공"
+                            }'
+                        """
                     }
                 }
             }
