@@ -78,7 +78,8 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
                 .where(where)
                 .orderBy(
                         article.fixFlag.desc(),
-                        article.writeTime.desc()
+                        article.writeTime.desc(),
+                        article.id.articleSeq.desc()
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

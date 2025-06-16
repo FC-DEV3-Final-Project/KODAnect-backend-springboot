@@ -225,7 +225,8 @@ public class ArticleController {
                 pageable.getPageSize(),
                 Sort.by(
                         Sort.Order.desc("fixFlag"),
-                        Sort.Order.desc("writeTime")
+                        Sort.Order.desc("writeTime"),
+                        Sort.Order.desc("articleSeq")
                 )
         );
     }
