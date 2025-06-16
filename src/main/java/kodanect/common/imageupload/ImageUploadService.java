@@ -1,4 +1,4 @@
-package kodanect.common.imageUpload;
+package kodanect.common.imageupload;
 
 import kodanect.common.config.GlobalsProperties;
 import org.springframework.stereotype.Service;
@@ -47,12 +47,10 @@ public class ImageUploadService {
         // 4. 저장된 이미지의 웹 접근 URL 생성
         // globalsProperties.getFileBaseUrl() 예: "/uploads"
         // 최종 URL 예: http://localhost:8080/uploads/generated-uuid.jpg
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path(globalsProperties.getFileBaseUrl()) // CKEditor에서 접근할 기본 URL (ex: /uploads)
                 .path("/")
                 .path(fileName) // 생성된 고유 파일명
                 .toUriString();
-
-        return fileDownloadUri;
     }
 }

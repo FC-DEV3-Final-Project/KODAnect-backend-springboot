@@ -139,7 +139,7 @@ public class RecipientServiceImpl implements RecipientService {
 
         RecipientEntity updatedEntity = recipientRepository.save(recipientEntityold); // 변경사항 저장
         logger.info("게시물 성공적으로 수정됨: letterSeq={}", updatedEntity.getLetterSeq());
-        return RecipientDetailResponseDto.fromEntity(updatedEntity); // DTO로 변환하여 반환
+        return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl()); // DTO로 변환하여 반환
     }
 
     // 게시물 삭제
@@ -228,7 +228,7 @@ public class RecipientServiceImpl implements RecipientService {
         RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
 
         // 상세 DTO로 변환하여 반환
-        return RecipientDetailResponseDto.fromEntity(savedEntity);
+        return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl());
     }
 
     // 특정 게시물 조회
@@ -244,7 +244,7 @@ public class RecipientServiceImpl implements RecipientService {
         recipientRepository.save(recipientEntity); // 조회수 업데이트
 
         // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함)
-        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity);
+        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, globalsProperties.getFileBaseUrl());
 
         // 4. 상위 INITIAL_COMMENT_LOAD_LIMIT 개 댓글 조회
         // lastCommentId는 첫 조회이므로 0 (또는 null), size는 INITIAL_COMMENT_LOAD_LIMIT + 1 (다음 커서 확인용)

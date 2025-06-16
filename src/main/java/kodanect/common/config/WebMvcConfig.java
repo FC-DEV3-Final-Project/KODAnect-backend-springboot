@@ -45,14 +45,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/admin/kindeditor/attached/**")
-                .addResourceLocations("file:/app/uploads/admin/kindeditor/attached/");
-        registry.addResourceHandler("/upload_img/**")
-                .addResourceLocations("file:/app/uploads/upload_img/");
-        // Recipient 게시판 이미지 파일 핸들러
-        // file.base-url (예: /uploads/**) 요청을 file:uploadRootDir (예: file:/app/uploads/) 경로로 매핑
-        registry.addResourceHandler(globalsProperties.getFileBaseUrl() + "/**")
-                .addResourceLocations("file:" + globalsProperties.getFileStorePath() + "/");
+        String fileStorePath = appendSlashIfMissing(globalsProperties.getFileStorePath()); // ./uploads/
+        String fileBaseUrl = appendSlashIfMissing(globalsProperties.getFileBaseUrl());     // /image/uploads/
+
+        // CKEditor 등에서 업로드한 이미지 포함하여 모든 정적 리소스 파일 핸들링
+        registry.addResourceHandler(fileBaseUrl + "**")  // /image/uploads/**
+                .addResourceLocations("file:" + fileStorePath);     // file:./uploads/
+    }
+
+    private String appendSlashIfMissing(String path) {
+        return path.endsWith("/") ? path : path + "/";
     }
 }
 

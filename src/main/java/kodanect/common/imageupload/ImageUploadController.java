@@ -1,4 +1,4 @@
-package kodanect.common.imageUpload;
+package kodanect.common.imageupload;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +13,10 @@ import java.util.Map;
 
 @RestController
 public class ImageUploadController {
+
+    private static final String ERROR_KEY = "error";
+    private static final String URL_KEY = "url";
+
     private final ImageUploadService imageUploadService;
 
     public ImageUploadController(ImageUploadService imageUploadService) {
@@ -32,19 +36,19 @@ public class ImageUploadController {
         Map<String, String> response = new HashMap<>();
 
         if (file.isEmpty()) {
-            response.put("error", "파일이 존재하지 않습니다.");
+            response.put(ERROR_KEY, "파일이 존재하지 않습니다.");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
         try {
             String imageUrl = imageUploadService.saveImageAndGetUrl(file);
-            response.put("url", imageUrl); // CKEditor가 기대하는 JSON 형식
+            response.put(URL_KEY, imageUrl); // CKEditor가 기대하는 JSON 형식
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (IOException ex) {
-            response.put("error", "파일 업로드 중 오류가 발생했습니다: " + ex.getMessage());
+            response.put(ERROR_KEY, "파일 업로드 중 오류가 발생했습니다: " + ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception ex) {
-            response.put("error", "알 수 없는 오류가 발생했습니다: " + ex.getMessage());
+            response.put(ERROR_KEY, "알 수 없는 오류가 발생했습니다: " + ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

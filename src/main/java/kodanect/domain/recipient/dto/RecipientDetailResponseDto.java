@@ -41,8 +41,11 @@ public class RecipientDetailResponseDto {
     private CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
-    public static RecipientDetailResponseDto fromEntity(RecipientEntity entity) {
-
+    public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String fileBaseUrl) {
+        String imageUrl = null;
+        if (entity.getFileName() != null && !entity.getFileName().isEmpty()) {
+            imageUrl = fileBaseUrl + "/" + entity.getFileName();
+        }
         return RecipientDetailResponseDto.builder() // 빌더로 객체를 생성한 결과를 바로 반환
                 .letterSeq(entity.getLetterSeq())
                 .organCode(entity.getOrganCode())

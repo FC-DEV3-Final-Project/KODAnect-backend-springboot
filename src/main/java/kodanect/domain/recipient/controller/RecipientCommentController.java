@@ -60,7 +60,8 @@ public class RecipientCommentController {
 
     // 댓글 인증 API (비밀번호 확인)
     @PostMapping("/{letterSeq}/comments/{commentSeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<Void>> verifyPwdComment(@PathVariable("commentSeq") Integer commentSeq,
+    public ResponseEntity<ApiResponse<Void>> verifyPwdComment(@PathVariable("letterSeq") Integer letterSeq,
+                                                              @PathVariable("commentSeq") Integer commentSeq,
                                                               @Valid @RequestBody RecipientCommentAuthRequestDto authRequestDto) {
         // 서비스에서 비밀번호 검증 수행. 실패 시 예외 발생 (컨트롤러에서 예외 처리)
         recipientCommentService.authenticateComment(commentSeq, authRequestDto.getCommentPasscode());
@@ -80,20 +81,6 @@ public class RecipientCommentController {
         );
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "댓글이 성공적으로 수정되었습니다.", updatedComment));
     }
-
-//    // 댓글 수정
-//    @PutMapping("/{letterSeq}/comments/{commentSeq}")
-//    public ResponseEntity<ApiResponse<RecipientCommentResponseDto>> updateComment(@PathVariable("letterSeq") Integer letterSeq,
-//                                                                                  @PathVariable("commentSeq") Integer commentSeq,
-//                                                                                  @Valid @RequestBody RecipientCommentRequestDto requestDto) {
-//        RecipientCommentResponseDto updatedComment = recipientCommentService.updateComment(
-//                commentSeq, // 댓글 시퀀스
-//                requestDto.getCommentContents(), // 업데이트할 내용
-//                requestDto.getCommentWriter(), // 업데이트할 작성자
-//                requestDto.getCommentPasscode() // 비밀번호
-//        );
-//        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "댓글이 성공적으로 수정되었습니다.", updatedComment));
-//    }
 
     // 댓글 삭제
     @DeleteMapping("/{letterSeq}/comments/{commentSeq}")
