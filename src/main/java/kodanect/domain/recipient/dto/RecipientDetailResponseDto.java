@@ -42,10 +42,11 @@ public class RecipientDetailResponseDto {
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String fileBaseUrl) {
-        String imageUrl = null;
-        if (entity.getFileName() != null && !entity.getFileName().isEmpty()) {
-            imageUrl = fileBaseUrl + "/" + entity.getFileName();
-        }
+        // 이미지 URL 생성 로직
+        String fullImageUrl = (entity.getFileName() != null && !entity.getFileName().isEmpty())
+                ? fileBaseUrl + "/" + entity.getFileName()
+                : null;
+
         return RecipientDetailResponseDto.builder() // 빌더로 객체를 생성한 결과를 바로 반환
                 .letterSeq(entity.getLetterSeq())
                 .organCode(entity.getOrganCode())
@@ -65,7 +66,7 @@ public class RecipientDetailResponseDto {
                 .delFlag(entity.getDelFlag())
                 .commentCount(0)
                 .hasMoreComments(false)
-                .imageUrl(entity.getFileName()) // RecipientEntity의 fileName을 이미지 URL로 활용
+                .imageUrl(fullImageUrl)
                 // 초기에는 댓글 데이터를 비워두고, 서비스 계층에서 설정
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
                 .build();
