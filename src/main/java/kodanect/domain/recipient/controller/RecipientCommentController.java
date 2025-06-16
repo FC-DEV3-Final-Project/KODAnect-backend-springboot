@@ -1,5 +1,6 @@
 package kodanect.domain.recipient.controller;
 
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.domain.recipient.dto.RecipientCommentAuthRequestDto;
 import kodanect.common.response.CursorCommentPaginationResponse;
@@ -8,8 +9,6 @@ import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
 import kodanect.domain.recipient.dto.RecipientCommentUpdateRequestDto;
 import kodanect.domain.recipient.service.RecipientCommentService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +19,7 @@ import javax.validation.Valid;
 @RequestMapping("/recipientLetters")
 public class RecipientCommentController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RecipientCommentController.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientCommentController.class);
 
     private final RecipientCommentService recipientCommentService;
 

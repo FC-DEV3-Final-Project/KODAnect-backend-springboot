@@ -1,11 +1,10 @@
 package kodanect.domain.recipient.controller;
 
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.recipient.dto.*;
 import kodanect.domain.recipient.service.RecipientService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import java.util.Map;
 @RequestMapping("/recipientLetters")
 public class RecipientController {
 
-    private static final Logger logger = LoggerFactory.getLogger(RecipientController.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientController.class);
 
     private final RecipientService recipientService;
 

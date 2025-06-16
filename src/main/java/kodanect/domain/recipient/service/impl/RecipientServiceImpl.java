@@ -1,6 +1,7 @@
 package kodanect.domain.recipient.service.impl;
 
 import kodanect.common.config.GlobalsProperties;
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
@@ -13,9 +14,6 @@ import kodanect.domain.recipient.entity.RecipientEntity;
 import kodanect.domain.recipient.repository.RecipientCommentRepository;
 import kodanect.domain.recipient.repository.RecipientRepository;
 import kodanect.domain.recipient.service.RecipientService;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -39,12 +37,11 @@ import java.util.stream.Collectors;
 
 import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 
-@Slf4j
 @Service("recipientService")
 public class RecipientServiceImpl implements RecipientService {
 
     // 로거 선언 (가장 먼저)
-    private static final Logger logger = LoggerFactory.getLogger(RecipientServiceImpl.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientServiceImpl.class);
 
     // 정적(static) 상수 정의
     private static final String RECIPIENT_NOT_FOUND_MESSAGE = "해당 게시물이 존재하지 않거나 이미 삭제되었습니다.";
@@ -255,8 +252,8 @@ public class RecipientServiceImpl implements RecipientService {
                 0, // lastCommentId는 첫 조회이므로 0
                 commentPageable // Pageable을 사용하여 LIMIT 적용
         );
-        log.info("조회된 초기 댓글 수: {}", initialComments.size());
-        initialComments.forEach(c -> log.info("commentSeq={}, delFlag={}", c.getCommentSeq(), c.getDelFlag()));
+        logger.info("조회된 초기 댓글 수: {}", initialComments.size());
+        initialComments.forEach(c -> logger.info("commentSeq={}, delFlag={}", c.getCommentSeq(), c.getDelFlag()));
 
         // 5. 초기 댓글 Entity를 DTO로 변환
         List<RecipientCommentResponseDto> initialCommentDtos = initialComments.stream()

@@ -20,7 +20,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public WebMvcConfig(GlobalsProperties globalsProperties) {
         this.globalsProperties = globalsProperties;
     }
-
     /**
      * CORS 설정
      * - 특정 도메인에서 오는 요청을 허용
