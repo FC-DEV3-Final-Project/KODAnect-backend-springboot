@@ -133,7 +133,6 @@ public class HeavenControllerTest {
         /* given */
         Integer letterSeq = 1;
         String letterTitle = "사랑하는 가족에게";
-        String letterPasscode = "asdf1234";
         String letterWriter = "작성자";
         String anonymityFlag = "Y";
         Integer readCount = 5;
@@ -156,7 +155,6 @@ public class HeavenControllerTest {
         HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
                 .letterSeq(letterSeq)
                 .letterTitle(letterTitle)
-                .letterPasscode(letterPasscode)
                 .letterWriter(letterWriter)
                 .anonymityFlag(anonymityFlag)
                 .readCount(readCount)

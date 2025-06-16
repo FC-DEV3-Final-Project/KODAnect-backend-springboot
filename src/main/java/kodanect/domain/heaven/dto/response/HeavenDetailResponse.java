@@ -2,7 +2,6 @@ package kodanect.domain.heaven.dto.response;
 
 import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
-import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
@@ -21,17 +20,11 @@ public class HeavenDetailResponse {
     /* 기증자 일련번호 */
     private Integer donateSeq;
 
-    /* 권역 코드 */
-    private AreaCode areaCode;
-
     /* 편지 제목 */
     private String letterTitle;
 
     /* 기증자 명 */
     private String donorName;
-
-    /* 비밀번호 */
-    private String letterPasscode;
 
     /* 편지 작성자 */
     private String letterWriter;
@@ -57,6 +50,11 @@ public class HeavenDetailResponse {
     /* 댓글 리스트 */
     private CursorCommentPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse;
 
+    /* 생성 일시 형식화 */
+    public String getWriteTime() {
+        return writeTime.toLocalDate().toString();
+    }
+
     public static HeavenDetailResponse of(
             Heaven heaven,
             CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse
@@ -66,10 +64,8 @@ public class HeavenDetailResponse {
         return HeavenDetailResponse.builder()
                 .letterSeq(heaven.getLetterSeq())
                 .donateSeq((memorial != null) ? memorial.getDonateSeq() : null)
-                .areaCode(heaven.getAreaCode())
                 .letterTitle(heaven.getLetterTitle())
                 .donorName(heaven.getDonorName())
-                .letterPasscode(heaven.getLetterPasscode())
                 .letterWriter(heaven.getLetterWriter())
                 .anonymityFlag(heaven.getAnonymityFlag())
                 .readCount(heaven.getReadCount())

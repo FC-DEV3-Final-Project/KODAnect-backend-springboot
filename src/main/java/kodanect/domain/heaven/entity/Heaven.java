@@ -1,6 +1,5 @@
 package kodanect.domain.heaven.entity;
 
-import kodanect.domain.donation.dto.response.AreaCode;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.exception.PasswordMismatchException;
 import kodanect.domain.remembrance.entity.Memorial;
@@ -32,11 +31,6 @@ public class Heaven {
     @ManyToOne
     @JoinColumn(name = "donate_seq")
     private Memorial memorial;
-
-    /* 권역 코드 */
-    @Column(length = 10)
-    @Enumerated(EnumType.STRING)
-    private AreaCode areaCode;
 
     /* 편지 제목 */
     @Column(length = 600)

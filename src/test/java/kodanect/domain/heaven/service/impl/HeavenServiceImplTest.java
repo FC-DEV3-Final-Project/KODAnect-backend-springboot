@@ -2,6 +2,7 @@ package kodanect.domain.heaven.service.impl;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.HeavenFinder;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
@@ -38,6 +39,8 @@ public class HeavenServiceImplTest {
     private HeavenCommentRepository heavenCommentRepository;
     @Mock
     private HeavenCommentService heavenCommentService;
+    @Mock
+    private HeavenFinder heavenFinder;
 
     @Test
     @DisplayName("게시물 전체 조회 테스트")
@@ -148,7 +151,7 @@ public class HeavenServiceImplTest {
             heavenCommentResponseList.add(new HeavenCommentResponse(i, "댓글 작성자"+i, "댓글 내용"+i, now));
         }
 
-        when(heavenRepository.findById(letterSeq)).thenReturn(Optional.of(heaven));
+        when(heavenFinder.findByIdOrThrow(letterSeq)).thenReturn(heaven);
         when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize + 1)).thenReturn(heavenCommentResponseList);
         when(heavenCommentRepository.countByHeaven(heaven)).thenReturn(commentCount);
 
@@ -165,7 +168,6 @@ public class HeavenServiceImplTest {
 
         assertEquals(letterSeq, heavenDetailResponse.getLetterSeq());
         assertEquals("사랑하는 가족에게", heavenDetailResponse.getLetterTitle());
-        assertEquals("asdf1234", heavenDetailResponse.getLetterPasscode());
         assertEquals("작성자", heavenDetailResponse.getLetterWriter());
         assertEquals("Y", heavenDetailResponse.getAnonymityFlag());
         assertEquals(Integer.valueOf(1), heavenDetailResponse.getReadCount()); // 조회수 1 증가

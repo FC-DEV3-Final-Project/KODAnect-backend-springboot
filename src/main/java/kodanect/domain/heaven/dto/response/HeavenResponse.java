@@ -32,6 +32,11 @@ public class HeavenResponse implements CursorIdentifiable<Integer> {
     /* 생성 일시 */
     private LocalDateTime writeTime;
 
+    /* 생성 일시 형식화 */
+    public String getWriteTime() {
+        return writeTime.toLocalDate().toString();
+    }
+
     @Override
     public Integer getCursorId() {
         return letterSeq;
