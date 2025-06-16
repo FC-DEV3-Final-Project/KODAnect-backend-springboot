@@ -79,7 +79,7 @@ public class HeavenServiceImplTest {
         assertEquals("작성자1", firstHeavenResponse.getLetterWriter());
         assertEquals(anonymityFlag, firstHeavenResponse.getAnonymityFlag());
         assertEquals(Integer.valueOf(readCount), firstHeavenResponse.getReadCount());
-        assertEquals(now, firstHeavenResponse.getWriteTime());
+        assertEquals(now.toLocalDate().toString(), firstHeavenResponse.getWriteTime());
     }
 
     @Test
@@ -121,7 +121,7 @@ public class HeavenServiceImplTest {
         assertEquals("작성자1", firstHeavenResponse.getLetterWriter());
         assertEquals(anonymityFlag, firstHeavenResponse.getAnonymityFlag());
         assertEquals(Integer.valueOf(readCount), firstHeavenResponse.getReadCount());
-        assertEquals(now, firstHeavenResponse.getWriteTime());
+        assertEquals(now.toLocalDate().toString(), firstHeavenResponse.getWriteTime());
     }
 
     @Test
@@ -172,11 +172,11 @@ public class HeavenServiceImplTest {
         assertEquals("Y", heavenDetailResponse.getAnonymityFlag());
         assertEquals(Integer.valueOf(1), heavenDetailResponse.getReadCount()); // 조회수 1 증가
         assertEquals("이 편지는 하늘로 보냅니다.", heavenDetailResponse.getLetterContents());
-        assertEquals(now, heavenDetailResponse.getWriteTime());
+        assertEquals(now.toLocalDate().toString(), heavenDetailResponse.getWriteTime());
 
         assertEquals(1, firstHeavenCommentResponse.getCommentSeq());
         assertEquals("댓글 작성자1", firstHeavenCommentResponse.getCommentWriter());
         assertEquals("댓글 내용1", firstHeavenCommentResponse.getContents());
-        assertEquals(now, firstHeavenCommentResponse.getWriteTime());
+        assertEquals(now.toLocalDate().toString(), firstHeavenCommentResponse.getWriteTime());
     }
 }

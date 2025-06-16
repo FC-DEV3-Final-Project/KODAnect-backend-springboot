@@ -25,7 +25,7 @@ public class HeavenCommentController {
     @GetMapping
     public ResponseEntity<ApiResponse<CursorCommentPaginationResponse<HeavenCommentResponse, Integer>>> getMoreCommentList(
             @PathVariable Integer letterSeq,
-            @RequestParam Integer cursor,
+            @RequestParam(required = false) Integer cursor,
             @RequestParam(defaultValue = "3") int size
     ) {
         CursorCommentPaginationResponse<HeavenCommentResponse, Integer> commentList = heavenCommentService.getMoreCommentList(letterSeq, cursor, size);

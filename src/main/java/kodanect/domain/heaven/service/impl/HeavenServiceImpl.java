@@ -4,12 +4,14 @@ import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
 import kodanect.common.util.HeavenFinder;
+import kodanect.common.util.MemorialFinder;
 import kodanect.common.validation.HeavenValidator;
 import kodanect.domain.heaven.dto.request.HeavenCreateRequest;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
+import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.exception.FileStorageException;
 import kodanect.domain.heaven.exception.InvalidTypeException;
@@ -45,6 +47,7 @@ public class HeavenServiceImpl implements HeavenService {
     private final HeavenCommentService heavenCommentService;
     private final MemorialRepository memorialRepository;
     private final HeavenFinder heavenFinder;
+    private final MemorialFinder memorialFinder;
 
     /* 게시물 전체 조회 (페이징) */
     @Override
@@ -90,6 +93,20 @@ public class HeavenServiceImpl implements HeavenService {
                 CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);
 
         return HeavenDetailResponse.of(heaven, cursorCommentCountPaginationResponse);
+    }
+
+    /* 기증자 추모관 상세 조회 시 하늘나라 편지 전체 조회 */
+    @Override
+    public CursorPaginationResponse<MemorialHeavenResponse, Integer> getMemorialHeavenList(Integer donateSeq, Integer cursor, int size) {
+        Memorial memorial = memorialFinder.findByIdOrThrow(donateSeq);
+
+        Pageable pageable = PageRequest.of(0, size + 1);
+
+        List<MemorialHeavenResponse> memorialHeavenResponseList = heavenRepository.findMemorialHeavenResponseById(memorial, cursor, pageable);
+
+        int count = heavenRepository.countByMemorial(memorial);
+
+        return CursorFormatter.cursorFormat(memorialHeavenResponseList, size, count);
     }
 
     /* 게시물 생성 */

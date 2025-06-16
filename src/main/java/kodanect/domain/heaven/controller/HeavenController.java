@@ -7,6 +7,7 @@ import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.dto.request.HeavenVerifyRequest;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
+import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -61,6 +62,20 @@ public class HeavenController {
         String message = messageSourceAccessor.getMessage("heaven.detail.get.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenDetailResponse));
+    }
+
+    /* 기증자 추모관 상세 조회 시 하늘나라 편지 전체 조회 */
+    @GetMapping("/{donateSeq}/remembrance")
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<MemorialHeavenResponse, Integer>>> getMemorialHeavenList(
+            @PathVariable Integer donateSeq,
+            @RequestParam(required = false) Integer cursor,
+            @RequestParam(defaultValue = "3") int size
+    ) {
+        CursorPaginationResponse<MemorialHeavenResponse, Integer> memorialHeavenList = heavenService.getMemorialHeavenList(donateSeq, cursor, size);
+
+        String message = messageSourceAccessor.getMessage("heaven.list.get.success");
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, memorialHeavenList));
     }
 
     /* 게시물 등록 */
