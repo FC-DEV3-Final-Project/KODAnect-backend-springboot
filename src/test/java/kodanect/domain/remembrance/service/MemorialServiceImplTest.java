@@ -255,8 +255,8 @@ public class MemorialServiceImplTest {
 
 
         when(memorialFinder.findByIdOrThrow(donateSeq)).thenReturn(memorial);
-        when(memorialCommentService.getMemorialCommentList(donateSeq, null, size+1)).thenReturn(page);
-        when(heavenService.getMemorialHeavenList(donateSeq, null, size+1)).thenReturn(letters);
+        when(memorialCommentService.getMemorialCommentList(eq(donateSeq), eq(null), anyInt())).thenReturn(page);
+        when(heavenService.getMemorialHeavenList(eq(donateSeq), eq(null), anyInt())).thenReturn(letters);
 
         MemorialDetailResponse result = memorialService.getMemorialByDonateSeq(donateSeq);
 
@@ -276,6 +276,7 @@ public class MemorialServiceImplTest {
         assertEquals(6, result.getHardCount());
         assertEquals(7, result.getSadCount());
         assertEquals("2024-01-01", result.getWriteTime());
+        assertEquals(1, result.getHeavenLetterResponses().getContent().get(0).getLetterSeq());
     }
 
 }
