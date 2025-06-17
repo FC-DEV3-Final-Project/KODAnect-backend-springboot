@@ -117,7 +117,7 @@ public class ActionLogFlusher {
                         .build());
 
             } catch (JsonProcessingException e) {
-                throw new ActionLogJsonSerializationException();
+                throw new ActionLogJsonSerializationException("로그 엔티티 직렬화");
             }
         }
 

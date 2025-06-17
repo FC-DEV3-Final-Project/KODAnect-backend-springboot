@@ -49,6 +49,10 @@ public final class MessageKeys {
     public static final String HEAVEN_COMMENT_NOT_FOUND = "heaven.comment.notFound.error";
     public static final String HEAVEN_COMMENT_INFORM_MISMATCH = "heaven.comment.mismatch.error";
 
+    // 액션 로그 관련
+    public static final String ACTION_LOG_JSON_SERIALIZATION_FAIL = "error.actionlog.json.serialization";
+    public static final String FRONTEND_LOG_LIST_EMPTY = "error.frontend.log.empty";
+
     private MessageKeys() {}
 
 }

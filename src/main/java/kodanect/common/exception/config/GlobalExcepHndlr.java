@@ -7,8 +7,6 @@ import kodanect.domain.donation.exception.BadRequestException;
 import kodanect.domain.donation.exception.DonationNotFoundException;
 import kodanect.domain.donation.exception.ValidationFailedException;
 import kodanect.domain.donation.exception.*;
-import kodanect.domain.logging.exception.ActionLogJsonSerializationException;
-import kodanect.domain.logging.exception.EmptyFrontendLogListException;
 import kodanect.domain.remembrance.exception.*;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -64,15 +62,13 @@ public class GlobalExcepHndlr {
     /**
      * 400 예외 처리
      *
-     * 잘못된 입력 발생 시 400 응답 반환
-     * */
-    @ExceptionHandler({
-        MissingRequestHeaderException.class,
-        EmptyFrontendLogListException.class
-    })public ResponseEntity<ApiResponse<Void>> handleBadRequest() {
+     * 요청 헤더 누락 시 400 응답 반환
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestHeader() {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."));
+                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "필수 요청 헤더가 누락되었습니다."));
     }
 
     /**
@@ -368,18 +364,6 @@ public class GlobalExcepHndlr {
         log.warn("요청 값 변환 실패", ex);
         return ResponseEntity.badRequest()
                 .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다."));
-    }
-
-    /**
-     * 500 예외 처리
-     *
-     * 액션 로그 직렬화 실패 시 발생하는 예외 처리
-     */
-    @ExceptionHandler(ActionLogJsonSerializationException.class)
-    public ResponseEntity<ApiResponse<Void>> handleActionLogConversion(ActionLogJsonSerializationException ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "로그 데이터를 저장하는 도중 오류가 발생했습니다."));
     }
 
 }

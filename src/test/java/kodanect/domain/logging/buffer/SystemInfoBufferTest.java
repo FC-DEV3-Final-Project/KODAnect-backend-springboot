@@ -1,6 +1,5 @@
-package kodanect.domain.logging;
+package kodanect.domain.logging.buffer;
 
-import kodanect.domain.logging.buffer.SystemInfoBuffer;
 import kodanect.domain.logging.dto.SystemInfoDto;
 import org.junit.Before;
 import org.junit.Test;
