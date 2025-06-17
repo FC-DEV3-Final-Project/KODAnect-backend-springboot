@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -45,11 +47,12 @@ public class ImageUploadController {
             throw new BadRequestException(msg.getMessage("upload.error.sizeExceeded"));
         }
 
-        // 3. 파일명 생성 (예: 20250617_154530_cat.jpg)
-        String originalFileName = file.getOriginalFilename();
-        String timestamp = java.time.LocalDateTime.now()
-                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String storedFileName = timestamp + "_" + originalFileName;
+        // 3. 파일명 생성
+        String rawFileName = Optional.ofNullable(file.getOriginalFilename()).orElse("unknown.jpg");
+        String safeFileName = Paths.get(rawFileName).getFileName().toString(); // 경로 제거
+        String ext = safeFileName.contains(".") ? safeFileName.substring(safeFileName.lastIndexOf(".")) : ".jpg";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String storedFileName = timestamp + ext; // 예: 20250617_154530.jpg
 
         // 4. 저장 경로 설정 (/app/files/upload_img/a1b2c3d4_cat.jpg)
         // 도커에서는 실제 /home/app/files/upload_img/ 에 저장됨
