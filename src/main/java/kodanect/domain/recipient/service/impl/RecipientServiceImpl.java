@@ -23,7 +23,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.criteria.Predicate;
 import java.io.IOException;
@@ -31,7 +30,6 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,17 +71,31 @@ public class RecipientServiceImpl implements RecipientService {
 
     // 게시물 비밀번호 확인
     @Override
-    public void verifyLetterPassword(Integer letterSeq, String letterPasscode) {
+    public RecipientDetailResponseDto verifyLetterPassword(Integer letterSeq, String letterPasscode) {
 
         // 게시물 조회 (삭제되지 않은 게시물만 조회)
         RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag())) // 삭제되지 않은 게시물만 필터링
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
 
-        // 비밀번호 불일치 (엔티티의 checkPasscode 메서드 활용)
-        if (!recipientEntityold.checkPasscode(letterPasscode)) {
-            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
+        // DTO로 변환
+        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntityold, anonymousWriterValue);
+
+        // 비밀번호 일치 여부 확인
+        boolean isPasscodeMatched = recipientEntityold.checkPasscode(letterPasscode);
+
+        // DTO에 비밀번호 일치 여부 설정 (RecipientDetailResponseDto에 필드 추가 필요)
+        responseDto.setPasscodeMatched(isPasscodeMatched); // 이 필드를 DTO에 추가해야 함!
+
+        // 비밀번호가 일치하지 않으면 메시지 로깅 (예외를 던지지 않음)
+        if (!isPasscodeMatched) {
+            logger.warn("게시물 비밀번호 불일치: letterSeq={}", letterSeq);
+            // 프론트엔드에서 isPasscodeMatched 값을 확인하여 처리하도록 함
+        } else {
+            logger.info("게시물 비밀번호 일치: letterSeq={}", letterSeq);
         }
+
+        return responseDto;
     }
 
     // 게시물 수정
@@ -108,55 +120,16 @@ public class RecipientServiceImpl implements RecipientService {
         // 내용(HTML) 필터링 및 유효성 검사
         recipientEntityold.setLetterContents(cleanAndValidateContents(requestDto.getLetterContents()));
 
-        // --- 파일 업로드/교체/삭제 처리 로직 변경 (imageUrl 기준으로 판단) ---
-        String newImageUrl = requestDto.getImageUrl(); // 새로 전송된 이미지 URL
-        String newFileName = requestDto.getFileName(); // 새로 전송된 파일명
-        String newOrgFileName = requestDto.getOrgFileName(); // 새로 전송된 원본 파일명
+        // 파일 업로드/교체/삭제 처리 로직 분리
+        handleImageUpdate(recipientEntityold, requestDto); // 별도 메서드로 분리
 
-        String oldImageUrl = recipientEntityold.getImageUrl(); // 기존 엔티티의 이미지 URL
-        String oldFileName = recipientEntityold.getFileName(); // 기존 엔티티의 파일명
-
-        // Case 1: 새로운 이미지가 전송되었거나, 기존 이미지가 다른 이미지로 변경된 경우 (newImageUrl이 있고, 기존 imageUrl과 다른 경우)
-        if (newImageUrl != null && !newImageUrl.isEmpty() && !newImageUrl.equals(oldImageUrl)) {
-            // 기존 파일이 있다면 삭제
-            if (oldFileName != null && !oldFileName.isEmpty()) {
-                deleteExistingFile(oldFileName); // 실제 물리 파일 삭제는 oldFileName 기준
-            }
-            // 새 파일 정보로 엔티티 업데이트 (fileName, orgFileName은 DTO에 있는 값 그대로 설정)
-            recipientEntityold.setImageUrl(newImageUrl);
-            recipientEntityold.setFileName(newFileName);
-            recipientEntityold.setOrgFileName(newOrgFileName);
-            logger.info("게시물 이미지 변경됨: oldImageUrl={}, newImageUrl={}", oldImageUrl, newImageUrl);
-        }
-        // Case 2: 기존 이미지가 명시적으로 삭제된 경우 (newImageUrl이 null 또는 비어있고, 기존 oldImageUrl은 있었던 경우)
-        else if ((newImageUrl == null || newImageUrl.isEmpty()) && (oldImageUrl != null && !oldImageUrl.isEmpty())) {
-            // 기존 파일 삭제
-            if (oldFileName != null && !oldFileName.isEmpty()) {
-                deleteExistingFile(oldFileName); // 실제 물리 파일 삭제
-            }
-            recipientEntityold.setImageUrl(null);
-            recipientEntityold.setFileName(null);
-            recipientEntityold.setOrgFileName(null);
-            logger.info("게시물 이미지 삭제됨: oldImageUrl={}", oldImageUrl);
-        }
-        // Case 3: 파일 변경이 없는 경우 (newFileName == oldFileName 또는 둘 다 null/empty)
-        // 이 경우는 특별한 처리 없이 기존 값 유지
-
-        // organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
-        if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
-            recipientEntityold.setOrganEtc(null);
-        } else {
-            if (requestDto.getOrganEtc() == null || requestDto.getOrganEtc().trim().isEmpty()) {
-                logger.warn("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-                throw new RecipientInvalidDataException("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-            }
-            recipientEntityold.setOrganEtc(requestDto.getOrganEtc());
-        }
+        // organCode 및 organEtc 로직 분리
+        handleOrganCodeAndEtc(recipientEntityold, requestDto); // 별도 메서드로 분리
 
         RecipientEntity updatedEntity = recipientRepository.save(recipientEntityold); // 변경사항 저장
         logger.info("게시물 성공적으로 수정됨: letterSeq={}", updatedEntity.getLetterSeq());
         // DTO로 변환하여 반환 (이때 DTO에서 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
-        return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
+        return RecipientDetailResponseDto.fromEntity(updatedEntity, anonymousWriterValue);
     }
 
     // 게시물 등록
@@ -170,38 +143,17 @@ public class RecipientServiceImpl implements RecipientService {
 
         RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
 
-        // 첨부파일 등록 관련
-        String uploadedImageUrl = requestDto.getImageUrl();
-        String uploadedFileName = requestDto.getFileName();
-        String uploadedOrgFileName = requestDto.getOrgFileName();
+        // 파일 업로드/교체/삭제 처리 로직 분리
+        handleImageUpdate(recipientEntityRequest, requestDto); // 별도 메서드로 분리
 
-        // imageUrl이 유효하면 파일명과 원본 파일명 설정 (null 체크 없음)
-        recipientEntityRequest.setImageUrl(uploadedImageUrl);
-        recipientEntityRequest.setFileName(uploadedFileName);       // fileName은 DTO에 있으면 설정, 없으면 null
-        recipientEntityRequest.setOrgFileName(uploadedOrgFileName); // orgFileName은 DTO에 있으면 설정, 없으면 null
-        logger.info("첨부된 이미지 URL: {}, 파일명: {}, 원본 파일명: {}", uploadedImageUrl, uploadedFileName, uploadedOrgFileName);
+        // organCode 및 organEtc 로직 분리
+        handleOrganCodeAndEtc(recipientEntityRequest, requestDto); // 별도 메서드로 분리
 
-        // 작성자(letterWriter) 설정: 항상 원본 작성자 이름을 저장
-        recipientEntityRequest.setLetterWriter(requestDto.getLetterWriter()); // 원본 이름을 DB에 저장
-        recipientEntityRequest.setAnonymityFlag(requestDto.getAnonymityFlag()); // 익명 플래그도 DB에 저장
-
-        // 3. organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
-        if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
-            recipientEntityRequest.setOrganEtc(null);
-        }
-        else {
-            // ORGAN000인데 organEtc가 null이거나 비어있을 경우 (이전 NullPointerException의 다른 원인 가능성)
-            if (requestDto.getOrganEtc() == null || requestDto.getOrganEtc().trim().isEmpty()) {
-                logger.warn("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-                throw new RecipientInvalidDataException("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-            }
-        }
-
-        // 4. RecipientEntity 저장
+        // RecipientEntity 저장
         RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
 
-        // 5. 상세 DTO로 변환하여 반환
-        return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
+        // 상세 DTO로 변환하여 반환
+        return RecipientDetailResponseDto.fromEntity(savedEntity, anonymousWriterValue);
     }
 
     // 게시물 삭제
@@ -249,7 +201,7 @@ public class RecipientServiceImpl implements RecipientService {
         recipientRepository.save(recipientEntity); // 조회수 업데이트
 
         // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함, 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
-        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
+        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, anonymousWriterValue);
 
         // 4. 상위 INITIAL_COMMENT_LOAD_LIMIT 개 댓글 조회
         // lastCommentId는 첫 조회이므로 0 (또는 null), size는 INITIAL_COMMENT_LOAD_LIMIT + 1 (다음 커서 확인용)
@@ -418,55 +370,57 @@ public class RecipientServiceImpl implements RecipientService {
     }
 
     /**
-     * 이미지 파일을 저장하고, 저장된 파일의 URL과 원본 파일명을 반환하는 공통 메서드.
-     * @param imageFile 업로드할 MultipartFile.
-     * @return [파일 URL, 원본 파일명]을 포함하는 String 배열 또는 파일이 없으면 빈 배열.
-     * @throws RecipientInvalidDataException 파일 저장 실패 시 발생.
+     * 이미지 파일 업로드/교체/삭제 로직을 처리합니다.
+     * @param entity 기존 게시물 엔티티
+     * @param requestDto 업데이트 요청 DTO
      */
-    private String[] saveImageFile(MultipartFile imageFile) {
-        if (imageFile == null || imageFile.isEmpty()) {
-            return new String[]{}; // 저장할 파일이 없으면 빈 배열 반환
-        }
-        try {
-            String originalFilename = imageFile.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+    private void handleImageUpdate(RecipientEntity entity, RecipientRequestDto requestDto) {
+        String newImageUrl = requestDto.getImageUrl();
+        String newFileName = requestDto.getFileName();
+        String newOrgFileName = requestDto.getOrgFileName();
+
+        String oldImageUrl = entity.getImageUrl();
+        String oldFileName = entity.getFileName();
+
+        // Case 1: 새로운 이미지가 전송되었거나, 기존 이미지가 다른 이미지로 변경된 경우
+        if (newImageUrl != null && !newImageUrl.isEmpty() && !newImageUrl.equals(oldImageUrl)) {
+            if (oldFileName != null && !oldFileName.isEmpty()) {
+                deleteExistingFile(oldFileName); // 기존 물리 파일 삭제
             }
-            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-
-            Path uploadPath = Paths.get(globalsProperties.getFileStorePath()).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath); // 디렉토리가 없으면 생성
-
-            Path targetLocation = uploadPath.resolve(uniqueFileName);
-            Files.copy(imageFile.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            // 로깅 레벨 확인 후 메서드 호출
-            if (logger.isInfoEnabled()) {
-                logger.info("이미지 파일 저장 성공: {}", targetLocation);
-            }
-            // GlobalsProperties에서 fileBaseUrl 사용
-            String imageUrl = globalsProperties.getFileBaseUrl() + "/" + uniqueFileName;
-            return new String[]{imageUrl, originalFilename};
-        } catch (IOException ex) {
-            logger.error("이미지 파일 저장 실패: {}", ex.getMessage());
-            throw new RecipientInvalidDataException("이미지 파일 저장 중 오류가 발생했습니다.");
+            entity.setImageUrl(newImageUrl);
+            entity.setFileName(newFileName);
+            entity.setOrgFileName(newOrgFileName);
+            logger.info("게시물 이미지 변경됨: oldImageUrl={}, newImageUrl={}", oldImageUrl, newImageUrl);
         }
+        // Case 2: 기존 이미지가 명시적으로 삭제된 경우
+        else if ((newImageUrl == null || newImageUrl.isEmpty()) && (oldImageUrl != null && !oldImageUrl.isEmpty())) {
+            if (oldFileName != null && !oldFileName.isEmpty()) {
+                deleteExistingFile(oldFileName); // 기존 물리 파일 삭제
+            }
+            entity.setImageUrl(null);
+            entity.setFileName(null);
+            entity.setOrgFileName(null);
+            logger.info("게시물 이미지 삭제됨: oldImageUrl={}", oldImageUrl);
+        }
+        // Case 3: 파일 변경이 없는 경우 (기존 값 유지) - 별도 처리 없음
     }
 
     /**
-     * 익명 여부(anonymityFlag)에 따라 작성자 이름(letterWriter)을 처리합니다.
-     * 'Y'인 경우 첫 글자만 남기고 나머지는 '*'로 처리합니다.
-     *
-     * @param letterWriter 원본 작성자 이름
-     * @param anonymityFlag 익명 여부 ('Y' 또는 'N')
-     * @return 처리된 작성자 이름
+     * organCode와 organEtc 필드 관련 로직을 처리합니다.
+     * @param entity 게시물 엔티티
+     * @param requestDto 요청 DTO
      */
-    private String processAnonymityWriter(String letterWriter, String anonymityFlag) {
-        if ("Y".equalsIgnoreCase(anonymityFlag) && StringUtils.hasText(letterWriter) && letterWriter.length() > 1) {
-            return letterWriter.charAt(0) + "*".repeat(letterWriter.length() - 1);
+    private void handleOrganCodeAndEtc(RecipientEntity entity, RecipientRequestDto requestDto) {
+        // organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
+        if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
+            entity.setOrganEtc(null);
+        } else {
+            if (requestDto.getOrganEtc() == null || requestDto.getOrganEtc().trim().isEmpty()) {
+                logger.warn("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
+                throw new RecipientInvalidDataException("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
+            }
+            entity.setOrganEtc(requestDto.getOrganEtc());
         }
-        return letterWriter; // 익명이 아니거나, 길이가 1 이하거나, 내용이 없으면 원본 그대로 반환
     }
 
     /**

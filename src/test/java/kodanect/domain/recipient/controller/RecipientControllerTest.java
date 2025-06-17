@@ -186,7 +186,6 @@ public class RecipientControllerTest {
         updatedDto.setFileName("updated_file.jpg"); // 이미지 파일명도 설정
         updatedDto.setOrgFileName("updated_original.jpg");
         updatedDto.setWriteTime(LocalDateTime.now().minusDays(1));
-        updatedDto.setModifierId("modifier");
         updatedDto.setModifyTime(LocalDateTime.now());
         updatedDto.setDelFlag("N");
         updatedDto.setCommentCount(0);
