@@ -22,6 +22,15 @@ import java.util.List;
 public interface MemorialRepository extends JpaRepository<Memorial, Integer> {
 
 
+    /**
+     *
+     * 기증자 추모관 게시글 리스트 날짜 + 문자 조건 페이징 조회
+     *
+     * @param startDate 시작 일
+     * @param endDate 종료 일
+     * @param keyWord 검색 문자 (%검색어%)
+     * @return 조건에 맞는 게시글 순서 리스트(최신순)
+     * */
     @Query(
             value = """
                 SELECT m.donate_seq AS donateSeq,

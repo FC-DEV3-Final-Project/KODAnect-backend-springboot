@@ -9,11 +9,11 @@ import kodanect.domain.remembrance.dto.common.MemorialNextCursor;
  *
  * <p>donateSeq : 게시글 번호</p>
  * <p>donorName : 기증자 명</p>
- * <p>anonymityFlag : 익명 여부 Y, N</p>
  * <p>donateDate : 기증 일시</p>
  * <p>genderFlag : 기증자 성별</p>
  * <p>donateAge : 기증자 나이</p>
  * <p>commentCount : 댓글 개수</p>
+ * <p>letterCount : 편지 개수</p>
  *
  * */
 public interface MemorialResponse extends CursorIdentifiable<MemorialNextCursor> {
