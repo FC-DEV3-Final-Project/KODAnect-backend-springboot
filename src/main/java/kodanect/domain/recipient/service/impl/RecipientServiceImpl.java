@@ -90,7 +90,7 @@ public class RecipientServiceImpl implements RecipientService {
     @Override
     public RecipientDetailResponseDto updateRecipient(Integer letterSeq, RecipientRequestDto requestDto) {
 
-        // 1. 게시물 조회 (삭제되지 않은 게시물만 조회)
+        // 게시물 조회 (삭제되지 않은 게시물만 조회)
         RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag()))
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
@@ -101,9 +101,9 @@ public class RecipientServiceImpl implements RecipientService {
         recipientEntityold.setLetterTitle(requestDto.getLetterTitle());
         recipientEntityold.setRecipientYear(requestDto.getRecipientYear());
 
-        // 작성자 익명 처리 로직 적용
-        recipientEntityold.setLetterWriter(processAnonymityWriter(requestDto.getLetterWriter(), requestDto.getAnonymityFlag()));
-        recipientEntityold.setAnonymityFlag(requestDto.getAnonymityFlag());
+        // 작성자 익명 처리 로직 변경: DB에는 원본 이름을 저장
+        recipientEntityold.setLetterWriter(requestDto.getLetterWriter()); // 원본 이름을 DB에 저장
+        recipientEntityold.setAnonymityFlag(requestDto.getAnonymityFlag()); // 익명 플래그도 DB에 저장
 
         // 내용(HTML) 필터링 및 유효성 검사
         recipientEntityold.setLetterContents(cleanAndValidateContents(requestDto.getLetterContents()));
@@ -155,7 +155,53 @@ public class RecipientServiceImpl implements RecipientService {
 
         RecipientEntity updatedEntity = recipientRepository.save(recipientEntityold); // 변경사항 저장
         logger.info("게시물 성공적으로 수정됨: letterSeq={}", updatedEntity.getLetterSeq());
-        return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl()); // DTO로 변환하여 반환
+        // DTO로 변환하여 반환 (이때 DTO에서 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
+        return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
+    }
+
+    // 게시물 등록
+    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
+    @Override
+    public RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto) {
+
+        // DTO의 letterContents를 먼저 정제하고 유효성 검사 (이렇게 하면 toEntity() 전에 문제가 되는 내용을 걸러낼 수 있습니다)
+        String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
+        requestDto.setLetterContents(validatedAndCleanedContents); // 정제된 내용을 DTO에 다시 설정
+
+        RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
+
+        // 첨부파일 등록 관련
+        String uploadedImageUrl = requestDto.getImageUrl();
+        String uploadedFileName = requestDto.getFileName();
+        String uploadedOrgFileName = requestDto.getOrgFileName();
+
+        // imageUrl이 유효하면 파일명과 원본 파일명 설정 (null 체크 없음)
+        recipientEntityRequest.setImageUrl(uploadedImageUrl);
+        recipientEntityRequest.setFileName(uploadedFileName);       // fileName은 DTO에 있으면 설정, 없으면 null
+        recipientEntityRequest.setOrgFileName(uploadedOrgFileName); // orgFileName은 DTO에 있으면 설정, 없으면 null
+        logger.info("첨부된 이미지 URL: {}, 파일명: {}, 원본 파일명: {}", uploadedImageUrl, uploadedFileName, uploadedOrgFileName);
+
+        // 작성자(letterWriter) 설정: 항상 원본 작성자 이름을 저장
+        recipientEntityRequest.setLetterWriter(requestDto.getLetterWriter()); // 원본 이름을 DB에 저장
+        recipientEntityRequest.setAnonymityFlag(requestDto.getAnonymityFlag()); // 익명 플래그도 DB에 저장
+
+        // 3. organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
+        if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
+            recipientEntityRequest.setOrganEtc(null);
+        }
+        else {
+            // ORGAN000인데 organEtc가 null이거나 비어있을 경우 (이전 NullPointerException의 다른 원인 가능성)
+            if (requestDto.getOrganEtc() == null || requestDto.getOrganEtc().trim().isEmpty()) {
+                logger.warn("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
+                throw new RecipientInvalidDataException("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
+            }
+        }
+
+        // 4. RecipientEntity 저장
+        RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
+
+        // 5. 상세 DTO로 변환하여 반환
+        return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
     }
 
     // 게시물 삭제
@@ -190,52 +236,6 @@ public class RecipientServiceImpl implements RecipientService {
         }
         logger.info("게시물 성공적으로 삭제됨: letterSeq={}", letterSeq);
     }
-
-    // 게시물 등록
-    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
-    @Override
-    public RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto) {
-
-        // DTO의 letterContents를 먼저 정제하고 유효성 검사 (이렇게 하면 toEntity() 전에 문제가 되는 내용을 걸러낼 수 있습니다)
-        String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
-        requestDto.setLetterContents(validatedAndCleanedContents); // 정제된 내용을 DTO에 다시 설정
-
-        RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
-
-        // 첨부파일 등록 관련
-        String uploadedImageUrl = requestDto.getImageUrl();
-        String uploadedFileName = requestDto.getFileName();
-        String uploadedOrgFileName = requestDto.getOrgFileName();
-
-        // imageUrl이 유효하면 파일명과 원본 파일명 설정 (null 체크 없음)
-        recipientEntityRequest.setImageUrl(uploadedImageUrl);
-        recipientEntityRequest.setFileName(uploadedFileName);       // fileName은 DTO에 있으면 설정, 없으면 null
-        recipientEntityRequest.setOrgFileName(uploadedOrgFileName); // orgFileName은 DTO에 있으면 설정, 없으면 null
-        logger.info("첨부된 이미지 URL: {}, 파일명: {}, 원본 파일명: {}", uploadedImageUrl, uploadedFileName, uploadedOrgFileName);
-
-        // 작성자 익명 처리 로직 적용
-        recipientEntityRequest.setLetterWriter(processAnonymityWriter(requestDto.getLetterWriter(), requestDto.getAnonymityFlag()));
-        recipientEntityRequest.setAnonymityFlag(requestDto.getAnonymityFlag());
-
-        // 3. organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
-        if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
-            recipientEntityRequest.setOrganEtc(null);
-        }
-        else {
-            // ORGAN000인데 organEtc가 null이거나 비어있을 경우 (이전 NullPointerException의 다른 원인 가능성)
-            if (requestDto.getOrganEtc() == null || requestDto.getOrganEtc().trim().isEmpty()) {
-                logger.warn("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-                throw new RecipientInvalidDataException("ORGAN000 선택 시 organEtc는 필수 입력 항목입니다.");
-            }
-        }
-
-        // 4. RecipientEntity 저장
-        RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
-
-        // 5. 상세 DTO로 변환하여 반환
-        return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl());
-    }
-
     // 특정 게시물 조회
     @Override
     public RecipientDetailResponseDto selectRecipient(Integer letterSeq) {
@@ -248,8 +248,8 @@ public class RecipientServiceImpl implements RecipientService {
         recipientEntity.incrementReadCount();
         recipientRepository.save(recipientEntity); // 조회수 업데이트
 
-        // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함)
-        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, globalsProperties.getFileBaseUrl());
+        // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함, 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
+        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, globalsProperties.getFileBaseUrl(), anonymousWriterValue);
 
         // 4. 상위 INITIAL_COMMENT_LOAD_LIMIT 개 댓글 조회
         // lastCommentId는 첫 조회이므로 0 (또는 null), size는 INITIAL_COMMENT_LOAD_LIMIT + 1 (다음 커서 확인용)
@@ -317,8 +317,7 @@ public class RecipientServiceImpl implements RecipientService {
 
         for (int i = 0; i < recipientList.size(); i++) {
             RecipientEntity entity = recipientList.get(i);
-            RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity);
-
+            RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity, anonymousWriterValue);
             recipientResponseDtos.add(dto);
         }
 
