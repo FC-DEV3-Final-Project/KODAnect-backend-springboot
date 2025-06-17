@@ -189,7 +189,6 @@ public class RecipientControllerTest {
         updatedDto.setModifyTime(LocalDateTime.now());
         updatedDto.setDelFlag("N");
         updatedDto.setCommentCount(0);
-        updatedDto.setHasMoreComments(false);
         updatedDto.setImageUrl("/uploads/updated_file.jpg");
 
 

@@ -23,15 +23,15 @@ import org.springframework.util.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.criteria.Predicate;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 
@@ -71,38 +71,24 @@ public class RecipientServiceImpl implements RecipientService {
 
     // 게시물 비밀번호 확인
     @Override
-    public RecipientDetailResponseDto verifyLetterPassword(Integer letterSeq, String letterPasscode) {
+    public void verifyLetterPassword(Integer letterSeq, String letterPasscode) {
 
         // 게시물 조회 (삭제되지 않은 게시물만 조회)
         RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag())) // 삭제되지 않은 게시물만 필터링
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
 
-        // DTO로 변환
-        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntityold, anonymousWriterValue);
-
-        // 비밀번호 일치 여부 확인
-        boolean isPasscodeMatched = recipientEntityold.checkPasscode(letterPasscode);
-
-        // DTO에 비밀번호 일치 여부 설정 (RecipientDetailResponseDto에 필드 추가 필요)
-        responseDto.setPasscodeMatched(isPasscodeMatched); // 이 필드를 DTO에 추가해야 함!
-
-        // 비밀번호가 일치하지 않으면 메시지 로깅 (예외를 던지지 않음)
-        if (!isPasscodeMatched) {
-            logger.warn("게시물 비밀번호 불일치: letterSeq={}", letterSeq);
-            // 프론트엔드에서 isPasscodeMatched 값을 확인하여 처리하도록 함
-        } else {
-            logger.info("게시물 비밀번호 일치: letterSeq={}", letterSeq);
+        // 비밀번호 불일치 (엔티티의 checkPasscode 메서드 활용)
+        if (!recipientEntityold.checkPasscode(letterPasscode)) {
+            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
         }
-
-        return responseDto;
     }
 
     // 게시물 수정
     @Override
     public RecipientDetailResponseDto updateRecipient(Integer letterSeq, RecipientRequestDto requestDto) {
 
-        // 게시물 조회 (삭제되지 않은 게시물만 조회)
+        // 1. 게시물 조회 (삭제되지 않은 게시물만 조회)
         RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag()))
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
@@ -112,10 +98,6 @@ public class RecipientServiceImpl implements RecipientService {
         recipientEntityold.setOrganEtc(requestDto.getOrganEtc());
         recipientEntityold.setLetterTitle(requestDto.getLetterTitle());
         recipientEntityold.setRecipientYear(requestDto.getRecipientYear());
-
-        // 작성자 익명 처리 로직 변경: DB에는 원본 이름을 저장
-        recipientEntityold.setLetterWriter(requestDto.getLetterWriter()); // 원본 이름을 DB에 저장
-        recipientEntityold.setAnonymityFlag(requestDto.getAnonymityFlag()); // 익명 플래그도 DB에 저장
 
         // 내용(HTML) 필터링 및 유효성 검사
         recipientEntityold.setLetterContents(cleanAndValidateContents(requestDto.getLetterContents()));
@@ -128,32 +110,7 @@ public class RecipientServiceImpl implements RecipientService {
 
         RecipientEntity updatedEntity = recipientRepository.save(recipientEntityold); // 변경사항 저장
         logger.info("게시물 성공적으로 수정됨: letterSeq={}", updatedEntity.getLetterSeq());
-        // DTO로 변환하여 반환 (이때 DTO에서 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
-        return RecipientDetailResponseDto.fromEntity(updatedEntity, anonymousWriterValue);
-    }
-
-    // 게시물 등록
-    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
-    @Override
-    public RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto) {
-
-        // DTO의 letterContents를 먼저 정제하고 유효성 검사 (이렇게 하면 toEntity() 전에 문제가 되는 내용을 걸러낼 수 있습니다)
-        String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
-        requestDto.setLetterContents(validatedAndCleanedContents); // 정제된 내용을 DTO에 다시 설정
-
-        RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
-
-        // 파일 업로드/교체/삭제 처리 로직 분리
-        handleImageUpdate(recipientEntityRequest, requestDto); // 별도 메서드로 분리
-
-        // organCode 및 organEtc 로직 분리
-        handleOrganCodeAndEtc(recipientEntityRequest, requestDto); // 별도 메서드로 분리
-
-        // RecipientEntity 저장
-        RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
-
-        // 상세 DTO로 변환하여 반환
-        return RecipientDetailResponseDto.fromEntity(savedEntity, anonymousWriterValue);
+        return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl()); // DTO로 변환하여 반환
     }
 
     // 게시물 삭제
@@ -188,6 +145,31 @@ public class RecipientServiceImpl implements RecipientService {
         }
         logger.info("게시물 성공적으로 삭제됨: letterSeq={}", letterSeq);
     }
+
+    // 게시물 등록
+    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
+    @Override
+    public RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto) {
+
+        // DTO의 letterContents를 먼저 정제하고 유효성 검사 (이렇게 하면 toEntity() 전에 문제가 되는 내용을 걸러낼 수 있습니다)
+        String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
+        requestDto.setLetterContents(validatedAndCleanedContents); // 정제된 내용을 DTO에 다시 설정
+
+        RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
+
+        // 파일 업로드/교체/삭제 처리 로직 분리
+        handleImageUpdate(recipientEntityRequest, requestDto); // 별도 메서드로 분리
+
+        // organCode 및 organEtc 로직 분리
+        handleOrganCodeAndEtc(recipientEntityRequest, requestDto); // 별도 메서드로 분리
+
+        // RecipientEntity 저장
+        RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
+
+        // 상세 DTO로 변환하여 반환
+        return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl());
+    }
+
     // 특정 게시물 조회
     @Override
     public RecipientDetailResponseDto selectRecipient(Integer letterSeq) {
@@ -200,8 +182,8 @@ public class RecipientServiceImpl implements RecipientService {
         recipientEntity.incrementReadCount();
         recipientRepository.save(recipientEntity); // 조회수 업데이트
 
-        // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함, 익명 처리된 이름을 사용하도록 anonymousWriterValue 전달)
-        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, anonymousWriterValue);
+        // 3. Entity를 RecipientDetailResponseDto 변환 (댓글 포함)
+        RecipientDetailResponseDto responseDto = RecipientDetailResponseDto.fromEntity(recipientEntity, globalsProperties.getFileBaseUrl());
 
         // 4. 상위 INITIAL_COMMENT_LOAD_LIMIT 개 댓글 조회
         // lastCommentId는 첫 조회이므로 0 (또는 null), size는 INITIAL_COMMENT_LOAD_LIMIT + 1 (다음 커서 확인용)
@@ -270,6 +252,7 @@ public class RecipientServiceImpl implements RecipientService {
         for (int i = 0; i < recipientList.size(); i++) {
             RecipientEntity entity = recipientList.get(i);
             RecipientListResponseDto dto = RecipientListResponseDto.fromEntity(entity, anonymousWriterValue);
+
             recipientResponseDtos.add(dto);
         }
 
@@ -322,26 +305,6 @@ public class RecipientServiceImpl implements RecipientService {
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    /**
-     * 댓글 수를 letterSeq 기준으로 매핑한 Map 반환
-     */
-    private Map<Integer, Integer> getCommentCountMap(List<RecipientEntity> recipientList) {
-        List<Integer> letterSeqs = recipientList.stream()
-                .map(RecipientEntity::getLetterSeq)
-                .collect(Collectors.toList());
-
-        final Map<Integer, Integer> commentCountMap = new HashMap<>();
-        if (!letterSeqs.isEmpty()) {
-            List<Object[]> commentCountsRaw = recipientRepository.countCommentsByLetterSeqs(letterSeqs);
-            for (Object[] arr : commentCountsRaw) {
-                Integer letterSeq = (Integer) arr[0];
-                BigInteger commentCountBigInt = (BigInteger) arr[1];
-                commentCountMap.put(letterSeq, commentCountBigInt.intValue()); // int로 변환하여 저장
-            }
-        }
-        return commentCountMap;
     }
 
     /**

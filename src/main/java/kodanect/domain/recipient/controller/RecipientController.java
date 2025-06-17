@@ -82,27 +82,20 @@ public class RecipientController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "게시물 조회 성공", recipientDto));
     }
 
-    /**
-     * ## 게시물 수정을 위한 비밀번호 인증
-     *
-     * **요청:** `POST /recipientLetters/{letterSeq}/verifyPwd`
-     * **파라미터:** `letterSeq` (Path Variable), `requestBody` (비밀번호)
-     * **응답:** `ApiResponse<RecipientDetailResponseDto>`
-     */
+    /** ## 게시물 수정을 위한 비밀번호 인증
+
+    **요청:** `POST /recipientLetters/{letterSeq}/verifyPwd`
+            **파라미터:** `letterSeq` (Path Variable), `requestBody` (비밀번호)
+            **응답:** `ApiResponse<Boolean>`
+            */
     @PostMapping("/{letterSeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<RecipientDetailResponseDto>> verifyPassword(@PathVariable("letterSeq") Integer letterSeq,
-                                                                                  @RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<ApiResponse<Boolean>> verifyPassword(@PathVariable("letterSeq") Integer letterSeq,
+                                                               @RequestBody Map<String, String> requestBody) {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        // 서비스 메서드 호출 및 DTO 반환 받기
-        RecipientDetailResponseDto responseDto = recipientService.verifyLetterPassword(letterSeq, letterPasscode);
-
-        // DTO에 포함된 passcodeMatched 값을 기반으로 응답 메시지 결정
-        String message = responseDto.isPasscodeMatched() ? "비밀번호 확인" : "비밀번호가 일치하지 않습니다.";
-        HttpStatus status = responseDto.isPasscodeMatched() ? HttpStatus.OK : HttpStatus.UNAUTHORIZED; // 적절한 HTTP 상태 코드
-
-        return ResponseEntity.status(status).body(ApiResponse.success(status, message, responseDto));
+        recipientService.verifyLetterPassword(letterSeq, letterPasscode);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인"));
     }
 
     /** ## 게시물 수정

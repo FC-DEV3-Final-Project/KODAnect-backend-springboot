@@ -34,11 +34,9 @@ public class RecipientDetailResponseDto {
     private LocalDateTime modifyTime;
     private String delFlag;
     private int commentCount;        // 댓글 수는 조회 시 필요한 정보이므로 DTO에 포함
-    private boolean hasMoreComments; // 추가 댓글이 있는지 여부
     private String imageUrl;         // 게시물에 등록된 이미지의 URL
     // 게시물 조회 시 초기 댓글 데이터를 CursorReplyPaginationResponse 형태로 포함
     private CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
-    private boolean passcodeMatched; // 비밀번호 일치 여부를 나타내는 필드
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String anonymousWriterValue) {
@@ -61,22 +59,15 @@ public class RecipientDetailResponseDto {
                 .modifyTime(entity.getModifyTime())
                 .delFlag(entity.getDelFlag())
                 .commentCount(0)
-                .hasMoreComments(false)
                 .imageUrl(entity.getImageUrl())
                 // 초기에는 댓글 데이터를 비워두고, 서비스 계층에서 설정
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
-                .passcodeMatched(false) // 초기값은 false로 설정 (서비스에서 true로 변경)
                 .build();
     }
 
     // 서비스 계층에서 초기 댓글 데이터를 설정하기 위한 setter
     public void setInitialCommentData(CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
         this.initialCommentData = initialCommentData;
-    }
-
-    // passcodeMatched 필드 setter 추가 (Lombok @Data가 자동으로 생성하지만 명시적으로 추가)
-    public void setPasscodeMatched(boolean passcodeMatched) {
-        this.passcodeMatched = passcodeMatched;
     }
 
     /**

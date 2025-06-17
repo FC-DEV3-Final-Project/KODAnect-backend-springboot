@@ -300,6 +300,10 @@
 					<failOnError>false</failOnError> <!-- 빌드 실패 방지 -->
 					<xmlOutput>true</xmlOutput>
 					<excludeFilterFile>${project.basedir}/config/findbugs/excludeFilter.xml</excludeFilterFile>
+
+					<jvmArgs>-Xmx2g</jvmArgs>
+
+					<debug>true</debug>
 					<plugins>
 						<plugin>
 							<groupId>com.h3xstream.findsecbugs</groupId>
