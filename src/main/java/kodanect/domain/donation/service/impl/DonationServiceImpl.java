@@ -1,6 +1,5 @@
 package kodanect.domain.donation.service.impl;
 
-import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
@@ -16,6 +15,7 @@ import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -30,10 +30,10 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DonationServiceImpl implements DonationService {
 
     /** Cursor 기반 기본 Size */
-    private static final SecureLogger log = SecureLogger.getLogger(DonationServiceImpl.class);
     private static final int DEFAULT_SIZE = 3;
     private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
 
@@ -58,10 +58,10 @@ public class DonationServiceImpl implements DonationService {
         List<DonationStoryListDto> results;
         long totalCount = 0;
 
-        if ("title".equalsIgnoreCase(type)) {
+        if ("TITLE".equalsIgnoreCase(type)) {
             results = donationRepository.findByTitleCursor(keyword, cursor, pageable);
             totalCount = donationRepository.countByTitle(keyword);
-        } else if ("contents".equalsIgnoreCase(type)) {
+        } else if ("CONTENTS".equalsIgnoreCase(type)) {
             results = donationRepository.findByContentsCursor(keyword, cursor, pageable);
             totalCount = donationRepository.countByContents(keyword);
         } else {
@@ -88,6 +88,7 @@ public class DonationServiceImpl implements DonationService {
         // 이미지가 여러개 저장될 수 도 있음.
 
         String [] imgNames = imgParsing(requestDto.getStoryContents());
+
         DonationStory story = DonationStory.builder()
                 .areaCode(requestDto.getAreaCode())
                 .storyTitle(requestDto.getStoryTitle())
@@ -106,6 +107,9 @@ public class DonationServiceImpl implements DonationService {
         List<String> orgFileNames = new ArrayList<>();
         List<String> fileNames = new ArrayList<>();
 
+        if (storyContents == null || storyContents.isBlank()) { //null 체크
+            return new String[]{"", ""};
+        }
         log.info("==== storyContents ====");
         log.info(storyContents);
 
@@ -160,6 +164,7 @@ public class DonationServiceImpl implements DonationService {
     }
 
 
+
     /** 비밀번호 검증 */
     public void verifyPasswordWithPassword(Long storySeq, VerifyStoryPasscodeDto verifyPassword) {
         DonationStory story = donationRepository.findById(storySeq)
@@ -173,7 +178,7 @@ public class DonationServiceImpl implements DonationService {
         }
     }
     /** 스토리 수정 */
-    public void     updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
+    public void  updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
         log.info("===== updateDonationStory 호출됨 =====");
 
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
@@ -189,6 +194,9 @@ public class DonationServiceImpl implements DonationService {
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
+        if (storyPasscodeDto.getStoryPasscode() == null || storyPasscodeDto.getStoryPasscode().isBlank()) {
+            throw new PasscodeMismatchException(messageResolver.get("donation.error.required.passcode"));
+        }
         if (!storyPasscodeDto.getStoryPasscode().equals(story.getStoryPasscode())) {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
