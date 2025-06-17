@@ -244,19 +244,6 @@ public class GlobalExcepHndlr {
 
 
     /**
-     * enum 바인딩 실패 처리(valid 오류 터트 리기 위함)
-     */
-
-    @ExceptionHandler(ConversionFailedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleEnumConversionError(ConversionFailedException ex) {
-        String message = messageSourceAccessor.getMessage("donation.story.areaCode.invalid", null, "잘못된 권역 코드입니다.");
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, message));
-    }
-
-
-    /**
      * 500 예외 처리: 나머지 모든 예외
      */
     @ExceptionHandler(Exception.class)

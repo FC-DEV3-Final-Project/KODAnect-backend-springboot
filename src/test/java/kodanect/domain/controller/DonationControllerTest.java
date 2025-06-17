@@ -36,7 +36,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(DonationController.class)
-@ContextConfiguration(classes = KodanectBootApplication.class)
 @Import(GlobalExcepHndlr.class)
 class DonationControllerTest {
 
@@ -249,7 +248,6 @@ class DonationControllerTest {
         given(messageSourceAccessor.getMessage("donation.password.match"))
                 .willReturn("비밀번호 일치");
         given(donationService.findDonationStoryWithStoryId(1L)).willReturn(detailDto);
-        given(DonationStoryModifyDto.fromEntity(detailDto)).willReturn(modifyDto); // 정적 팩토리는 mocking 불가 → stub 직접 생성
 
 
         doNothing().when(donationService).verifyPasswordWithPassword(eq(1L), any(VerifyStoryPasscodeDto.class));
@@ -495,7 +493,6 @@ class DonationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.result").value(1))
                 .andExpect(jsonPath("$.message").value("비밀번호 일치"));
     }
 

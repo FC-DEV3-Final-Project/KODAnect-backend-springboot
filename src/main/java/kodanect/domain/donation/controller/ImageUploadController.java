@@ -5,54 +5,68 @@ import kodanect.domain.donation.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.nio.file.*;
+import java.util.*;
 
 @RestController
-@RequestMapping("/app/upload")
+@RequestMapping("/app/upload") // POST 요청: http://localhost:8080/app/upload/upload_img
 @RequiredArgsConstructor
 public class ImageUploadController {
-    // application.properties 에서 바인딩
+
+    // 도메인 주소 하드코딩 (정적 이미지 접근 URL 앞에 붙는 prefix)
+    private static final String DOMAIN_URL = "https://www.koda1458.kr"; // 실제 외부에서 접근하는 웹 도메인
+
     private final GlobalsProperties globals;
     private final MessageSourceAccessor msg;
 
-    @PostMapping("/upload_img/donation")
-    public ResponseEntity<Map<String,String>> uploadImage(
+
+    @PostMapping("/upload_img") // CKEditor가 이 경로로 이미지 업로드 요청 보냄
+    public ResponseEntity<Map<String, String>> uploadImage(
             @RequestParam("file") MultipartFile file) throws IOException {
 
-        // 1) 검증: 비어있는지, 확장자/크기 등
+        // 1. 비어있는 파일 체크
         if (file.isEmpty()) {
             throw new BadRequestException(msg.getMessage("upload.error.empty"));
         }
+
+        // 2. MIME 타입 허용 리스트
         String contentType = file.getContentType();
-        if (!List.of("image/jpeg","image/png","image/gif")
-                .contains(contentType)) {
+        List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif");
+        if (!allowedTypes.contains(contentType)) {
             throw new BadRequestException(msg.getMessage("upload.error.invalidType"));
         }
+
+        // 3. 크기 제한 체크
         if (file.getSize() > globals.getPosblAtchFileSize()) {
             throw new BadRequestException(msg.getMessage("upload.error.sizeExceeded"));
         }
 
-        // 2) 저장: globals.fileStorePath + "/upload_img/"
-        String storedName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        Path target = Paths.get(globals.getFileStorePath(), "upload_img", storedName);
-        Files.createDirectories(target.getParent());
-        file.transferTo(target);
+        // 3. 파일명 생성 (예: 20250617_154530_cat.jpg)
+        String originalFileName = file.getOriginalFilename();
+        String timestamp = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String storedFileName = timestamp + "_" + originalFileName;
 
-        // 3) 클라이언트에 반환할 URL 조합
-        // fileBaseUrl = "/upload_img" (application.properties)
-        String fileUrl = globals.getFileBaseUrl() + "/upload_img/" + storedName;
-        return ResponseEntity.ok(Map.of("url", fileUrl));
+        // 4. 저장 경로 설정 (/app/files/upload_img/a1b2c3d4_cat.jpg)
+        // 도커에서는 실제 /home/app/files/upload_img/ 에 저장됨
+        Path target = Paths.get(globals.getFileStorePath(), "upload_img", storedFileName);
+        Files.createDirectories(target.getParent());
+        file.transferTo(target.toFile());
+
+        // 5. 클라이언트에게 반환할 URL의 기본 경로 설정
+        // application-prod.properties에 정의 안 되어 있으면 기본값 "/upload_img"
+        String baseUrl = (globals.getFileBaseUrl() != null) ? globals.getFileBaseUrl() : "/upload_img";
+
+        // 6. 전체 이미지 URL 구성
+        // 예: "https://www.koda1458.kr/upload_img/a1b2c3d4_cat.jpg"
+        String fileUrl = DOMAIN_URL + baseUrl + "/" + storedFileName;
+
+        // 7. CKEditor5가 필요로 하는 형식으로 JSON 응답
+        Map<String, String> response = Map.of("url", fileUrl);
+        return ResponseEntity.ok(response);
     }
 }
