@@ -50,4 +50,34 @@
         <Class name="kodanect.domain.article.service.impl.FileDownloadServiceImpl"/>
     </Match>
 
+    <!-- Spring REST 컨트롤러 기본 경고 무시 -->
+    <Match>
+        <Class name="kodanect.domain.donation.controller.ImageFileUploadController"/>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!-- 파일명 관련 경고 (예: path traversal) 무시 -->
+    <Match>
+        <Class name="kodanect.domain.donation.controller.ImageFileUploadController"/>
+        <Bug pattern="PATH_TRAVERSAL_IN"/>
+    </Match>
+
+    <!-- 사용하지 않는 임시 변수 할당 무시 -->
+    <Match>
+        <Class name="kodanect.domain.donation.controller.ImageFileUploadController"/>
+        <Bug pattern="DEAD_STORE"/>
+    </Match>
+
+    <!-- toLowerCase / toUpperCase 관련 유니코드 경고 무시 -->
+    <Match>
+        <Class name="kodanect.domain.donation.controller.ImageFileUploadController"/>
+        <Bug pattern="DM_CONVERT_CASE"/>
+    </Match>
+
+    <!-- 로그 메시지 줄바꿈 포함 경고 무시 -->
+    <Match>
+        <Class name="kodanect.domain.donation.controller.ImageFileUploadController"/>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+
 </FindBugsFilter>

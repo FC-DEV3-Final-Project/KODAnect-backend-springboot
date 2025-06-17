@@ -213,6 +213,9 @@ public class DonationServiceImpl implements DonationService {
         if (areaCode == null) {
             throw new BadRequestException(messageResolver.get("donation.error.required.area"));
         }
+        if(!(areaCode.equals("AREA100") || areaCode.equals("AREA200") || areaCode.equals("AREA300"))){
+            throw new BadRequestException(messageResolver.get("donation.error.invalid.area"));
+        }
         if (title == null || title.isBlank()) {
             throw new BadRequestException(messageResolver.get("donation.error.required.title"));
         }
