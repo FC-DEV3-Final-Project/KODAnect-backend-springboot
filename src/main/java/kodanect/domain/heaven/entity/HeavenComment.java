@@ -96,4 +96,9 @@ public class HeavenComment {
         commentWriter = heavenCommentUpdateRequest.getCommentWriter();
         contents = heavenCommentUpdateRequest.getContents();
     }
+
+    /* 댓글 소프트 삭제 */
+    public void softDelete() {
+        this.delFlag = "Y";
+    }
 }

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
 
@@ -38,7 +39,8 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                      END AS letterWriter,
                      h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
-            WHERE :cursor IS NULL OR h.letterSeq < :cursor
+            WHERE h.delFlag = 'N'
+            AND (:cursor IS NULL OR h.letterSeq < :cursor)
             ORDER BY h.letterSeq DESC
         """
     )
@@ -69,7 +71,8 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                      END AS letterWriter,
                      h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
-            WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
+            WHERE h.delFlag = 'N'
+            AND (:cursor IS NULL OR h.letterSeq < :cursor)
             AND (h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%)
             ORDER BY h.letterSeq DESC
         """
@@ -101,7 +104,8 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                      END AS letterWriter,
                      h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
-            WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
+            WHERE h.delFlag = 'N'
+            AND (:cursor IS NULL OR h.letterSeq < :cursor)
             AND h.letterTitle LIKE %:keyWord%
             ORDER BY h.letterSeq DESC
         """
@@ -133,7 +137,8 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                      END AS letterWriter,
                      h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
-            WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
+            WHERE h.delFlag = 'N'
+            AND (:cursor IS NULL OR h.letterSeq < :cursor)
             AND h.letterContents LIKE %:keyWord%
             ORDER BY h.letterSeq DESC
         """
@@ -153,7 +158,8 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
             SELECT new kodanect.domain.heaven.dto.response.MemorialHeavenResponse
             (h.letterSeq, h.letterTitle, h.readCount, h.writeTime)
             FROM Heaven h
-            WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
+            WHERE h.delFlag = 'N'
+            AND (:cursor IS NULL OR h.letterSeq < :cursor)
             AND h.memorial = :memorial
             ORDER BY h.letterSeq DESC
         """
@@ -185,10 +191,27 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
                     h.readCount, h.letterContents, h.fileName, h.orgFileName, h.writeTime)
             FROM Heaven h
             LEFT JOIN h.memorial m
-            WHERE h.letterSeq = :letterSeq
+            WHERE h.delFlag = 'N'
+            AND h.letterSeq = :letterSeq
         """
     )
     HeavenDto findAnonymizedById(@Param("letterSeq") Integer letterSeq);
+
+    /**
+     * letterSeq를 통한 게시물 조회
+     *
+     * @param letterSeq
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT h
+            FROM Heaven h
+            WHERE h.letterSeq = :letterSeq
+            AND h.delFlag = 'N'
+        """
+    )
+    Optional<Heaven> findByIdAndDelFlag(@Param("letterSeq") Integer letterSeq);
 
     /**
      * 전체(제목 + 내용)을 통한 게시물 개수 조회
@@ -200,10 +223,11 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%
+            WHERE h.delFlag = 'N'
+            AND h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%
         """
     )
-    int countByTitleOrContentsContaining(@Param("keyWord") String keyWord);
+    long countByTitleOrContentsContaining(@Param("keyWord") String keyWord);
 
     /**
      * 제목을 통한 게시물 개수 조회
@@ -215,10 +239,11 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterTitle LIKE %:keyWord%
+            WHERE h.delFlag = 'N'
+            AND h.letterTitle LIKE %:keyWord%
         """
     )
-    int countByTitleContaining(@Param("keyWord") String keyWord);
+    long countByTitleContaining(@Param("keyWord") String keyWord);
 
     /**
      * 내용을 통한 게시물 개수 조회
@@ -230,10 +255,25 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
             value = """
             SELECT COUNT(h)
             FROM Heaven h
-            WHERE h.letterContents LIKE %:keyWord%
+            WHERE h.delFlag = 'N'
+            AND h.letterContents LIKE %:keyWord%
         """
     )
-    int countByContentsContaining(@Param("keyWord") String keyWord);
+    long countByContentsContaining(@Param("keyWord") String keyWord);
+
+    /**
+     * 게시물 개수 전체 조회
+     *
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT COUNT(*)
+            FROM Heaven h
+            WHERE h.delFlag = 'N'
+        """
+    )
+    long countByDelFlag();
 
     /**
      * donateSeq를 통한 게시물 개수 조회
@@ -241,5 +281,13 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
      * @param memorial
      * @return
      */
-    int countByMemorial(Memorial memorial);
+    @Query(
+            value = """
+            SELECT COUNT(*)
+            FROM Heaven h
+            WHERE h.memorial = :memorial
+            AND h.delFlag = 'N'
+        """
+    )
+    long countByMemorial(@Param("memorial") Memorial memorial);
 }

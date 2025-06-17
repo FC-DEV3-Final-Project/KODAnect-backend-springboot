@@ -20,7 +20,7 @@ public class HeavenCommentFinder {
     public HeavenComment findByIdAndValidateOwnership(Integer letterSeq, Integer commentSeq) {
         heavenFinder.findByIdOrThrow(letterSeq);
 
-        HeavenComment heavenComment = heavenCommentRepository.findById(commentSeq)
+        HeavenComment heavenComment = heavenCommentRepository.findByIdAndDelFlag(commentSeq)
                 .orElseThrow(() -> new HeavenCommentNotFoundException(commentSeq));
 
         if (!Objects.equals(heavenComment.getHeaven().getLetterSeq(), letterSeq)) {

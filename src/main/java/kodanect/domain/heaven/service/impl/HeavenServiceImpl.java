@@ -59,7 +59,7 @@ public class HeavenServiceImpl implements HeavenService {
 
         List<HeavenResponse> heavenResponseList = heavenRepository.findByCursor(cursor, pageable);
 
-        long count = heavenRepository.count();
+        long count = heavenRepository.countByDelFlag();
 
         return CursorFormatter.cursorFormat(heavenResponseList, size, count);
     }
@@ -91,7 +91,7 @@ public class HeavenServiceImpl implements HeavenService {
         List<HeavenCommentResponse> heavenCommentList = heavenCommentService.getHeavenCommentList(letterSeq, null, COMMENT_SIZE + 1);
 
         /* 댓글 개수 조회 */
-        int commentCount = heavenCommentRepository.countByHeaven(heaven);
+        long commentCount = heavenCommentRepository.countByHeaven(heaven);
 
         CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
                 CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);
@@ -108,12 +108,13 @@ public class HeavenServiceImpl implements HeavenService {
 
         List<MemorialHeavenResponse> memorialHeavenResponseList = heavenRepository.findMemorialHeavenResponseById(memorial, cursor, pageable);
 
-        int count = heavenRepository.countByMemorial(memorial);
+        long count = heavenRepository.countByMemorial(memorial);
 
         return CursorFormatter.cursorFormat(memorialHeavenResponseList, size, count);
     }
 
     /* 게시물 생성 */
+    @Transactional
     @Override
     public void createHeaven(HeavenCreateRequest heavenCreateRequest) {
         Memorial memorial = memorialRepository.findById(heavenCreateRequest.getDonateSeq()).orElse(null);
@@ -151,6 +152,7 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 게시물 수정 */
+    @Transactional
     @Override
     public void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
@@ -165,13 +167,15 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 게시물 삭제 */
+    @Transactional
     @Override
     public void deleteHeaven(Integer letterSeq, String letterPasscode) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
 
         heaven.verifyPasscode(letterPasscode);
 
-        heavenRepository.delete(heaven);
+        /* 게시물 및 해당 댓글 소프트 삭제 */
+        heaven.softDelete();
     }
 
     /* 검색 조건에 따른 게시물 개수 조회 */

@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -46,6 +47,7 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
     }
 
     /* 댓글 등록 */
+    @Transactional
     @Override
     public void createHeavenComment(Integer letterSeq, HeavenCommentCreateRequest heavenCommentCreateRequest) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
@@ -69,6 +71,7 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
     }
 
     /* 댓글 수정 */
+    @Transactional
     @Override
     public void updateHeavenComment(Integer letterSeq, Integer commentSeq, HeavenCommentUpdateRequest heavenCommentUpdateRequest) {
         HeavenComment heavenComment = heavenCommentFinder.findByIdAndValidateOwnership(letterSeq, commentSeq);
@@ -77,12 +80,14 @@ public class HeavenCommentServiceImpl implements HeavenCommentService {
     }
 
     /* 댓글 삭제 */
+    @Transactional
     @Override
     public void deleteHeavenComment(Integer letterSeq, Integer commentSeq, HeavenCommentVerifyRequest heavenCommentVerifyRequest) {
         HeavenComment heavenComment = heavenCommentFinder.findByIdAndValidateOwnership(letterSeq, commentSeq);
 
         heavenComment.verifyPasscode(heavenCommentVerifyRequest.getCommentPasscode());
 
-        heavenCommentRepository.delete(heavenComment);
+        /* 댓글 소프트 삭제 */
+        heavenComment.softDelete();
     }
 }

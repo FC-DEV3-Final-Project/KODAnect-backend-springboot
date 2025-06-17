@@ -14,7 +14,7 @@ public class HeavenFinder {
 
     /* 편지 존재 여부 확인 */
     public Heaven findByIdOrThrow(Integer letterSeq) {
-        return heavenRepository.findById(letterSeq)
+        return heavenRepository.findByIdAndDelFlag(letterSeq)
                 .orElseThrow(() -> new HeavenNotFoundException(letterSeq));
     }
 }

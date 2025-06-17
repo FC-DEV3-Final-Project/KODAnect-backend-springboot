@@ -62,7 +62,7 @@ public class HeavenServiceImplTest {
         }
 
         when(heavenRepository.findByCursor(eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
-        when(heavenRepository.count()).thenReturn(heavenCount);
+        when(heavenRepository.countByDelFlag()).thenReturn(heavenCount);
 
         /* when */
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenList(cursor, size);
@@ -106,7 +106,7 @@ public class HeavenServiceImplTest {
         }
 
         when(heavenRepository.findByTitleOrContentsContaining(eq(keyWord), eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
-        when(heavenRepository.countByTitleOrContentsContaining(keyWord)).thenReturn(30);
+        when(heavenRepository.countByTitleOrContentsContaining(keyWord)).thenReturn(30L);
 
         /* when */
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenListSearchResult(type, keyWord, cursor, size);
@@ -137,7 +137,7 @@ public class HeavenServiceImplTest {
         int letterSeq = 1;
         LocalDateTime now = LocalDateTime.now();
         int commentSize = 3;
-        int commentCount = 10;
+        long commentCount = 10;
 
         HeavenDto heavenDto = HeavenDto.builder()
                 .letterSeq(letterSeq)
