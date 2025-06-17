@@ -23,14 +23,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.criteria.Predicate;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
