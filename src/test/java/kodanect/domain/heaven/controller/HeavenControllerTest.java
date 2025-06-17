@@ -49,7 +49,8 @@ public class HeavenControllerTest {
     @DisplayName("게시물 전체 조회 테스트")
     public void getHeavenListTest() throws Exception {
         /* given */
-        String anonymityFlag = "N";
+        String memorialAnonymityFlag = "Y";
+        String heavenAnonymityFlag = "N";
         int readCount = 5;
         LocalDateTime now = LocalDateTime.now();
         Integer nextCursor = 10;
@@ -60,7 +61,7 @@ public class HeavenControllerTest {
         List<HeavenResponse> heavenResponseList = new ArrayList<>();
 
         for (int i = 1; i <= totalCount; i++) {
-            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
+            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, memorialAnonymityFlag, "작성자"+i, heavenAnonymityFlag, readCount, now));
         }
 
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = CursorPaginationResponse.<HeavenResponse, Integer>builder()
@@ -90,7 +91,8 @@ public class HeavenControllerTest {
     @DisplayName("검색을 통한 게시물 전체 조회 테스트")
     public void searchHeavenListTest() throws Exception {
         /* given */
-        String anonymityFlag = "N";
+        String memorialAnonymityFlag = "Y";
+        String heavenAnonymityFlag = "N";
         int readCount = 5;
         LocalDateTime now = LocalDateTime.now();
         boolean hasNext = false;
@@ -100,7 +102,7 @@ public class HeavenControllerTest {
         List<HeavenResponse> heavenResponseList = new ArrayList<>();
 
         for (int i = 1; i <= totalCount; i++) {
-            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, "작성자"+i, anonymityFlag, readCount, now));
+            heavenResponseList.add(new HeavenResponse(i, "제목"+i, "기증자"+i, memorialAnonymityFlag, "작성자"+i, heavenAnonymityFlag, readCount, now));
         }
 
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = CursorPaginationResponse.<HeavenResponse, Integer>builder()
@@ -134,7 +136,7 @@ public class HeavenControllerTest {
         Integer letterSeq = 1;
         String letterTitle = "사랑하는 가족에게";
         String letterWriter = "작성자";
-        String anonymityFlag = "Y";
+        String heavenAnonymityFlag = "N";
         Integer readCount = 5;
         String letterContents = "이 편지는 하늘로 보냅니다.";
         LocalDateTime writeTime = LocalDateTime.now();
@@ -156,7 +158,7 @@ public class HeavenControllerTest {
                 .letterSeq(letterSeq)
                 .letterTitle(letterTitle)
                 .letterWriter(letterWriter)
-                .anonymityFlag(anonymityFlag)
+                .heavenAnonymityFlag(heavenAnonymityFlag)
                 .readCount(readCount)
                 .letterContents(letterContents)
                 .writeTime(writeTime)

@@ -1,5 +1,6 @@
 package kodanect.domain.heaven.repository;
 
+import kodanect.domain.heaven.dto.HeavenDto;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
@@ -23,7 +24,19 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     @Query(
             value = """
             SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
-                    (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
+                    (h.letterSeq, h.letterTitle,
+                     CASE
+                             WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
+                             ELSE h.donorName
+                     END AS donorName,
+                     h.memorial.anonymityFlag AS memorialAnonymityFlag,
+                     CASE
+                             WHEN(h.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.letterWriter, 1, 1), REPEAT('*', CHAR_LENGTH(h.letterWriter) - 1))
+                             ELSE h.letterWriter
+                     END AS letterWriter,
+                     h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE :cursor IS NULL OR h.letterSeq < :cursor
             ORDER BY h.letterSeq DESC
@@ -42,7 +55,19 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     @Query(
             value = """
             SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
-                    (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
+                    (h.letterSeq, h.letterTitle,
+                     CASE
+                             WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
+                             ELSE h.donorName
+                     END AS donorName,
+                     h.memorial.anonymityFlag AS memorialAnonymityFlag,
+                     CASE
+                             WHEN(h.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.letterWriter, 1, 1), REPEAT('*', CHAR_LENGTH(h.letterWriter) - 1))
+                             ELSE h.letterWriter
+                     END AS letterWriter,
+                     h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
             AND (h.letterTitle LIKE %:keyWord% OR h.letterContents LIKE %:keyWord%)
@@ -62,7 +87,19 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     @Query(
             value = """
             SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
-                    (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
+                    (h.letterSeq, h.letterTitle,
+                     CASE
+                             WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
+                             ELSE h.donorName
+                     END AS donorName,
+                     h.memorial.anonymityFlag AS memorialAnonymityFlag,
+                     CASE
+                             WHEN(h.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.letterWriter, 1, 1), REPEAT('*', CHAR_LENGTH(h.letterWriter) - 1))
+                             ELSE h.letterWriter
+                     END AS letterWriter,
+                     h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
             AND h.letterTitle LIKE %:keyWord%
@@ -82,7 +119,19 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
     @Query(
             value = """
             SELECT new kodanect.domain.heaven.dto.response.HeavenResponse
-                    (h.letterSeq, h.letterTitle, h.donorName, h.letterWriter, h.anonymityFlag, h.readCount, h.writeTime)
+                    (h.letterSeq, h.letterTitle,
+                     CASE
+                             WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
+                             ELSE h.donorName
+                     END AS donorName,
+                     h.memorial.anonymityFlag AS memorialAnonymityFlag,
+                     CASE
+                             WHEN(h.anonymityFlag = 'Y') THEN
+                                     CONCAT(SUBSTRING(h.letterWriter, 1, 1), REPEAT('*', CHAR_LENGTH(h.letterWriter) - 1))
+                             ELSE h.letterWriter
+                     END AS letterWriter,
+                     h.anonymityFlag AS heavenAnonymityFlag, h.readCount, h.writeTime)
             FROM Heaven h
             WHERE (:cursor IS NULL OR h.letterSeq < :cursor)
             AND h.letterContents LIKE %:keyWord%
@@ -110,6 +159,36 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
         """
     )
     List<MemorialHeavenResponse> findMemorialHeavenResponseById(@Param("memorial") Memorial memorial, @Param("cursor") Integer cursor, Pageable pageable);
+
+    /**
+     * 상세 조회 시 게시물 조회
+     *
+     * @param letterSeq
+     * @return
+     */
+    @Query(
+            value = """
+            SELECT new kodanect.domain.heaven.dto.HeavenDto
+                    (h.letterSeq, m.donateSeq, h.letterTitle,
+                    CASE
+                            WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                                    CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
+                            ELSE h.donorName
+                    END AS donorName,
+                    m.anonymityFlag AS memorialAnonymityFlag,
+                    CASE
+                            WHEN(h.anonymityFlag = 'Y') THEN
+                                    CONCAT(SUBSTRING(h.letterWriter, 1, 1), REPEAT('*', CHAR_LENGTH(h.letterWriter) - 1))
+                            ELSE h.letterWriter
+                    END AS letterWriter,
+                    h.anonymityFlag AS heavenAnonymityFlag,
+                    h.readCount, h.letterContents, h.fileName, h.orgFileName, h.writeTime)
+            FROM Heaven h
+            LEFT JOIN h.memorial m
+            WHERE h.letterSeq = :letterSeq
+        """
+    )
+    HeavenDto findAnonymizedById(@Param("letterSeq") Integer letterSeq);
 
     /**
      * 전체(제목 + 내용)을 통한 게시물 개수 조회

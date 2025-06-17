@@ -1,9 +1,9 @@
 package kodanect.domain.heaven.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
-import kodanect.domain.heaven.entity.Heaven;
-import kodanect.domain.remembrance.entity.Memorial;
+import kodanect.domain.heaven.dto.HeavenDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -26,11 +26,16 @@ public class HeavenDetailResponse {
     /* 기증자 명 */
     private String donorName;
 
+    /* 기증자 익명 여부 */
+    @JsonIgnore
+    private String memorialAnonymityFlag;
+
     /* 편지 작성자 */
     private String letterWriter;
 
-    /* 편지 익명여부 */
-    private String anonymityFlag;
+    /* 작성자 익명 여부 */
+    @JsonIgnore
+    private String heavenAnonymityFlag;
 
     /* 조회 건수 */
     private Integer readCount;
@@ -56,18 +61,16 @@ public class HeavenDetailResponse {
     }
 
     public static HeavenDetailResponse of(
-            Heaven heaven,
+            HeavenDto heaven,
             CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse
     ) {
-        Memorial memorial = heaven.getMemorial();
 
         return HeavenDetailResponse.builder()
                 .letterSeq(heaven.getLetterSeq())
-                .donateSeq((memorial != null) ? memorial.getDonateSeq() : null)
+                .donateSeq(heaven.getDonateSeq())
                 .letterTitle(heaven.getLetterTitle())
                 .donorName(heaven.getDonorName())
                 .letterWriter(heaven.getLetterWriter())
-                .anonymityFlag(heaven.getAnonymityFlag())
                 .readCount(heaven.getReadCount())
                 .letterContents(heaven.getLetterContents())
                 .fileName(heaven.getFileName())

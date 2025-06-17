@@ -6,6 +6,7 @@ import kodanect.common.util.CursorFormatter;
 import kodanect.common.util.HeavenFinder;
 import kodanect.common.util.MemorialFinder;
 import kodanect.common.validation.HeavenValidator;
+import kodanect.domain.heaven.dto.HeavenDto;
 import kodanect.domain.heaven.dto.request.HeavenCreateRequest;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
@@ -80,6 +81,7 @@ public class HeavenServiceImpl implements HeavenService {
     @Override
     public HeavenDetailResponse getHeavenDetail(Integer letterSeq) {
         /* 게시물 상세 조회 */
+        HeavenDto heavenDto = heavenRepository.findAnonymizedById(letterSeq);
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
 
         /* 조회수 증가 */
@@ -94,7 +96,7 @@ public class HeavenServiceImpl implements HeavenService {
         CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
                 CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);
 
-        return HeavenDetailResponse.of(heaven, cursorCommentCountPaginationResponse);
+        return HeavenDetailResponse.of(heavenDto, cursorCommentCountPaginationResponse);
     }
 
     /* 기증자 추모관 상세 조회 시 하늘나라 편지 전체 조회 */
