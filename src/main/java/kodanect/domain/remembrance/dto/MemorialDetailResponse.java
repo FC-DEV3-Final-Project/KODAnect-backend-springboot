@@ -1,12 +1,42 @@
 package kodanect.domain.remembrance.dto;
 
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.FormatUtils;
 import kodanect.domain.remembrance.entity.Memorial;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+/**
+ *
+ * 기증자 추모관 게시글 응답 dto
+ *
+ * <p>donateSeq : 게시글 번호</p>
+ * <p>donorName : 기증자 명</p>
+ * <p>anonymityFlag : 익명 여부 Y, N</p>
+ * <p>donateTitle : 제목</p>
+ * <p>contents : 기증자 내용</p>
+ * <p>fileName : 이미지 파일 명</p>
+ * <p>orgFileName : 이미지 원본 파일 명</p>
+ * <p>writer : 작성자</p>
+ * <p>donateDate : 기증자 기증 일시</p>
+ * <p>genderFlag : 기증자 성별</p>
+ * <p>donateAge : 기증자 나이</p>
+ * <p>flowerCount : 이모지 헌화</p>
+ * <p>loveCount : 이모지 사랑해요</p>
+ * <p>seeCount : 이모지 보고싶어요</p>
+ * <p>missCount : 이모지 그리워요</p>
+ * <p>proudCount : 이모지 자랑스러워요</p>
+ * <p>hardCount : 이모지 힘들어요</p>
+ * <p>sadCount : 이모지 슬퍼요</p>
+ * <p>writeTime : 생성 일시</p>
+ * <p>memorialCommentResponses : 댓글 리스트</p>
+ * <p>commentNextCursor : 다음 페이지 번호</p>
+ * <p>commentHasNext : 다음 페이지 존재 유무</p>
+ * <p>totalCommentCount : 총 댓글 갯수</p>
+ * <p>heavenLetterResponses : </p>
+ *
+ * */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -71,9 +101,7 @@ public class MemorialDetailResponse {
     private LocalDateTime writeTime;
 
     /* 댓글 리스트 */
-    private List<MemorialReplyResponse> memorialReplyResponses;
-    private Integer replyNextCursor;
-    private boolean replyHasNext;
+    private CursorCommentPaginationResponse<MemorialCommentResponse, Integer> memorialCommentResponses;
 
     /* 편지 리스트 */
 
@@ -82,10 +110,14 @@ public class MemorialDetailResponse {
         return FormatUtils.formatDonateDate(this.donateDate);
     }
 
-    /* 기증자 상세 조회 */
+    /** 2020-12-13T02:11:12 -> 2020-12-13 형식 변경 */
+    public String getWriteTime() {
+        return writeTime.toLocalDate().toString();
+    }
+
+    /** 기증자 상세 조회 객체 생성 메서드 */
     public static MemorialDetailResponse of(
-            Memorial memorial, List<MemorialReplyResponse> replies,
-            Integer replyNextCursor, boolean replyHasNext)
+            Memorial memorial, CursorCommentPaginationResponse<MemorialCommentResponse, Integer> replies)
     {
         return MemorialDetailResponse.builder()
                 .donateSeq(memorial.getDonateSeq())
@@ -107,9 +139,7 @@ public class MemorialDetailResponse {
                 .hardCount(memorial.getHardCount())
                 .sadCount(memorial.getSadCount())
                 .writeTime(memorial.getWriteTime())
-                .memorialReplyResponses(replies)
-                .replyNextCursor(replyNextCursor)
-                .replyHasNext(replyHasNext)
+                .memorialCommentResponses(replies)
                 .build();
     }
 }

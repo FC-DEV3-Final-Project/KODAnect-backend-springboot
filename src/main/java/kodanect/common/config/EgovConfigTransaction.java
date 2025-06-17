@@ -12,8 +12,11 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.interceptor.*;
 
 import javax.persistence.EntityManagerFactory;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 트랜잭션 AOP 설정
@@ -31,6 +34,8 @@ import java.util.HashMap;
 @Configuration
 public class EgovConfigTransaction {
 
+	private static final int TIMEOUT_SECONDS = 30;
+
 	/**
 	 * 트랜잭션 매니저 Bean (JPA 전용)
 	 *
@@ -47,14 +52,12 @@ public class EgovConfigTransaction {
 	 * 트랜잭션 전파 방식과 롤백 정책 설정
 	 *
 	 * [읽기 계열] (readOnly = true)
-	 * - get*, find*, read*, select*, list*, fetch*, load*, search*, query*, check*
+	 * - get*, find*, read*, select*, list*, fetch*, search*, query*, check*
 	 *
 	 * [쓰기 계열] (트랜잭션 전파 + 예외 발생 시 롤백)
 	 * - save*, insert*, update*, delete*, create*, remove*, register*,
 	 *   edit*, change*, process*, apply*, sync*
 	 *
-	 * [기본 처리]
-	 * - 위 조건에 해당하지 않는 모든 메서드는 쓰기 계열로 처리
 	 */
 	@Bean
 	public TransactionInterceptor txAdvice(@Qualifier("transactionManager") PlatformTransactionManager txManager) {
@@ -62,10 +65,21 @@ public class EgovConfigTransaction {
 		RuleBasedTransactionAttribute readOnlyTx = new RuleBasedTransactionAttribute();
 		readOnlyTx.setReadOnly(true);
 		readOnlyTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+		readOnlyTx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		readOnlyTx.setTimeout(TIMEOUT_SECONDS);
 
 		RuleBasedTransactionAttribute writeTx = new RuleBasedTransactionAttribute();
 		writeTx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+		writeTx.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
 		writeTx.setRollbackRules(Collections.singletonList(new RollbackRuleAttribute(Exception.class)));
+		writeTx.setTimeout(TIMEOUT_SECONDS);
+		writeTx.setRollbackRules(List.of(
+				new RollbackRuleAttribute(RuntimeException.class),
+				new RollbackRuleAttribute(SQLException.class),
+				new RollbackRuleAttribute(IOException.class),
+				new RollbackRuleAttribute(IllegalStateException.class)
+		));
+
 
 		HashMap<String, TransactionAttribute> txMethods = new HashMap<>();
 
@@ -75,7 +89,6 @@ public class EgovConfigTransaction {
 		txMethods.put("select*", readOnlyTx);
 		txMethods.put("list*", readOnlyTx);
 		txMethods.put("fetch*", readOnlyTx);
-		txMethods.put("load*", readOnlyTx);
 		txMethods.put("search*", readOnlyTx);
 		txMethods.put("query*", readOnlyTx);
 		txMethods.put("check*", readOnlyTx);
@@ -93,8 +106,6 @@ public class EgovConfigTransaction {
 		txMethods.put("apply*", writeTx);
 		txMethods.put("sync*", writeTx);
 		txMethods.put("increase*", writeTx);
-
-		txMethods.put("*", writeTx);
 
 		NameMatchTransactionAttributeSource txAttributeSource = new NameMatchTransactionAttributeSource();
 		txAttributeSource.setNameMap(txMethods);
@@ -119,5 +130,7 @@ public class EgovConfigTransaction {
 		);
 		return new DefaultPointcutAdvisor(pointcut, txAdvice(txManager));
 	}
+
+
 
 }

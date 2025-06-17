@@ -107,7 +107,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>io.sentry</groupId>
+			<artifactId>sentry-spring-boot-starter</artifactId>
+			<version>6.34.0</version>
+		</dependency>
 
 		<!-- egovframe -->
 		<dependency>
@@ -165,11 +169,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
@@ -180,39 +179,41 @@
 			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>5.2.0</version> <scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>5.3.37</version> <!-- Spring Boot 2.7.18 호환 -->
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.24.2</version>
+			<scope>test</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
 			<version>2.9.3</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>eu.bitwalker</groupId>
+            <artifactId>UserAgentUtils</artifactId>
+            <version>1.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>4.5.1</version>
             <scope>test</scope>
         </dependency>
-		<dependency>
-			<groupId>org.awaitility</groupId>
-			<artifactId>awaitility</artifactId>
-			<version>4.2.0</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/eu.bitwalker/UserAgentUtils -->
-		<dependency>
-			<groupId>eu.bitwalker</groupId>
-			<artifactId>UserAgentUtils</artifactId>
-			<version>1.21</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-inline</artifactId>
-			<version>4.5.1</version>
-			<scope>test</scope>
-		</dependency>
     </dependencies>
 
 	<build>
@@ -223,6 +224,26 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>io.sentry</groupId>
+				<artifactId>sentry-maven-plugin</artifactId>
+				<version>0.5.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<debugSentryCli>true</debugSentryCli>
+					<org>my-sentry-3h</org>
+					<project>java-spring-boot</project>
+					<authToken>${env.SENTRY_AUTH_TOKEN}</authToken>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>uploadSourceBundle</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
@@ -244,77 +265,62 @@
 					<configLocation>config/checkstyle/checkstyle.xml</configLocation>
 					<suppressionsLocation>config/checkstyle/suppressions.xml</suppressionsLocation>
 					<consoleOutput>true</consoleOutput>
-<!--					<encoding>UTF-8</encoding>-->
 					<failsOnError>true</failsOnError>
 					<outputFile>target/checkstyle-result.xml</outputFile>
 				</configuration>
+			</plugin>
+
+<!--			<plugin>-->
+<!--				<groupId>org.owasp</groupId>-->
+<!--				<artifactId>dependency-check-maven</artifactId>-->
+<!--				<version>12.1.1</version> &lt;!&ndash; 2025-04 기준 최신 안정 버전 &ndash;&gt;-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<goals><goal>check</goal></goals>-->
+<!--						&lt;!&ndash; site goal도 함께 쓰면 HTML·JSON 리포트 생성 &ndash;&gt;-->
+<!--						&lt;!&ndash; <goals><goal>aggregate</goal></goals> &ndash;&gt;-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--				<configuration>-->
+<!--					&lt;!&ndash; CVSS 7.0 이상 발견 시 빌드 실패 예시 &ndash;&gt;-->
+<!--					<failBuildOnCVSS>7</failBuildOnCVSS>-->
+<!--					&lt;!&ndash; 로컬 캐시 경로 지정(초기 실행 속도 개선) &ndash;&gt;-->
+<!--					<dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>-->
+<!--					<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey> &lt;!&ndash; 환경변수에서 API 키 불러오기 &ndash;&gt;-->
+<!--					<failBuildOnCVSS>7</failBuildOnCVSS>-->
+<!--					<dataDirectory>${project.build.directory}/dependency-check-data</dataDirectory>-->
+<!--					&lt;!&ndash; 필요 시 false positive 억제를 위한 suppression 파일 &ndash;&gt;-->
+<!--					 <suppressionFiles>config/dependency-check/suppressions.xml</suppressionFiles>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
+
+
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>4.7.3.0</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+					<failOnError>false</failOnError> <!-- 빌드 실패 방지 -->
+					<xmlOutput>true</xmlOutput>
+					<excludeFilterFile>${project.basedir}/config/findbugs/excludeFilter.xml</excludeFilterFile>
+					<plugins>
+						<plugin>
+							<groupId>com.h3xstream.findsecbugs</groupId>
+							<artifactId>findsecbugs-plugin</artifactId>
+							<version>1.12.0</version>
+						</plugin>
+					</plugins>
+				</configuration>
+				<executions>
+				</executions>
 			</plugin>
 
 			<plugin>
 				<groupId>org.sonarsource.scanner.maven</groupId>
 				<artifactId>sonar-maven-plugin</artifactId>
 				<version>3.9.1.2184</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.11</version>
-				<executions>
-
-					<execution>
-						<id>prepare-agent</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-
-					<execution>
-						<id>report</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<excludes>
-								<exclude>**/dto/**</exclude>
-								<exclude>**/exception/**</exclude>
-								<exclude>**/response/**</exclude>
-								<exclude>**/util/**</exclude>
-								<exclude>**/validation/**</exclude>
-								<exclude>**/config/**</exclude>
-								<exclude>**/*Application*</exclude>
-								<exclude>**/Swagger*.*</exclude>
-								<exclude>**/entity/**</exclude>
-							</excludes>
-						</configuration>
-					</execution>
-
-					<execution>
-						<id>check</id>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<rule>
-									<element>PACKAGE</element>
-									<includes>
-										<include>kodanect.domain.*</include>
-									</includes>
-									<limits>
-										<limit>
-											<counter>LINE</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.00</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
-
-				</executions>
 			</plugin>
 
 			<plugin>
@@ -328,6 +334,15 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M9</version>
+				<configuration>
+					<reuseForks>true</reuseForks>
+					<forkCount>1</forkCount>
+				</configuration>
 			</plugin>
 
 			<!-- Java Compiler Plugin -->
@@ -365,5 +380,72 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>with-coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>0.8.11</version>
+						<executions>
+							<execution>
+								<id>prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>report</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+								<configuration>
+									<excludes>
+										<exclude>**/dto/**</exclude>
+										<exclude>**/exception/**</exclude>
+										<exclude>**/response/**</exclude>
+										<exclude>**/util/**</exclude>
+										<exclude>**/validation/**</exclude>
+										<exclude>**/config/**</exclude>
+										<exclude>**/*Application*</exclude>
+										<exclude>**/Swagger*.*</exclude>
+										<exclude>**/entity/**</exclude>
+									</excludes>
+								</configuration>
+							</execution>
+							<execution>
+								<id>check</id>
+								<goals>
+									<goal>check</goal>
+								</goals>
+								<configuration>
+									<rules>
+										<rule>
+											<element>PACKAGE</element>
+											<includes>
+												<include>kodanect.domain.*</include>
+											</includes>
+											<limits>
+												<limit>
+													<counter>LINE</counter>
+													<value>COVEREDRATIO</value>
+													<minimum>0.00</minimum>
+												</limit>
+											</limits>
+										</rule>
+									</rules>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 
 </project>

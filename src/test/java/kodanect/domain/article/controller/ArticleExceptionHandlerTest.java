@@ -2,8 +2,10 @@ package kodanect.domain.article.controller;
 
 import kodanect.common.config.GlobalsProperties;
 import kodanect.common.exception.config.ArticleExceptionHandler;
-import kodanect.common.exception.custom.*;
+import kodanect.common.exception.custom.FileMissingException;
 import kodanect.domain.article.dto.ArticleDetailDto;
+import kodanect.domain.article.exception.ArticleNotFoundException;
+import kodanect.domain.article.exception.InvalidBoardCodeException;
 import kodanect.domain.article.repository.BoardCategoryCache;
 import kodanect.domain.article.service.ArticleService;
 import kodanect.domain.article.service.FileDownloadService;
@@ -17,6 +19,9 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static kodanect.common.exception.config.MessageKeys.FILE_NOT_FOUND;
 import static org.mockito.ArgumentMatchers.*;
@@ -55,12 +60,12 @@ class ArticleExceptionHandlerTest {
 
         when(boardCategoryCache.getBoardCodeByUrlParam(optionStr)).thenReturn("7");
 
-        when(articleService.getArticle(eq("7"), eq(articleSeq)))
+        when(articleService.getArticle(eq("7"), eq(articleSeq), anyString()))
                 .thenThrow(new ArticleNotFoundException(articleSeq));
         when(messageSourceAccessor.getMessage(anyString(), any(Object[].class), anyString()))
                 .thenReturn("게시글을 찾을 수 없습니다.");
 
-        mockMvc.perform(get("/newKoda/notices/{articleSeq}", articleSeq)
+        mockMvc.perform(get("/notices/{articleSeq}", articleSeq)
                         .param("optionStr", optionStr)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -80,7 +85,7 @@ class ArticleExceptionHandlerTest {
         when(messageSourceAccessor.getMessage(anyString(), any(Object[].class), anyString()))
                 .thenReturn("잘못된 게시판 코드입니다.");
 
-        mockMvc.perform(get("/newKoda/{boardCode}/{articleSeq}", boardCode, 1)
+        mockMvc.perform(get("/{boardCode}/{articleSeq}", boardCode, 1)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
@@ -94,13 +99,17 @@ class ArticleExceptionHandlerTest {
         String optionStr = "1";
         int articleSeq = 1;
         String fileName = "notfound.pdf";
+        String boardCode = "7";
+        Path filePath = Paths.get("/files", boardCode, String.valueOf(articleSeq), fileName).toAbsolutePath().normalize();
 
-        when(boardCategoryCache.getBoardCodeByUrlParam(optionStr)).thenReturn("7");
+        when(boardCategoryCache.getBoardCodeByUrlParam(optionStr)).thenReturn(boardCode);
 
-        when(fileDownloadService.loadDownloadFile(eq("7"), eq(articleSeq), eq(fileName)))
-                .thenThrow(new FileMissingException(fileName));
+        when(fileDownloadService.loadDownloadFile(eq(boardCode), eq(articleSeq), eq(fileName)))
+                .thenThrow(new FileMissingException(
+                        "파일이 존재하지 않거나 읽을 수 없음", filePath, boardCode, articleSeq, fileName
+                ));
 
-        when(articleService.getArticle(eq("7"), eq(articleSeq)))
+        when(articleService.getArticle(eq(boardCode), eq(articleSeq), anyString()))
                 .thenReturn(ArticleDetailDto.builder().title("test").build());
 
         when(globalsProperties.getFileStorePath()).thenReturn("/files");
@@ -108,7 +117,7 @@ class ArticleExceptionHandlerTest {
         when(messageSourceAccessor.getMessage(eq(FILE_NOT_FOUND), any(Object[].class), anyString()))
                 .thenReturn("파일을 찾을 수 없습니다.");
 
-        mockMvc.perform(get("/newKoda/notices/{articleSeq}/files/{fileName}", articleSeq, fileName)
+        mockMvc.perform(get("/notices/{articleSeq}/files/{fileName}", articleSeq, fileName)
                         .param("optionStr", optionStr)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())

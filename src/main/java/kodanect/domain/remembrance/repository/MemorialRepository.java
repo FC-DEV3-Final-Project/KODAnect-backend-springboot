@@ -10,41 +10,96 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
+/**
+ *
+ * 기증자 추모관 게시글에 대한 데이터 베이스 접근 인터페이스
+ * <br>
+ * 게시글의 조회, 검색, 이모지 카운팅 등에 대한 JPA 기능 제공
+ *
+ * */
 public interface MemorialRepository extends JpaRepository<Memorial, Integer> {
 
-    /** 기증자 추모관 게시글 리스트 조회 */
+    /**
+     *
+     * 기증자 추모관 게시글 리스트 조회
+     *
+     * @param cursor 조회할 댓글 페이지 번호(이 ID보다 작은 번호의 댓글을 조회)
+     * @param pageable 최대 결과 개수 등 페이징 정보
+     * @return 조건에 맞는 게시글 리스트(최신순)
+     *
+     * */
     @Query(
-        value = """
+            value = """
             SELECT new kodanect.domain.remembrance.dto.MemorialResponse
-                    (m.donateSeq, m.donorName, m.anonymityFlag, m.donateDate,m.genderFlag, m.donateAge, COUNT(r))
+                    (m.donateSeq, m.donorName, m.anonymityFlag, m.donateDate,m.genderFlag, m.donateAge,
+                    (SELECT COUNT(r) FROM MemorialComment r WHERE m.donateSeq = r.donateSeq AND r.delFlag='N'))
             FROM Memorial m
-            LEFT JOIN MemorialReply r ON m.donateSeq = r.donateSeq
-            WHERE m.delFlag = 'N' AND (:cursor IS NULL OR m.donateSeq < :cursor)
-            GROUP BY m.donateSeq
-            ORDER BY m.donateDate DESC
+            WHERE m.delFlag = 'N'
+                    AND (:date IS NULL
+                    OR m.donateDate < :date
+                    OR (:cursor IS NOT NULL AND m.donateDate = :date AND m.donateSeq < :cursor))
+            ORDER BY m.donateDate DESC, m.donateSeq DESC
         """
     )
-    List<MemorialResponse> findByCursor(@Param("cursor") Integer cursor, Pageable pageable);
+    List<MemorialResponse> findByCursor(@Param("cursor") Integer cursor, @Param("date") String date, Pageable pageable);
 
-    /** 기증자 추모관 게시글 리스트 날짜 + 문자 조건 조회  */
+    /**
+     *
+     * 기증자 추모관 게시글 리스트 날짜 + 문자 조건 순서 조회
+     *
+     * @param startDate 시작 일
+     * @param endDate 종료 일
+     * @param keyWord 검색 문자 (%검색어%)
+     * @return 조건에 맞는 게시글 순서 리스트(최신순)
+     * */
     @Query(
-        value = """
-            SELECT new kodanect.domain.remembrance.dto.MemorialResponse
-                    (m.donateSeq, m.donorName, m.anonymityFlag, m.donateDate, m.genderFlag, m.donateAge, COUNT(r))
+            value = """
+             SELECT new kodanect.domain.remembrance.dto.MemorialResponse
+                    (m.donateSeq, m.donorName, m.anonymityFlag, m.donateDate,m.genderFlag, m.donateAge,
+                    (SELECT COUNT(r) FROM MemorialComment r WHERE m.donateSeq = r.donateSeq AND r.delFlag='N'))
             FROM Memorial m
-            LEFT JOIN MemorialReply r ON m.donateSeq = r.donateSeq
-            WHERE m.delFlag = 'N' AND (:cursor IS NULL OR m.donateSeq < :cursor)
-                    AND m.donateDate BETWEEN :startDate AND :endDate AND m.donorName LIKE :searchWord
-            GROUP BY m.donateSeq
-            ORDER BY m.donateDate DESC
+            WHERE m.delFlag = 'N'
+                    AND m.donateDate BETWEEN :startDate AND :endDate
+                    AND m.donorName LIKE %:keyWord%
+                    AND(:date IS NULL
+                            OR(m.donateDate < :date
+                            OR(m.donateDate = :date AND m.donateSeq < :cursor)))
+            ORDER BY m.donateDate DESC, m.donateSeq DESC
         """
     )
     List<MemorialResponse> findSearchByCursor(
+            @Param("date") String date,
             @Param("cursor") Integer cursor,
-            Pageable pageable,
             @Param("startDate") String startDate,
             @Param("endDate") String endDate,
-            @Param("searchWord") String searchWord);
+            @Param("keyWord") String keyWord,
+            Pageable pageable
+    );
+
+    /**
+     *
+     * 기증자 추모관 게시글 리스트 날짜 + 문자 조건 카운팅
+     *
+     * @param startDate 시작 일
+     * @param endDate 종료 일
+     * @param keyWord 검색 문자 (%검색어%)
+     * @return 조건에 맞는 게시글 리스트(최신순)
+     * */
+    @Query(
+            value = """
+            SELECT COUNT(*)
+            FROM tb25_400_memorial m
+            WHERE m.del_flag = 'N'
+                    AND m.donate_date BETWEEN :startDate AND :endDate
+                    AND m.donor_name LIKE :keyWord
+        """, nativeQuery = true
+    )
+    long countBySearch(
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate,
+            @Param("keyWord") String keyWord);
+
+
 
     /** 기증자 추모관 이모지 카운팅(Flower) */
     @Modifying

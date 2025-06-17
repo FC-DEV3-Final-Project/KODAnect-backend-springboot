@@ -1,10 +1,13 @@
 package kodanect.domain.remembrance.controller;
 
 import kodanect.common.config.EgovConfigCommon;
+import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.CursorFormatter;
 import kodanect.domain.remembrance.dto.MemorialDetailResponse;
 import kodanect.domain.remembrance.dto.MemorialResponse;
-import kodanect.domain.remembrance.dto.MemorialReplyResponse;
+import kodanect.domain.remembrance.dto.MemorialCommentResponse;
+import kodanect.domain.remembrance.dto.common.MemorialNextCursor;
 import kodanect.domain.remembrance.service.MemorialService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +48,7 @@ class MemorialControllerTest {
     @Captor ArgumentCaptor<String> searchWordCaptor;
     @Captor ArgumentCaptor<String> startDateCaptor;
     @Captor ArgumentCaptor<String> endDateCaptor;
-    @Captor ArgumentCaptor<Integer> cursorCaptor;
+    @Captor ArgumentCaptor<MemorialNextCursor> cursorCaptor;
     @Captor ArgumentCaptor<Integer> sizeCaptor;
 
     @Test
@@ -59,18 +62,18 @@ class MemorialControllerTest {
                 new MemorialResponse(3, "나길동", "N", "20220101", "M", 30, 32)
         );
 
-        CursorPaginationResponse<MemorialResponse, Integer> page =
-                CursorPaginationResponse.<MemorialResponse, Integer>builder()
+        MemorialNextCursor nextCursor = new MemorialNextCursor(1, "20200101");
+
+        CursorPaginationResponse<MemorialResponse, MemorialNextCursor> page =
+                CursorPaginationResponse.<MemorialResponse, MemorialNextCursor>builder()
                         .content(content)
-                        .nextCursor(null)
+                        .nextCursor(nextCursor)
                         .hasNext(false)
                         .build();
 
-        given(memorialService.getMemorialList(1, 20)).willReturn(page);
+        given(memorialService.getMemorialList(any(MemorialNextCursor.class), eq(20))).willReturn(page);
 
-        mockMvc.perform(get("/remembrance")
-                        .param("cursor", "1")
-                        .param("size", "20"))
+        mockMvc.perform(get("/remembrance"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -93,9 +96,9 @@ class MemorialControllerTest {
                 .andExpect(jsonPath("$.data.content[0].donateAge").value(10))
                 .andExpect(jsonPath("$.data.content[1].donateAge").value(20))
                 .andExpect(jsonPath("$.data.content[2].donateAge").value(30))
-                .andExpect(jsonPath("$.data.content[0].replyCount").value(12))
-                .andExpect(jsonPath("$.data.content[1].replyCount").value(22))
-                .andExpect(jsonPath("$.data.content[2].replyCount").value(32))
+                .andExpect(jsonPath("$.data.content[0].commentCount").value(12))
+                .andExpect(jsonPath("$.data.content[1].commentCount").value(22))
+                .andExpect(jsonPath("$.data.content[2].commentCount").value(32))
                 .andExpect(jsonPath("$.data.content.length()").value(3))
         ;
 
@@ -107,26 +110,29 @@ class MemorialControllerTest {
         /* 기증자 추모관 상세 게시글 조회 테스트 */
 
         /* 게시글 댓글 조회1 */
-        MemorialReplyResponse reply1 = MemorialReplyResponse.builder()
-                .replySeq(1)
-                .replyWriter("홍길동")
-                .replyContents("안녕하세요")
-                .replyWriteTime(LocalDateTime.of(2024,1,1,12,0,0))
+        MemorialCommentResponse comment1 = MemorialCommentResponse.builder()
+                .commentSeq(1)
+                .commentWriter("홍길동")
+                .contents("안녕하세요")
+                .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
                 .build();
 
         /* 게시글 댓글 조회2 */
-        MemorialReplyResponse reply2 = MemorialReplyResponse.builder()
-                .replySeq(2)
-                .replyWriter("김길동")
-                .replyContents("잘가세요")
-                .replyWriteTime(LocalDateTime.of(2022,1,1,12,0,0))
+        MemorialCommentResponse comment2 = MemorialCommentResponse.builder()
+                .commentSeq(2)
+                .commentWriter("김길동")
+                .contents("잘가세요")
+                .writeTime(LocalDateTime.of(2022,1,1,12,0,0))
                 .build();
 
         /* 게시글 댓글 리스트 */
-        List<MemorialReplyResponse> replies = List.of(
-                reply1,
-                reply2
+        List<MemorialCommentResponse> replies = List.of(
+                comment1,
+                comment2
         );
+
+        CursorCommentPaginationResponse<MemorialCommentResponse, Integer> cursoredReplies =
+                CursorFormatter.cursorCommentCountFormat(replies, 3, 30);
 
         MemorialDetailResponse memorial = MemorialDetailResponse.builder()
                 .donateSeq(1)
@@ -148,7 +154,7 @@ class MemorialControllerTest {
                 .hardCount(6)
                 .sadCount(7)
                 .writeTime(LocalDateTime.of(2024,1,1,12,0,0))
-                .memorialReplyResponses(replies)
+                .memorialCommentResponses(cursoredReplies)
                 .build();
 
         given(memorialService.getMemorialByDonateSeq(1)).willReturn(memorial);
@@ -176,16 +182,16 @@ class MemorialControllerTest {
                 .andExpect(jsonPath("$.data.proudCount").value(5))
                 .andExpect(jsonPath("$.data.hardCount").value(6))
                 .andExpect(jsonPath("$.data.sadCount").value(7))
-                .andExpect(jsonPath("$.data.writeTime").value("2024-01-01T12:00:00"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[0].replySeq").value(1))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[0].replyWriter").value("홍길동"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[0].replyContents").value("안녕하세요"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[0].replyWriteTime").value("2024-01-01T12:00:00"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[1].replySeq").value(2))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[1].replyWriter").value("김길동"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[1].replyContents").value("잘가세요"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses[1].replyWriteTime").value("2022-01-01T12:00:00"))
-                .andExpect(jsonPath("$.data.memorialReplyResponses.length()").value(2));
+                .andExpect(jsonPath("$.data.writeTime").value("2024-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].commentSeq").value(1))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].commentWriter").value("홍길동"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].contents").value("안녕하세요"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[0].writeTime").value("2024-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].commentSeq").value(2))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].commentWriter").value("김길동"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].contents").value("잘가세요"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content[1].writeTime").value("2022-01-01"))
+                .andExpect(jsonPath("$.data.memorialCommentResponses.content.length()").value(2));
 
 
     }
@@ -203,18 +209,24 @@ class MemorialControllerTest {
                 new MemorialResponse(3, "나길동", "N", "20220103", "M", 30, 32)
         );
 
-        CursorPaginationResponse<MemorialResponse, Integer> page =
-                CursorPaginationResponse.<MemorialResponse, Integer>builder()
+        MemorialNextCursor nextCursor = new MemorialNextCursor(1, "20200101");
+
+        CursorPaginationResponse<MemorialResponse, MemorialNextCursor> page =
+                CursorPaginationResponse.<MemorialResponse, MemorialNextCursor>builder()
                         .content(content)
-                        .nextCursor(null)
+                        .nextCursor(nextCursor)
                         .hasNext(false)
                         .build();
 
-        given(memorialService.getSearchMemorialList(anyString(), anyString(), anyString(), anyInt(), anyInt()))
+        given(memorialService.getSearchMemorialList(anyString(), anyString(), anyString(), any(MemorialNextCursor.class), anyInt()))
                 .willReturn(page);
 
         mockMvc.perform(get("/remembrance/search")
+                        .param("startDate", "1900-01-01")
+                        .param("endDate", "2100-12-31")
+                        .param("keyWord", "")
                         .param("cursor", "1")
+                        .param("date", "20200101")
                         .param("size", "20"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -234,8 +246,10 @@ class MemorialControllerTest {
         assertThat(startDateCaptor.getValue()).isEqualTo("1900-01-01");
         assertThat(endDateCaptor.getValue()).isEqualTo("2100-12-31");
         assertThat(searchWordCaptor.getValue()).isEmpty();
-        assertThat(cursorCaptor.getValue()).isEqualTo(1);
         assertThat(sizeCaptor.getValue()).isEqualTo(20);
+
+        MemorialNextCursor cursor = cursorCaptor.getValue();
+        assertThat(cursor).isNotNull();
     }
 
     @Test
