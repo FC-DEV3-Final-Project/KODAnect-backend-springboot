@@ -25,8 +25,9 @@ public class ImageFileUploadController {
     private final MessageSourceAccessor msg;
     private final Environment env;
 
-    @PostMapping("/upload_img")
+    @PostMapping("/upload_img/{category}")
     public ResponseEntity<Map<String,String>> uploadImage(
+            @PathVariable("category") String category,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         // 1) 빈 파일 체크
@@ -60,7 +61,7 @@ public class ImageFileUploadController {
         String storePath = Optional.ofNullable(env.getProperty("Globals.fileStorePath"))   // prod
                 .orElse(env.getProperty("globals.file-store-path", "./uploads"));          // dev
         String absStore = Paths.get(storePath).toAbsolutePath().normalize().toString();
-        Path target = Paths.get(absStore, "upload_img", storedFileName);
+        Path target = Paths.get(absStore, "upload_img",category,  storedFileName);
         Files.createDirectories(target.getParent());
         file.transferTo(target.toFile());
 
