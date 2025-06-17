@@ -20,7 +20,7 @@ public class RecipientListResponseDto implements CursorIdentifiable<Integer> {
     private Integer letterSeq;
     private String letterTitle;
     private String letterWriter;
-    private String anonymityFlag; // 익명 플래그 유지
+    private String anonymityFlag;
     private int readCount;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime writeTime;
