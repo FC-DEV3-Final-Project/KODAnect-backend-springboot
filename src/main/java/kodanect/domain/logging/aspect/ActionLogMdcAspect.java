@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.bitwalker.useragentutils.*;
 import kodanect.domain.logging.constant.MdcKey;
+import kodanect.domain.logging.exception.ActionLogJsonSerializationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,8 +12,9 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -36,8 +38,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ActionLogMdcAspect {
 
-    @Autowired
-    private HttpServletRequest request;
     private final ObjectMapper objectMapper;
 
     /**
@@ -51,6 +51,13 @@ public class ActionLogMdcAspect {
      */
     @Around("execution(* kodanect.domain..controller..*(..))")
     public Object injectMdcMetadata(ProceedingJoinPoint joinPoint) throws Throwable {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        if (attributes == null) {
+            return joinPoint.proceed();
+        }
+
+        HttpServletRequest request = attributes.getRequest();
         String sessionId = request.getHeader("X-Session-Id");
 
         if (sessionId == null || sessionId.isBlank()) {
@@ -79,12 +86,9 @@ public class ActionLogMdcAspect {
             MDC.put(MdcKey.DEVICE, orUnknown(os != null ? os.getDeviceType().getName() : null));
             MDC.put(MdcKey.LOCALE, orUnknown(request.getLocale().toLanguageTag()));
 
-            log.debug("📥 Incoming Request Info:");
-            MDC.getCopyOfContextMap().forEach((k, v) -> log.debug("{}: {}", k, v));
-
             return joinPoint.proceed();
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("쿼리 파라미터 JSON 직렬화 실패", e);
+            throw new ActionLogJsonSerializationException();
         } finally {
             MDC.clear();
         }

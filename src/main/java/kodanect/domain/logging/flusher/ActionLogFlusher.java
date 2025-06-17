@@ -66,7 +66,7 @@ public class ActionLogFlusher {
         allKeys.addAll(feMap.keySet());
         allKeys.addAll(beMap.keySet());
 
-        flushByKeys(allKeys, feMap, beMap, null); // null → key에서 crudCode 추출
+        flushByKeys(allKeys, feMap, beMap, null);
     }
 
     /**
