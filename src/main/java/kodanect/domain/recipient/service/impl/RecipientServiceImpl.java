@@ -213,9 +213,9 @@ public class RecipientServiceImpl implements RecipientService {
         recipientEntityRequest.setOrgFileName(uploadedOrgFileName); // orgFileName은 DTO에 있으면 설정, 없으면 null
         logger.info("첨부된 이미지 URL: {}, 파일명: {}, 원본 파일명: {}", uploadedImageUrl, uploadedFileName, uploadedOrgFileName);
 
-        // 2. 익명 처리 로직 및 작성자(letterWriter) 설정
-        String writerToSave = "Y".equalsIgnoreCase(requestDto.getAnonymityFlag()) ? anonymousWriterValue : requestDto.getLetterWriter();
-        recipientEntityRequest.setLetterWriter(writerToSave);
+        // 작성자 익명 처리 로직 적용
+        recipientEntityRequest.setLetterWriter(processAnonymityWriter(requestDto.getLetterWriter(), requestDto.getAnonymityFlag()));
+        recipientEntityRequest.setAnonymityFlag(requestDto.getAnonymityFlag());
 
         // 3. organCode : "ORGAN000" (직접입력) 일 경우 organEtc 설정, 아니면 null
         if (!organCodeDirectInput.equals(requestDto.getOrganCode())) {
