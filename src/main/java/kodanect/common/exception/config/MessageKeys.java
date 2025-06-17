@@ -40,6 +40,15 @@ public final class MessageKeys {
     public static final String COMMENT_PASSWORD_INVALID = "error.comment.password.invalid";
     public static final String COMMENT_CONTENTS_EMPTY = "error.comment.contents.empty";
 
+    // 하늘나라 편지 관련
+    public static final String HEAVEN_DONOR_INFORM_MISMATCH = "heaven.donor.mismatch.error";
+    public static final String HEAVEN_PASSWORD_MISMATCH = "heaven.password.mismatch.error";
+    public static final String HEAVEN_TYPE_INVALID = "heaven.type.invalid.error";
+    public static final String HEAVEN_FILE_SAVE_FAIL = "heaven.file.save.error";
+    public static final String HEAVEN_NOT_FOUND = "heaven.notFound.error";
+    public static final String HEAVEN_COMMENT_NOT_FOUND = "heaven.comment.notFound.error";
+    public static final String HEAVEN_COMMENT_INFORM_MISMATCH = "heaven.comment.mismatch.error";
+
     private MessageKeys() {}
 
 }
