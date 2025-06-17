@@ -22,7 +22,7 @@ import java.util.*;
 public class ActionLogScheduler {
 
     private static final int TEN_MINUTES = 10 * 60 * 1000;
-    private static final int TWENTY_MINUTES = 120 * 60 * 1000;
+    private static final int TWENTY_MINUTES = 20 * 60 * 1000;
     private static final int THIRTY_MINUTES = 30 * 60 * 1000;
 
     private static final int TEN_SECONDS = 10 * 1000;
