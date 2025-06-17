@@ -28,18 +28,18 @@ public class RecipientController {
     /** ## 게시물 목록 조회 (커서 기반 페이징 적용)
 
     **요청:** `GET /recipientLetters`
-            **파라미터:** `searchKeyword`, `searchType`, `cusor`, `size`
+            **파라미터:** `searchKeyword`, `searchType`, `cursor`, `size`
             **응답:** `ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>`
             */
     @GetMapping
     public ResponseEntity<ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>> getRecipientList(
             RecipientSearchCondition searchCondition,
-            @RequestParam(required = false) Integer cusor,      // 첫 조회 시 null, 더보기 시 마지막 게시물 ID
+            @RequestParam(required = false) Integer cursor,      // 첫 조회 시 null, 더보기 시 마지막 게시물 ID
             @RequestParam(defaultValue = "20") int size         // 게시물 한 번에 가져올 개수 (기본값 20)**
     ) {
-        logger.info("게시물 목록 조회 요청이 수신되었습니다. cusor: {}, size: {}", cusor, size);
+        logger.info("게시물 목록 조회 요청이 수신되었습니다. cursor: {}, size: {}", cursor, size);
         CursorPaginationResponse<RecipientListResponseDto, Integer> responseData =
-                recipientService.selectRecipientList(searchCondition, cusor, size);
+                recipientService.selectRecipientList(searchCondition, cursor, size);
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물 목록 조회 성공", responseData));
     }
@@ -94,8 +94,8 @@ public class RecipientController {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        boolean isVerified = recipientService.verifyLetterPassword(letterSeq, letterPasscode);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인 결과", isVerified));
+        recipientService.verifyLetterPassword(letterSeq, letterPasscode);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인"));
     }
 
     /** ## 게시물 수정
