@@ -4,6 +4,7 @@ import kodanect.common.config.EgovConfigCommon;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
+import kodanect.common.util.MemorialHtmlNormalizer;
 import kodanect.domain.remembrance.TestHeavenMemorialResponse;
 import kodanect.domain.remembrance.TestMemorialResponse;
 import kodanect.domain.remembrance.dto.HeavenMemorialResponse;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -49,6 +51,9 @@ class MemorialControllerTest {
 
     @MockBean
     private MemorialService memorialService;
+
+    @Mock
+    private MemorialHtmlNormalizer memorialHtmlNormalizer;
 
     /* 검색 조건 */
     @Captor ArgumentCaptor<String> searchWordCaptor;
@@ -160,6 +165,8 @@ class MemorialControllerTest {
                 .memorialCommentResponses(cursoredReplies)
                 .build();
 
+        String content = MemorialHtmlNormalizer.contentsFormat(1, "홍길동", "M", 43, "20240101");
+
         given(memorialService.getMemorialByDonateSeq(1)).willReturn(memorial);
 
         mockMvc.perform(get("/remembrance/1"))
@@ -170,7 +177,7 @@ class MemorialControllerTest {
                 .andExpect(jsonPath("$.data.donateSeq").value(1))
                 .andExpect(jsonPath("$.data.donorName").value("홍길동"))
                 .andExpect(jsonPath("$.data.donateTitle").value("당신을 기억합니다."))
-                .andExpect(jsonPath("$.data.contents").value("감사한 마음을 전합니다."))
+                .andExpect(jsonPath("$.data.contents").value(content))
                 .andExpect(jsonPath("$.data.fileName").value("image.jpg"))
                 .andExpect(jsonPath("$.data.orgFileName").value("original.jpg"))
                 .andExpect(jsonPath("$.data.writer").value("관리자"))

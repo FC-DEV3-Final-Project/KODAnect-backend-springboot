@@ -208,7 +208,8 @@ public class MemorialServiceImpl implements MemorialService {
      * */
     @Override
     public MemorialDetailResponse getMemorialByDonateSeq(Integer donateSeq)
-            throws  MemorialNotFoundException
+            throws  MemorialNotFoundException,
+                    InvalidContentsException
     {
         /* 게시글 조회 */
         Memorial memorial = memorialFinder.findByIdOrThrow(donateSeq);

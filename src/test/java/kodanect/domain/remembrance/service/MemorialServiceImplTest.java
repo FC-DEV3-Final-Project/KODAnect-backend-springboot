@@ -1,7 +1,9 @@
 package kodanect.domain.remembrance.service;
 
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.FormatUtils;
 import kodanect.common.util.MemorialFinder;
+import kodanect.common.util.MemorialHtmlNormalizer;
 import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
 import kodanect.domain.remembrance.TestHeavenMemorialResponse;
@@ -50,6 +52,9 @@ public class MemorialServiceImplTest {
 
     @Mock
     private HeavenService heavenService;
+
+    @Mock
+    private MemorialHtmlNormalizer memorialHtmlNormalizer;
 
     @Test
     @DisplayName("추모관 이모지 카운팅")
@@ -307,11 +312,13 @@ public class MemorialServiceImplTest {
 
         MemorialDetailResponse result = memorialService.getMemorialByDonateSeq(donateSeq);
 
+        String content = MemorialHtmlNormalizer.contentsFormat(1, "홍길동", "M", 40,"20240101");
+
         assertNotNull(result);
         assertEquals(Integer.valueOf(1), result.getDonateSeq());
         assertEquals("홍길동", result.getDonorName());
         assertEquals("기억합니다", result.getDonateTitle());
-        assertEquals("내용입니다", result.getContents());
+        assertEquals(content, result.getContents());
         assertEquals("2024-01-01", result.getDonateDate());
         assertEquals("M", result.getGenderFlag());
         assertEquals(Integer.valueOf(40), result.getDonateAge());

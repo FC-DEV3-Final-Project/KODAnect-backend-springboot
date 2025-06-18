@@ -72,7 +72,8 @@ public class MemorialController {
     @GetMapping("/{donateSeq}")
     public ResponseEntity<ApiResponse<MemorialDetailResponse>> getMemorialByDonateSeq(
             @PathVariable @Min(value = 1, message = DONATE_INVALID) Integer donateSeq)
-            throws  MemorialNotFoundException
+            throws  MemorialNotFoundException,
+                    InvalidContentsException
     {
         /* 게시글 상세 조회 */
 
