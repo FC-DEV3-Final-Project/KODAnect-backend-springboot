@@ -4,7 +4,9 @@ import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.MemorialFinder;
 import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.service.HeavenService;
+import kodanect.domain.remembrance.TestHeavenMemorialResponse;
 import kodanect.domain.remembrance.TestMemorialResponse;
+import kodanect.domain.remembrance.dto.HeavenMemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialDetailResponse;
 import kodanect.domain.remembrance.dto.MemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialCommentResponse;
@@ -17,6 +19,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -48,7 +53,7 @@ public class MemorialServiceImplTest {
 
     @Test
     @DisplayName("추모관 이모지 카운팅")
-    public void 추모관_이모지_카운팅() throws Exception {
+    public void 추모관_이모지_카운팅() {
         /* emotionCountUpdate */
 
         Integer donateSeq = 1;
@@ -116,7 +121,7 @@ public class MemorialServiceImplTest {
 
     @Test
     @DisplayName("추모관 게시글 검색 조회")
-    public void 추모관_게시글_검색_조회() throws Exception {
+    public void 추모관_게시글_검색_조회() {
         /* getSearchMemorialList */
         MemorialNextCursor nextCursor = new MemorialNextCursor(null, null);
         int size = 20;
@@ -156,10 +161,52 @@ public class MemorialServiceImplTest {
         assertEquals(5, item.getCommentCount());
     }
 
+    @Test
+    @DisplayName("추모관 게시글 하늘나라 팝업 검색 조회")
+    public void 추모관_게시글_하늘나라_팝업_검색_조회() {
+        /* getSearchMemorialList */
+        Integer page = 1;
+        int size = 20;
+        String startDate = "2023-01-01";
+        String endDate = "2024-01-01";
+        String searchWord = "홍길동";
+
+        List<HeavenMemorialResponse> content = List.of(
+                new TestHeavenMemorialResponse(2, "홍길동", "2023-01-02", "M", 40),
+                new TestHeavenMemorialResponse(3, "홍길동", "2023-01-03", "M", 42)
+        );
+
+        Page<HeavenMemorialResponse> result = new PageImpl<>(
+                content,
+                PageRequest.of(0,20),
+                100
+        );
+
+        when(memorialRepository.findSearchByPage(
+                any(Pageable.class),
+                eq("20230101"),       // startDateStr
+                eq("20240101"),       // endDateStr
+                eq("%홍길동%")       // keyWord
+        )).thenReturn(result);
+
+        Page<HeavenMemorialResponse> response = memorialService.getSearchHeavenMemorialList(
+                startDate, endDate, searchWord, page, size
+                );
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+
+        HeavenMemorialResponse item = response.getContent().get(0);
+        assertEquals("홍길동", item.getDonorName());
+        assertEquals("2023-01-02", item.getDonateDate());
+        assertEquals("M", item.getGenderFlag());
+        assertEquals(Integer.valueOf(40), item.getDonateAge());
+    }
+
 
     @Test
     @DisplayName("추모관 게시글 리스트 조회")
-    public void 추모관_게시글_리스트_조회() throws Exception {
+    public void 추모관_게시글_리스트_조회() {
         /* getMemorialList */
 
         MemorialNextCursor nextCursor = new MemorialNextCursor(null, null);
@@ -197,7 +244,7 @@ public class MemorialServiceImplTest {
 
     @Test
     @DisplayName("추모관 게시글 상세 조회")
-    public void 추모관_게시글_상세_조회() throws Exception {
+    public void 추모관_게시글_상세_조회() {
         /* getMemorialByDonateSeq */
 
         Integer donateSeq = 1;

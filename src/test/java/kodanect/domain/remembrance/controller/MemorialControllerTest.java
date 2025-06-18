@@ -4,7 +4,9 @@ import kodanect.common.config.EgovConfigCommon;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
+import kodanect.domain.remembrance.TestHeavenMemorialResponse;
 import kodanect.domain.remembrance.TestMemorialResponse;
+import kodanect.domain.remembrance.dto.HeavenMemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialDetailResponse;
 import kodanect.domain.remembrance.dto.MemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialCommentResponse;
@@ -18,6 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -50,6 +55,7 @@ class MemorialControllerTest {
     @Captor ArgumentCaptor<String> startDateCaptor;
     @Captor ArgumentCaptor<String> endDateCaptor;
     @Captor ArgumentCaptor<MemorialNextCursor> cursorCaptor;
+    @Captor ArgumentCaptor<Integer> pageCaptor;
     @Captor ArgumentCaptor<Integer> sizeCaptor;
 
     @Test
@@ -246,6 +252,56 @@ class MemorialControllerTest {
 
         MemorialNextCursor cursor = cursorCaptor.getValue();
         assertThat(cursor).isNotNull();
+    }
+
+    @Test
+    @DisplayName("추모관 하늘나라 팝업 검색 조회")
+    void 추모관_하늘나라_팝업_검색_조회() throws Exception {
+        /* 기증자 추모관 게시글 하늘나라 팝업 검색 리스트 조회 */
+        /* 검색 조건이 없는 경우 */
+        /* 컨트롤러 테스트는 필터링 로직이 반영되지 않음 */
+
+        List<HeavenMemorialResponse> content = List.of(
+                new TestHeavenMemorialResponse(1, "홍길동", "20200101", "M", 10),
+                new TestHeavenMemorialResponse(2, "김길동",  "20200102", "F", 20),
+                new TestHeavenMemorialResponse(3, "나길동",  "20220103", "M", 30)
+        );
+
+        Page<HeavenMemorialResponse> page = new PageImpl<>(
+                content,
+                PageRequest.of(0,20),
+                100
+        );
+
+        given(memorialService.getSearchHeavenMemorialList(anyString(), anyString(), anyString(), anyInt(), anyInt()))
+                .willReturn(page);
+
+        mockMvc.perform(get("/remembrance/heaven")
+                        .param("startDate", "1900-01-01")
+                        .param("endDate", "2100-12-31")
+                        .param("keyWord", "")
+                        .param("page", "1")
+                        .param("size", "20"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.message").value("게시글 검색 조회 성공"))
+                .andExpect(jsonPath("$.data.content.length()").value(3));
+
+        verify(memorialService).getSearchHeavenMemorialList(
+                startDateCaptor.capture(),
+                endDateCaptor.capture(),
+                searchWordCaptor.capture(),
+                pageCaptor.capture(),
+                sizeCaptor.capture()
+        );
+
+        assertThat(startDateCaptor.getValue()).isEqualTo("1900-01-01");
+        assertThat(endDateCaptor.getValue()).isEqualTo("2100-12-31");
+        assertThat(searchWordCaptor.getValue()).isEmpty();
+        assertThat(sizeCaptor.getValue()).isEqualTo(20);
+        assertThat(pageCaptor.getValue()).isEqualTo(1);
     }
 
     @Test
