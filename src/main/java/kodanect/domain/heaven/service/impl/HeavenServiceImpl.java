@@ -18,6 +18,7 @@ import kodanect.domain.heaven.exception.FileStorageException;
 import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
+import kodanect.domain.heaven.service.FileService;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import kodanect.domain.heaven.service.HeavenService;
 import kodanect.domain.remembrance.entity.Memorial;
@@ -51,6 +52,7 @@ public class HeavenServiceImpl implements HeavenService {
     private final MemorialRepository memorialRepository;
     private final HeavenFinder heavenFinder;
     private final MemorialFinder memorialFinder;
+    private final FileService fileService;
 
     /* 게시물 전체 조회 (페이징) */
     @Override
@@ -77,7 +79,7 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 게시물 상세 조회 */
-    @Transactional
+    @Transactional(value = Transactional.TxType.NOT_SUPPORTED)
     @Override
     public HeavenDetailResponse getHeavenDetail(Integer letterSeq) {
         /* 게시물 상세 조회 */
@@ -92,10 +94,13 @@ public class HeavenServiceImpl implements HeavenService {
         /* 댓글 개수 조회 */
         long commentCount = heavenCommentRepository.countByLetterSeq(letterSeq);
 
+        /* 파일 조회 */
+        String imageUrl = fileService.getFile(heavenDto.getFileName());
+
         CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
                 CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);
 
-        return HeavenDetailResponse.of(heavenDto, cursorCommentCountPaginationResponse);
+        return HeavenDetailResponse.of(heavenDto, cursorCommentCountPaginationResponse, imageUrl);
     }
 
     /* 기증자 추모관 상세 조회 시 하늘나라 편지 전체 조회 */
@@ -113,7 +118,6 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 게시물 생성 */
-    @Transactional
     @Override
     public void createHeaven(HeavenCreateRequest heavenCreateRequest) {
         Memorial memorial = memorialRepository.findById(heavenCreateRequest.getDonateSeq()).orElse(null);
@@ -122,7 +126,7 @@ public class HeavenServiceImpl implements HeavenService {
         HeavenValidator.validateDonorNameMatches(heavenCreateRequest.getDonorName(), memorial);
 
         /* 파일 생성 */
-        Map<String, String> fileMap = saveFile(heavenCreateRequest.getFile());
+        Map<String, String> fileMap = fileService.saveFile(heavenCreateRequest.getFile());
         String fileName = fileMap.get(FILE_NAME_KEY);
         String orgFileName = fileMap.get(ORG_FILE_NAME_KEY);
 
@@ -151,7 +155,6 @@ public class HeavenServiceImpl implements HeavenService {
     }
 
     /* 게시물 수정 */
-    @Transactional
     @Override
     public void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
@@ -160,18 +163,21 @@ public class HeavenServiceImpl implements HeavenService {
         /* 유효성 검사 */
         HeavenValidator.validateDonorNameMatches(heavenUpdateRequest.getDonorName(), memorial);
 
-        Map<String, String> fileMap = updateFile(heavenUpdateRequest.getFile(), heaven);
+        Map<String, String> fileMap = fileService.updateFile(heavenUpdateRequest.getFile(), heaven.getFileName());
 
         heaven.updateHeaven(heavenUpdateRequest, memorial, fileMap);
     }
 
     /* 게시물 삭제 */
-    @Transactional
     @Override
     public void deleteHeaven(Integer letterSeq, String letterPasscode) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
 
+        /* 비밀번호 일치 검증 */
         heaven.verifyPasscode(letterPasscode);
+
+        /* 파일 삭제 */
+        fileService.deleteFile(heaven.getFileName());
 
         /* 게시물 및 해당 댓글 소프트 삭제 */
         heaven.softDelete();
@@ -195,67 +201,5 @@ public class HeavenServiceImpl implements HeavenService {
             case "CONTENTS"-> heavenRepository.findByContentsContaining(keyWord, cursor, pageable);
             default       -> throw new InvalidTypeException(type);
         };
-    }
-
-    /* 파일 저장 및 문자열 처리 */
-    private Map<String, String> saveFile(MultipartFile file) {
-        String orgFileName = "";
-        String fileName = "";
-
-        if (file != null && !file.isEmpty()) {
-            orgFileName = file.getOriginalFilename();
-            String extension = orgFileName.substring(orgFileName.lastIndexOf("."));
-            fileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
-
-            Path path = Paths.get(FILE_PATH);
-            Path filePath = path.resolve(fileName);
-
-            try {
-                file.transferTo(filePath);
-            } catch (IOException e) {
-                throw new FileStorageException(filePath, orgFileName);
-            }
-        }
-
-        return Map.of(FILE_NAME_KEY, fileName, ORG_FILE_NAME_KEY, orgFileName);
-    }
-
-    /* 파일 수정 -> 같은 파일인지 확인 후 같은 거면 그대로 반환 */
-    private Map<String, String> updateFile(MultipartFile newFile, Heaven heaven) {
-        String newOrgFileName = newFile.getOriginalFilename();
-        String currentOrgFileName = heaven.getOrgFileName();
-        String currentFileName = heaven.getFileName();
-
-        // 동일 파일인지 비교 (이름만으로 판단하는 경우)
-        if (newOrgFileName != null && newOrgFileName.equals(currentOrgFileName)) {
-            // 동일한 파일명이면 기존 파일 그대로 사용
-            return Map.of(FILE_NAME_KEY, currentFileName, ORG_FILE_NAME_KEY, currentOrgFileName);
-        }
-
-        // 기존 파일 삭제
-        Path path = Paths.get(FILE_PATH);
-        Path oldFilePath = path.resolve(currentFileName);
-
-        try {
-            if (Files.exists(oldFilePath)) {
-                Files.delete(oldFilePath);
-            }
-        } catch (IOException e) {
-            throw new FileStorageException(oldFilePath, "기존 파일 삭제 실패: " + currentFileName);
-        }
-
-        // 새 파일 저장
-        String extension = newOrgFileName.substring(newOrgFileName.lastIndexOf("."));
-        String newFileName = UUID.randomUUID().toString().replace("-", "").toUpperCase() + extension;
-        Path newFilePath = path.resolve(newFileName);
-
-        try {
-            Files.createDirectories(path);
-            newFile.transferTo(newFilePath);
-
-            return Map.of(FILE_NAME_KEY, newFileName, ORG_FILE_NAME_KEY, newOrgFileName);
-        } catch (IOException e) {
-            throw new FileStorageException(newFilePath, "새 파일 저장 실패: " + newOrgFileName);
-        }
     }
 }

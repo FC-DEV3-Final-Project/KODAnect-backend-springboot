@@ -43,11 +43,8 @@ public class HeavenDetailResponse {
     /* 편지 내용 */
     private String letterContents;
 
-    /* 이미지 파일 명 */
-    private String fileName;
-
-    /* 이미지 원본 파일 명 */
-    private String orgFileName;
+    /* 파일 URL */
+    private String imageUrl;
 
     /* 생성 일시 */
     private LocalDateTime writeTime;
@@ -62,7 +59,8 @@ public class HeavenDetailResponse {
 
     public static HeavenDetailResponse of(
             HeavenDto heaven,
-            CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse
+            CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse,
+            String imageUrl
     ) {
 
         return HeavenDetailResponse.builder()
@@ -73,8 +71,7 @@ public class HeavenDetailResponse {
                 .letterWriter(heaven.getLetterWriter())
                 .readCount(heaven.getReadCount())
                 .letterContents(heaven.getLetterContents())
-                .fileName(heaven.getFileName())
-                .orgFileName(heaven.getOrgFileName())
+                .imageUrl(imageUrl)
                 .writeTime(heaven.getWriteTime())
                 .cursorCommentPaginationResponse(cursorCommentPaginationResponse)
                 .build();
