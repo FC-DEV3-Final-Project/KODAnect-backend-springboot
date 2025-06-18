@@ -22,7 +22,6 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -57,18 +56,6 @@ public class GlobalExcepHndlr {
     // 생성자를 통해 MessageSourceAccessor를 주입받습니다.
     public GlobalExcepHndlr(MessageSourceAccessor messageSourceAccessor) {
         this.messageSourceAccessor = messageSourceAccessor;
-    }
-
-    /**
-     * 400 예외 처리
-     *
-     * 요청 헤더 누락 시 400 응답 반환
-     */
-    @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMissingRequestHeader() {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "필수 요청 헤더가 누락되었습니다."));
     }
 
     /**

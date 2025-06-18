@@ -46,11 +46,12 @@ public class ActionLogServiceImplTest {
     @Test
     public void saveFrontendLog_shouldDelegateToBuffer() {
         String sessionId = "session-123";
+
         List<FrontendLogDto> logs = List.of(
                 FrontendLogDto.builder().eventType("clickButton").build()
         );
 
-        service.saveFrontendLog(sessionId, logs);
+        service.saveFrontendLog(logs);
 
         verify(frontendLogBuffer).add(sessionId, logs);
     }
@@ -71,7 +72,7 @@ public class ActionLogServiceImplTest {
         MDC.put("parameters", "{\"id\":1}");
         MDC.put("timestamp", "2025-06-16T00:00:00Z");
 
-        service.saveBackendLog(sessionId);
+        service.saveBackendLog();
 
         verify(backendLogBuffer).add(eq(sessionId), argThat(log ->
                 "POST".equals(log.getHttpMethod()) &&
@@ -98,7 +99,7 @@ public class ActionLogServiceImplTest {
         MDC.put("device", "Computer");
         MDC.put("locale", "ko-KR");
 
-        service.saveSystemInfo(sessionId);
+        service.saveSystemInfo();
 
         verify(systemInfoBuffer).add(eq(sessionId), argThat(info ->
                 "Chrome".equals(info.getBrowserName()) &&

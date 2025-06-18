@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@link ActionLogExceptionHandler} 및 {@link GlobalExcepHndlr}에 정의된 예외 처리 로직의 단위 테스트입니다.
  *
  * 테스트 대상: {@link ActionLogController}
- * 목적: 필수 헤더 누락, 비어 있는 로그, JSON 직렬화 실패 시 예외 응답이 올바르게 처리되는지를 검증합니다.
+ * 목적: 비어 있는 로그, JSON 직렬화 실패 시 예외 응답이 올바르게 처리되는지를 검증합니다.
  */
 @WebMvcTest(controllers = ActionLogController.class)
 @Import({ ActionLogExceptionHandler.class, GlobalExcepHndlr.class })
@@ -40,23 +40,6 @@ class ActionLogExceptionHandlerTest {
     private MessageSourceAccessor messageSource;
 
     /**
-     * GIVEN: 요청 헤더에 필수 세션 ID가 누락된 경우
-     * WHEN: /action-logs 엔드포인트에 POST 요청을 보내면
-     * THEN: 400 Bad Request 상태 코드와 함께
-     *       "필수 요청 헤더가 누락되었습니다."라는 메시지가 반환되어야 한다.
-     */
-    @Test
-    void shouldReturn400WhenSessionIdIsMissing() throws Exception {
-        mockMvc.perform(post("/action-logs")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"frontendLogs\": []}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value(400))
-                .andExpect(jsonPath("$.message").value("필수 요청 헤더가 누락되었습니다."));
-    }
-
-    /**
      * GIVEN: 프론트엔드 로그 리스트가 비어 있는 상태로 전달된 경우
      * WHEN: 서비스에서 {@link EmptyFrontendLogListException}이 발생하면
      * THEN: 400 Bad Request 상태 코드와 함께
@@ -64,16 +47,13 @@ class ActionLogExceptionHandlerTest {
      */
     @Test
     void shouldReturn400WhenFrontendLogListIsEmpty() throws Exception {
-        String sessionId = "session-empty-001";
-
         doThrow(new EmptyFrontendLogListException())
-                .when(actionLogService).saveFrontendLog(sessionId, List.of());
+                .when(actionLogService).saveFrontendLog(List.of());
 
         when(messageSource.getMessage(anyString(), any(Object[].class), anyString()))
                 .thenReturn("프론트엔드 로그 리스트는 비어 있을 수 없습니다.");
 
         mockMvc.perform(post("/action-logs")
-                        .header("X-Session-Id", sessionId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"frontendLogs\": []}"))
                 .andExpect(status().isBadRequest())
@@ -90,16 +70,13 @@ class ActionLogExceptionHandlerTest {
      */
     @Test
     void shouldReturn500WhenJsonSerializationFails() throws Exception {
-        String sessionId = "session-error-001";
-
         doThrow(new ActionLogJsonSerializationException("프론트엔드 로그 직렬화 중 오류 발생"))
-                .when(actionLogService).saveFrontendLog(eq(sessionId), any());
+                .when(actionLogService).saveFrontendLog(any());
 
         when(messageSource.getMessage(anyString(), any(Object[].class), anyString()))
                 .thenReturn("JSON 직렬화에 실패했습니다.");
 
         mockMvc.perform(post("/action-logs")
-                        .header("X-Session-Id", sessionId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"frontendLogs\": [{\"eventType\": \"click\"}]}"))
                 .andExpect(status().isInternalServerError())

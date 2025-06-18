@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.HashMap;
@@ -25,25 +26,25 @@ import java.util.Map;
  * 컨트롤러 계층 진입 시 사용자 요청 메타데이터를 MDC에 설정하는 AOP 컴포넌트
  *
  * 주요 기능:
- * - X-Session-Id 헤더가 존재하는 요청에만 동작
+ * - 세션 쿠키(sessionId)가 존재하는 요청에 한해 MDC 설정
  * - User-Agent 분석을 통해 브라우저, OS, 디바이스 정보 수집
  * - 클라이언트 IP, HTTP 메서드, 엔드포인트, 컨트롤러명, 메서드명, 파라미터, 타임스탬프 저장
  * - 수집된 정보를 SLF4J MDC에 등록
- *
- * 모든 작업이 완료된 후에는 MDC가 반드시 초기화됩니다.
+ * - 모든 작업이 완료된 후에는 MDC가 반드시 초기화됩니다.
  */
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class ActionLogMdcAspect {
 
+    private static final String SESSION_ID_COOKIE_NAME = "sessionId";
     private static final SecureLogger log = SecureLogger.getLogger(ActionLogMdcAspect.class);
     private final ObjectMapper objectMapper;
 
     /**
      * 컨트롤러 메서드 실행 전후로 MDC 메타데이터를 설정하고 정리합니다.
      *
-     * X-Session-Id 헤더가 존재하는 요청에 대해서만 MDC를 설정합니다.
+     * 세션 쿠키(sessionId)가 존재하는 요청에 대해서만 MDC를 설정합니다.
      *
      * @param joinPoint 현재 실행 중인 컨트롤러 메서드 조인 포인트
      * @return 원래의 메서드 실행 결과
@@ -58,7 +59,7 @@ public class ActionLogMdcAspect {
         }
 
         HttpServletRequest request = attributes.getRequest();
-        String sessionId = request.getHeader("X-Session-Id");
+        String sessionId = extractSessionIdFromCookie(request);
 
         if (sessionId == null || sessionId.isBlank()) {
             return joinPoint.proceed();
@@ -79,8 +80,8 @@ public class ActionLogMdcAspect {
             OperatingSystem os = userAgent.getOperatingSystem();
             String locale = orUnknown(request.getLocale().toLanguageTag());
 
-            MDC.put(MdcKey.IP_ADDRESS, ipAddress);
             MDC.put(MdcKey.SESSION_ID, sessionId);
+            MDC.put(MdcKey.IP_ADDRESS, ipAddress);
             MDC.put(MdcKey.HTTP_METHOD, httpMethod);
             MDC.put(MdcKey.ENDPOINT, endpoint);
             MDC.put(MdcKey.CONTROLLER, controllerClassName);
@@ -102,6 +103,25 @@ public class ActionLogMdcAspect {
         } finally {
             MDC.clear();
         }
+    }
+
+    /**
+     * HttpServletRequest의 쿠키에서 sessionId 값을 추출합니다.
+     *
+     * @param request 현재 요청
+     * @return sessionId 쿠키 값 (없으면 null)
+     */
+    private String extractSessionIdFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        for (Cookie cookie : request.getCookies()) {
+            if (SESSION_ID_COOKIE_NAME.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 
     /**

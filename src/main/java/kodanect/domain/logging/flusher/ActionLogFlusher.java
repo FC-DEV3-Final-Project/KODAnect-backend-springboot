@@ -119,6 +119,8 @@ public class ActionLogFlusher {
             } catch (JsonProcessingException e) {
                 throw new ActionLogJsonSerializationException("로그 엔티티 직렬화");
             }
+
+            systemInfoBuffer.remove(sessionId);
         }
 
         if (!logsToSave.isEmpty()) {
