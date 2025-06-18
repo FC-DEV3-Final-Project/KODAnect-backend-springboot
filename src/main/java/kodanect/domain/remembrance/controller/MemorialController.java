@@ -134,7 +134,7 @@ public class MemorialController {
             @RequestParam(defaultValue = "2100-12-31") String endDate,
             @RequestParam(defaultValue = "") String keyWord,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") int size)
+            @RequestParam(defaultValue = "10") int size)
             throws  InvalidPaginationException,
                     MissingSearchDateParameterException,
                     InvalidSearchDateFormatException,
