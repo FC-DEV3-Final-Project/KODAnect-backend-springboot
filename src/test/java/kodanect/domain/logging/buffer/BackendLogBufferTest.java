@@ -89,7 +89,6 @@ public class BackendLogBufferTest {
                 .controller("TestController")
                 .method("testMethod")
                 .parameters("{\"id\":1}")
-                .httpStatus(200)
                 .timestamp("2024-01-01T00:00:00Z")
                 .build();
     }
