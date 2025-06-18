@@ -2,10 +2,10 @@ package kodanect.domain.article.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.domain.article.entity.Article;
 import kodanect.domain.article.entity.QArticle;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -18,14 +18,13 @@ import java.util.List;
  *
  * <p>QueryDSL을 사용하여 동적 검색 조건과 조회수 증가 기능을 제공합니다.</p>
  *
- * @author gkr97
  * @see ArticleRepositoryCustom
  * @see Article
  */
-@Slf4j
 @RequiredArgsConstructor
 public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
 
+    private static final SecureLogger log = SecureLogger.getLogger(ArticleRepositoryImpl.class);
     private final JPAQueryFactory queryFactory;
 
     /**
@@ -52,7 +51,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         if (keyWord != null && !keyWord.isBlank()) {
             BooleanBuilder keywordCondition = new BooleanBuilder();
 
-            String effectiveField = (type != null) ? type : "all";
+            String effectiveField = (type != null && !type.isBlank()) ? type : "all";
 
             switch (effectiveField) {
                 case "title":
@@ -67,6 +66,8 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
                     break;
                 default:
                     log.warn("잘못된 searchField 값: {}", type);
+                    keywordCondition.or(article.title.containsIgnoreCase(keyWord));
+                    keywordCondition.or(article.contents.containsIgnoreCase(keyWord));
             }
 
             where.and(keywordCondition);
@@ -75,7 +76,11 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         List<Article> content = queryFactory
                 .selectFrom(article)
                 .where(where)
-                .orderBy(article.fixFlag.desc(), article.writeTime.desc())
+                .orderBy(
+                        article.fixFlag.desc(),
+                        article.writeTime.desc(),
+                        article.id.articleSeq.desc()
+                )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

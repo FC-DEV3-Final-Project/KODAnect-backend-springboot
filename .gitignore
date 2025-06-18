@@ -18,6 +18,10 @@ build/
 bin/
 out/
 
+# === Node.js/NPM ===
+node_modules/
+package-lock.json
+
 # === Maven ===
 *.log
 *.tmp
@@ -57,6 +61,7 @@ test_uploads/
 *.cache
 *.sql~
 *.db
+uploads/
 
 KODAnect-backend-springboot.git/
 KODAnect-backend-springboot.git.bfg-report/

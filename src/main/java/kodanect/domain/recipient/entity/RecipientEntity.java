@@ -79,6 +79,10 @@ public class RecipientEntity {
     @Column(name = "org_file_name", length = 600)
     private String orgFileName;
 
+    // 게시물 이미지 URL
+    @Column(name = "image_path", length = 600)
+    private String imageUrl;
+
     // 생성 일시
     @CreatedDate
     @Column(name = "write_time", nullable = false, updatable = false)
@@ -114,6 +118,7 @@ public class RecipientEntity {
     @OneToMany(mappedBy = "letterSeq", fetch = FetchType.LAZY) // mappedBy는 RecipientCommentEntity의 필드명
     @BatchSize(size = 100) // N+1 쿼리 문제를 완화하기 위해 추가 (BatchSize는 원하는 숫자로 설정)
     @OrderBy("writeTime ASC")
+    @Builder.Default
     private List<RecipientCommentEntity> comments = new ArrayList<>(); // NullPointerException 방지를 위해 초기화
 
     // 비즈니스 로직을 위한 메서드

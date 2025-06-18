@@ -77,7 +77,7 @@ public class RecipientCommentRepositoryTest {
     private RecipientCommentEntity createComment(RecipientEntity recipient, String contents, String writer, String delFlag, LocalDateTime writeTime) {
         return RecipientCommentEntity.builder()
                 .letterSeq(recipient) // RecipientEntity 객체 자체를 넘깁니다.
-                .commentContents(contents)
+                .contents(contents)
                 .commentWriter(writer)
                 .commentPasscode("1234")
                 .delFlag(delFlag)
@@ -113,7 +113,7 @@ public class RecipientCommentRepositoryTest {
         // Then
         assertThat(savedComment).isNotNull();
         assertThat(savedComment.getCommentSeq()).isNotNull(); // AutoIncrement 확인
-        assertThat(savedComment.getCommentContents()).isEqualTo("새로운 댓글입니다.");
+        assertThat(savedComment.getContents()).isEqualTo("새로운 댓글입니다.");
         assertThat(savedComment.getLetterSeq().getLetterSeq()).isEqualTo(recipient.getLetterSeq()); // 부모 게시물 ID 확인
         assertThat(savedComment.getDelFlag()).isEqualTo("N");
     }
@@ -153,8 +153,8 @@ public class RecipientCommentRepositoryTest {
         assertThat(foundComments).hasSize(2);
 
         // writeTime 기준으로 올바르게 정렬되었는지 확인
-        assertThat(foundComments.get(0).getCommentContents()).isEqualTo("첫 번째 댓글"); // time1
-        assertThat(foundComments.get(1).getCommentContents()).isEqualTo("두 번째 댓글"); // time2
+        assertThat(foundComments.get(0).getContents()).isEqualTo("첫 번째 댓글"); // time1
+        assertThat(foundComments.get(1).getContents()).isEqualTo("두 번째 댓글"); // time2
 
         // 각 댓글의 delFlag가 'N'인지 확인
         assertThat(foundComments.get(0).getDelFlag()).isEqualTo("N");
@@ -187,7 +187,7 @@ public class RecipientCommentRepositoryTest {
         // Then
         // comment1은 찾을 수 있어야 하며, 내용이 일치해야 합니다.
         assertThat(foundComment).isPresent();
-        assertThat(foundComment.get().getCommentContents()).isEqualTo("조회할 댓글");
+        assertThat(foundComment.get().getContents()).isEqualTo("조회할 댓글");
         assertThat(foundComment.get().getDelFlag()).isEqualTo("N");
 
         // comment2는 delFlag가 'N'이 아니므로 찾을 수 없어야 합니다.
@@ -199,33 +199,46 @@ public class RecipientCommentRepositoryTest {
         // Given
         RecipientEntity recipient1 = createRecipient("게시물A", "aaaa", "작가A", "N", "ORG01", LocalDateTime.now().minusDays(3));
         RecipientEntity recipient2 = createRecipient("게시물B", "bbbb", "작가B", "N", "ORG02", LocalDateTime.now().minusDays(2));
+// …
         // 변수명 수정: recipient3_deletedPost -> recipient3DeletedPost
         RecipientEntity recipient3DeletedPost = createRecipient("게시물C (삭제된 게시물)", "cccc", "작가C", "Y", "ORG03", LocalDateTime.now().minusDays(1)); // 게시물 자체는 삭제됨
+// …
 
         recipient1 = recipientRepository.save(recipient1);
         recipient2 = recipientRepository.save(recipient2);
+// …
         recipient3DeletedPost = recipientRepository.save(recipient3DeletedPost);
+// …
         entityManager.flush();
+
 
         // recipient1에 댓글 2개 (N, N)
         entityManager.persist(createComment(recipient1, "R1 댓글1", "C1-1", "N", LocalDateTime.now().minusMinutes(50)));
         entityManager.persist(createComment(recipient1, "R1 댓글2", "C1-2", "N", LocalDateTime.now().minusMinutes(40)));
         entityManager.persist(createComment(recipient1, "R1 삭제 댓글", "C1-3", "Y", LocalDateTime.now().minusMinutes(30))); // 삭제된 댓글
 
+
         // recipient2에 댓글 1개 (N)
         entityManager.persist(createComment(recipient2, "R2 댓글1", "C2-1", "N", LocalDateTime.now().minusMinutes(20)));
 
+
         // recipient3 (삭제된 게시물)에 댓글 1개 (N)
         // 이 댓글은 댓글 자체의 delFlag가 'N'이므로 쿼리에서 카운트되어야 함.
+// …
         entityManager.persist(createComment(recipient3DeletedPost, "R3 댓글1", "C3-1", "N", LocalDateTime.now().minusMinutes(10)));
+// …
 
         entityManager.flush();
         entityManager.clear();
 
+
+// …
         List<Integer> letterSeqs = Arrays.asList(recipient1.getLetterSeq(), recipient2.getLetterSeq(), recipient3DeletedPost.getLetterSeq());
+// …
 
         // When
         List<Object[]> commentCounts = recipientCommentRepository.countCommentsByLetterSeqs(letterSeqs);
+
 
         // Then
         // recipient1: 2개 (N)
@@ -233,29 +246,33 @@ public class RecipientCommentRepositoryTest {
         // recipient3_deletedPost: 1개 (댓글의 delFlag가 N이므로 카운트됨)
         assertThat(commentCounts).isNotNull().hasSize(3); // 예상 사이즈는 3
 
+
         boolean foundR1 = false;
         boolean foundR2 = false;
         boolean foundR3 = false;
 
+
         for (Object[] row : commentCounts) {
             Integer letterSeq = (Integer) row[0];
+// …
             // BigInteger로 받은 다음 intValue()를 호출하여 int 로 변환합니다.
             Integer count = ((Number) row[1]).intValue();
+// …
 
             if (letterSeq.equals(recipient1.getLetterSeq())) {
-                assertThat(count).isEqualTo(2L);
+                assertThat(count).isEqualTo(2); // Long 리터럴(2L) 대신 Integer 리터럴(2) 사용
                 foundR1 = true;
             } else if (letterSeq.equals(recipient2.getLetterSeq())) {
-                assertThat(count).isEqualTo(1L);
+
+                assertThat(count).isEqualTo(1); // Long 리터럴(1L) 대신 Integer 리터럴(1) 사용
                 foundR2 = true;
+// …
             } else if (letterSeq.equals(recipient3DeletedPost.getLetterSeq())) {
-                assertThat(count).isEqualTo(1L);
+// …
+                assertThat(count).isEqualTo(1); // Long 리터럴(1L) 대신 Integer 리터럴(1) 사용
                 foundR3 = true;
             }
         }
-        assertThat(foundR1).isTrue();
-        assertThat(foundR2).isTrue();
-        assertThat(foundR3).isTrue();
     }
 
     @Test
@@ -294,7 +311,7 @@ public class RecipientCommentRepositoryTest {
         // 현재 페이지의 댓글 수가 3개인지 확인
         assertThat(firstPage.getContent()).hasSize(3);
         // 첫 번째 댓글의 내용이 "댓글 0"인지 확인 (시간 오름차순 정렬 가정)
-        assertThat(firstPage.getContent().get(0).getCommentContents()).isEqualTo("댓글 0");
+        assertThat(firstPage.getContent().get(0).getContents()).isEqualTo("댓글 0");
 
         // 두 번째 페이지 (3개)
         pageable = PageRequest.of(1, 3);
@@ -303,7 +320,7 @@ public class RecipientCommentRepositoryTest {
         assertThat(secondPage).isNotNull();
         assertThat(secondPage.getNumber()).isEqualTo(1);
         assertThat(secondPage.getContent()).hasSize(3);
-        assertThat(secondPage.getContent().get(0).getCommentContents()).isEqualTo("댓글 3");
+        assertThat(secondPage.getContent().get(0).getContents()).isEqualTo("댓글 3");
     }
 
     @Test
@@ -335,9 +352,9 @@ public class RecipientCommentRepositoryTest {
 
         // Then (첫 페이지 결과 검증: "첫 댓글", "두 번째 댓글", "세 번째 댓글")
         assertThat(firstPageComments).isNotNull().hasSize(3);
-        assertThat(firstPageComments.get(0).getCommentContents()).isEqualTo("첫 댓글");
-        assertThat(firstPageComments.get(1).getCommentContents()).isEqualTo("두 번째 댓글");
-        assertThat(firstPageComments.get(2).getCommentContents()).isEqualTo("세 번째 댓글");
+        assertThat(firstPageComments.get(0).getContents()).isEqualTo("첫 댓글");
+        assertThat(firstPageComments.get(1).getContents()).isEqualTo("두 번째 댓글");
+        assertThat(firstPageComments.get(2).getContents()).isEqualTo("세 번째 댓글");
 
         // When (두 번째 페이지 조회 - lastCommentId는 첫 페이지의 마지막 댓글 ID)
         Integer lastCommentIdOfFirstPage = firstPageComments.get(firstPageComments.size() - 1).getCommentSeq();
@@ -346,8 +363,8 @@ public class RecipientCommentRepositoryTest {
         // Then (두 번째 페이지 결과 검증: "네 번째 댓글", "마지막 댓글")
         // 삭제된 댓글은 delFlag='Y'이므로 포함되지 않음
         assertThat(secondPageComments).isNotNull().hasSize(2);
-        assertThat(secondPageComments.get(0).getCommentContents()).isEqualTo("네 번째 댓글");
-        assertThat(secondPageComments.get(1).getCommentContents()).isEqualTo("마지막 댓글");
+        assertThat(secondPageComments.get(0).getContents()).isEqualTo("네 번째 댓글");
+        assertThat(secondPageComments.get(1).getContents()).isEqualTo("마지막 댓글");
 
         // When (더 이상 댓글이 없는 경우)
         Integer lastCommentIdOfSecondPage = secondPageComments.get(secondPageComments.size() - 1).getCommentSeq();
