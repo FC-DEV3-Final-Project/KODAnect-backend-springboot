@@ -4,7 +4,6 @@ import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.recipient.dto.*;
-import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -129,9 +128,9 @@ public class RecipientController {
         }
 
         try {
-                RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
-                        letterSeq,
-                        recipientRequestDto
+            RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
+                    letterSeq,
+                    recipientRequestDto
             );
             return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물이 성공적으로 수정되었습니다.", null));
 
