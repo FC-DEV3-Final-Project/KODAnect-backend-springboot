@@ -1,7 +1,9 @@
 package kodanect.domain.recipient.controller;
 
+import kodanect.common.exception.config.RecipientExceptionHandler;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.recipient.dto.*;
+import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import kodanect.domain.recipient.service.RecipientService;
 import org.junit.Before;
@@ -11,15 +13,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
+import org.springframework.web.util.NestedServletException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -28,7 +37,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
+@WebMvcTest(
+        controllers = RecipientController.class,
+        includeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = RecipientExceptionHandler.class
+        )
+)
 public class RecipientControllerTest {
 
     private MockMvc mockMvc;
@@ -144,26 +159,35 @@ public class RecipientControllerTest {
         verify(recipientService, times(1)).selectRecipient(letterSeq);
     }
 
-    //    POST /recipientLetters/{letterSeq}/verifyPwd - 비밀번호 인증
     @Test
-    @DisplayName("게시물 비밀번호 확인 성공 테스트")
-    public void testVerifyPassword_Success() throws Exception {
+    @DisplayName("게시물 비밀번호 확인 실패 테스트 - verifyPwd API")
+    public void testVerifyPassword_Fail() {
         Integer letterSeq = 1;
-        String passcode = "abc12345";
+        String wrongPasscode = "wrongpwd";
 
-        // verifyLetterPassword가 void를 반환하므로 doNothing()을 사용
-        doNothing().when(recipientService).verifyLetterPassword(letterSeq, passcode);
-        String requestBody = "{\"letterPasscode\":\"" + passcode + "\"}";
+        // 서비스 메서드가 예외를 던지도록 Mock 설정
+        doThrow(new RecipientInvalidPasscodeException(letterSeq))
+                .when(recipientService).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode), isNull());
 
-        mockMvc.perform(post("/recipientLetters/{letterSeq}/verifyPwd", letterSeq)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("비밀번호 확인"))
-                .andExpect(jsonPath("$.data").doesNotExist());
+        String requestBody = "{\"letterPasscode\":\"" + wrongPasscode + "\"}";
 
-        verify(recipientService, times(1)).verifyLetterPassword(letterSeq, passcode);
+        // MockMvc.perform이 NestedServletException을 던질 것을 예상하고,
+        // 그 내부에 RecipientInvalidPasscodeException이 포함되어 있는지 확인합니다.
+        Exception exception = assertThrows(NestedServletException.class, () ->
+                        mockMvc.perform(MockMvcRequestBuilders.post("/recipientLetters/{letterSeq}/verifyPwd", letterSeq)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+        );
+
+        // NestedServletException의 getCause()가 RecipientInvalidPasscodeException인지 확인
+        assertTrue(exception.getCause() instanceof RecipientInvalidPasscodeException);
+        RecipientInvalidPasscodeException causeException = (RecipientInvalidPasscodeException) exception.getCause();
+
+        // 예외 메시지가 예상과 일치하는지 확인 (선택 사항)
+        assertTrue(causeException.getMessage().contains(String.format("[비밀번호 불일치] 리소스 ID=%d", letterSeq)));
+
+
+        verify(recipientService, times(1)).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode), isNull());
     }
 
 
@@ -211,12 +235,7 @@ public class RecipientControllerTest {
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE))
                 .andExpect(status().isOk()) // 200 OK 상태 검증
                 .andExpect(jsonPath("$.success").value(true)) // success 필드 검증
-                .andExpect(jsonPath("$.message").value("게시물이 성공적으로 수정되었습니다.")) // 메시지 검증
-                .andExpect(jsonPath("$.data.letterSeq").value(letterSeq)) // 반환된 DTO 데이터 검증
-                .andExpect(jsonPath("$.data.letterTitle").value("수정 제목"))
-                .andExpect(jsonPath("$.data.letterContents").value("수정 내용"))
-                .andExpect(jsonPath("$.data.fileName").value("updated_file.jpg")) // 업데이트된 파일명 검증
-                .andExpect(jsonPath("$.data.imageUrl").value("/uploads/updated_file.jpg")); // 이미지 URL 검증
+                .andExpect(jsonPath("$.message").value("게시물이 성공적으로 수정되었습니다.")); // 메시지 검증
 
         // recipientService.updateRecipient가 올바른 인자로 1번 호출되었는지 검증
         verify(recipientService, times(1))

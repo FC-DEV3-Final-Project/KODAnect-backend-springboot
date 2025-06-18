@@ -8,9 +8,11 @@ import kodanect.domain.recipient.dto.CommentDeleteRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
 import kodanect.domain.recipient.dto.RecipientCommentUpdateRequestDto;
+import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -59,26 +61,55 @@ public class RecipientCommentController {
 
     // 댓글 인증 API (비밀번호 확인)
     @PostMapping("/{letterSeq}/comments/{commentSeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<Void>> verifyPwdComment(@PathVariable("letterSeq") Integer letterSeq,
-                                                              @PathVariable("commentSeq") Integer commentSeq,
-                                                              @Valid @RequestBody RecipientCommentAuthRequestDto authRequestDto) {
-        // 서비스에서 비밀번호 검증 수행. 실패 시 예외 발생 (컨트롤러에서 예외 처리)
-        recipientCommentService.authenticateComment(commentSeq, authRequestDto.getCommentPasscode());
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.NO_CONTENT, "댓글 인증에 성공했습니다.", null));
+    public ResponseEntity<ApiResponse<?>> verifyPwdComment(@PathVariable("letterSeq") Integer letterSeq,
+                                                           @PathVariable("commentSeq") Integer commentSeq,
+                                                           @Valid @RequestBody RecipientCommentAuthRequestDto authRequestDto) {
+        try {
+            // 서비스 계층에서 비밀번호 검증 수행. 실패 시 RecipientInvalidPasscodeException(commentSeq) 발생
+            recipientCommentService.authenticateComment(commentSeq, authRequestDto.getCommentPasscode());
+            return ResponseEntity.ok(ApiResponse.success(HttpStatus.NO_CONTENT, "댓글 인증에 성공했습니다.", null));
+        }
+        catch (RecipientInvalidPasscodeException e) {
+            logger.warn("댓글 비밀번호 확인 실패: commentSeq={}, error={}", commentSeq, e.getMessage());
+            // 단순 비밀번호 확인 실패이므로, 입력 데이터는 반환하지 않음
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail(HttpStatus.UNAUTHORIZED, e.getMessage()));
+        }
     }
 
     // 댓글 수정 API (인증 후 호출)
     @PutMapping("/{letterSeq}/comments/{commentSeq}")
-    public ResponseEntity<ApiResponse<RecipientCommentResponseDto>> updateComment(@PathVariable("letterSeq") Integer letterSeq,
-                                                                                  @PathVariable("commentSeq") Integer commentSeq,
-                                                                                  @Valid @RequestBody RecipientCommentUpdateRequestDto requestDto) {
-        // 비밀번호 인증은 이미 authenticate 엔드포인트를 통해 완료되었다고 가정
-        RecipientCommentResponseDto updatedComment = recipientCommentService.updateComment(
-                commentSeq, // 댓글 시퀀스
-                requestDto.getContents(), // 업데이트할 내용
-                requestDto.getCommentWriter() // 업데이트할 작성자
-        );
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "댓글이 성공적으로 수정되었습니다.", updatedComment));
+    public ResponseEntity<ApiResponse<?>> updateComment(@PathVariable("letterSeq") Integer letterSeq,
+                                                        @PathVariable("commentSeq") Integer commentSeq,
+                                                        @Valid @RequestBody RecipientCommentUpdateRequestDto requestDto,
+                                                        BindingResult bindingResult // @Valid 유효성 검사 결과
+    ) {
+        logger.info("댓글 수정 요청 시작: commentSeq={}", commentSeq);
+
+        // @Valid 유효성 검사 실패 시
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            // 유효성 검사 실패 시에도 사용자가 입력한 데이터를 반환
+            return ResponseEntity.badRequest().body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage, requestDto));
+        }
+
+        try {
+            // 서비스 계층에서 비밀번호 확인 및 댓글 수정 로직 수행
+            RecipientCommentResponseDto updatedComment = recipientCommentService.updateComment(commentSeq, requestDto);
+            return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "댓글이 성공적으로 수정되었습니다.", null));
+
+        } catch (RecipientInvalidPasscodeException e) {
+            // 비밀번호 불일치 예외 처리
+            logger.warn("댓글 수정 중 비밀번호 불일치: commentSeq={}, error={}", commentSeq, e.getMessage());
+            // RecipientInvalidPasscodeException에 담긴 사용자가 입력한 데이터 (requestDto)를 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail(HttpStatus.UNAUTHORIZED, e.getMessage()));
+        } catch (Exception e) {
+            // 기타 예외 처리 (예: 댓글을 찾을 수 없는 경우)
+            logger.error("댓글 수정 중 오류 발생: commentSeq={}, error={}", commentSeq, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "댓글 수정 중 오류가 발생했습니다."));
+        }
     }
 
     // 댓글 삭제

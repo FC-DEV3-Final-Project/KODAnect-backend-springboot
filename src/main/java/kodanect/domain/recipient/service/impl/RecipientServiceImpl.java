@@ -124,14 +124,14 @@ public class RecipientServiceImpl implements RecipientService {
 
         // 게시물 비밀번호 검증
         if (!recipientEntityold.checkPasscode(letterPasscode)) {
-            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
+            throw new RecipientInvalidPasscodeException(letterSeq);
         }
 
-        // 2. 게시물 소프트 삭제
+        // 게시물 소프트 삭제
         recipientEntityold.softDelete();
         recipientRepository.save(recipientEntityold);
 
-        // 3. 해당 게시물의 모든 댓글 소프트 삭제
+        // 해당 게시물의 모든 댓글 소프트 삭제
         List<RecipientCommentEntity> commentsToSoftDelete =
                 recipientCommentRepository.findCommentsByLetterSeqAndDelFlagSorted(recipientEntityold, "N");
 

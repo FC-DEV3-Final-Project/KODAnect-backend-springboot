@@ -27,14 +27,31 @@ public class RecipientController {
         this.recipientService = recipientService;
     }
 
-    /** ## 게시물 목록 조회 (커서 기반 페이징 적용)
-
-    **요청:** `GET /recipientLetters`
-            **파라미터:** `searchKeyword`, `searchType`, `cursor`, `size`
-            **응답:** `ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>`
-            */
+    /**
+     * 게시물 목록 조회 (일반 조회, 커서 기반 페이징 적용)
+     * 파라미터: cursor, size
+     * 응답: ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>> getRecipientList(
+            @RequestParam(required = false) Integer cursor,     // 첫 조회 시 null, 더보기 시 마지막 게시물 ID
+            @RequestParam(defaultValue = "20") int size         // 게시물 한 번에 가져올 개수 (기본값 20)
+    ) {
+        logger.info("게시물 목록 조회 요청이 수신되었습니다. cursor: {}, size: {}", cursor, size);
+        CursorPaginationResponse<RecipientListResponseDto, Integer> responseData =
+                recipientService.selectRecipientList(new RecipientSearchCondition(), cursor, size); // 빈 검색 조건 전달
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "게시물 목록 조회 성공", responseData));
+    }
+
+    /** 게시물 검색 조회 (커서 기반 페이징 적용)
+
+    **요청:** `GET /recipientLetters`
+            **파라미터:** `type`, `keyWord`, `cursor`, `size`
+            **응답:** `ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>`
+            */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<CursorPaginationResponse<RecipientListResponseDto, Integer>>> searchRecipientLetters(
             RecipientSearchCondition searchCondition,
             @RequestParam(required = false) Integer cursor,      // 첫 조회 시 null, 더보기 시 마지막 게시물 ID
             @RequestParam(defaultValue = "20") int size         // 게시물 한 번에 가져올 개수 (기본값 20)**
@@ -44,16 +61,6 @@ public class RecipientController {
                 recipientService.selectRecipientList(searchCondition, cursor, size);
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물 목록 조회 성공", responseData));
-    }
-
-    /** ## 게시판 등록 페이지 요청
-
-    **요청:** `GET /recipientLetters/new`
-            **응답:** `ApiResponse<Void>`
-            */
-    @GetMapping("/new")
-    public ResponseEntity<ApiResponse<Void>> writeForm() {
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "게시물 작성 페이지 접근 성공", null));
     }
 
     /** ## 게시판 등록
@@ -68,7 +75,7 @@ public class RecipientController {
         logger.info("게시물 등록 요청: title={}", recipientRequestDto.getLetterTitle());
         RecipientDetailResponseDto createdRecipient = recipientService.insertRecipient(recipientRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED, "게시물이 성공적으로 등록되었습니다.", createdRecipient));
+                .body(ApiResponse.success(HttpStatus.CREATED, "게시물이 성공적으로 등록되었습니다.", null));
     }
 
     /** ## 특정 게시판 조회
@@ -122,24 +129,11 @@ public class RecipientController {
         }
 
         try {
-            // 1. 비밀번호 확인: RecipientRequestDto에 담긴 비밀번호로 확인
-            recipientService.verifyLetterPassword(letterSeq, recipientRequestDto.getLetterPasscode(), recipientRequestDto);
-
-            // 2. 비밀번호 확인 성공 시 게시물 수정 진행
-            RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
-                    letterSeq,
-                    recipientRequestDto
+                RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
+                        letterSeq,
+                        recipientRequestDto
             );
-            return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물이 성공적으로 수정되었습니다.", updatedRecipient));
-
-        } catch (RecipientInvalidPasscodeException e) {
-            // 비밀번호 불일치 예외 처리
-            // 응답 형식은 ApiResponse를 유지하며, data 필드에 RecipientRequestDto를 담아 반환
-            // HTTP 상태 코드는 UNAUTHORIZED (401) 또는 BAD_REQUEST (400) 중 적절한 것을 선택
-            // 여기서는 비밀번호 불일치이므로 UNAUTHORIZED가 더 적합하다고 볼 수 있음.
-            logger.warn("비밀번호 불일치: letterSeq={}", letterSeq);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.fail(HttpStatus.UNAUTHORIZED, e.getMessage(), e.getRequestDto())); // 에러 메시지와 함께 requestDto 반환
+            return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물이 성공적으로 수정되었습니다.", null));
 
         } catch (Exception e) {
             // 기타 예외 처리 (예: RecipientNotFoundException 등)
