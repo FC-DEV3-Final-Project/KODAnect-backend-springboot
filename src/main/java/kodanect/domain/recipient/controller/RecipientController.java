@@ -72,8 +72,11 @@ public class RecipientController {
             */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<RecipientDetailResponseDto>> write(@ModelAttribute @Valid RecipientRequestDto recipientRequestDto) {
+
         logger.info("게시물 등록 요청: title={}", recipientRequestDto.getLetterTitle());
-        RecipientDetailResponseDto createdRecipient = recipientService.insertRecipient(recipientRequestDto);
+
+        recipientService.insertRecipient(recipientRequestDto);
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(HttpStatus.CREATED, "게시물이 성공적으로 등록되었습니다.", null));
     }
@@ -144,7 +147,7 @@ public class RecipientController {
         }
 
         try {
-            RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
+            recipientService.updateRecipient(
                     letterSeq,
                     recipientRequestDto
             );

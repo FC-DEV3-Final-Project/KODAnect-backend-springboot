@@ -51,7 +51,7 @@ public class RecipientCommentController {
     public ResponseEntity<ApiResponse<RecipientCommentResponseDto>> writeComment(@PathVariable("letterSeq") Integer letterSeq,
                                                                                  @Valid @RequestBody RecipientCommentRequestDto requestDto) {
 
-        RecipientCommentResponseDto createdComment = recipientCommentService.insertComment(
+        recipientCommentService.insertComment(
                 letterSeq, // 게시물 번호를 직접 서비스로 전달
                 requestDto // DTO 객체 전달
         );
