@@ -165,7 +165,7 @@ public class RecipientControllerTest {
         // 서비스 메서드가 예외를 던지도록 Mock 설정
         // RecipientInvalidPasscodeException 생성자에 letterSeq만 전달 (inputData 없음)
         doThrow(new RecipientInvalidPasscodeException(letterSeq)) // letterSeq만 전달
-                .when(recipientService).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode)); // 세 번째 인자 제거
+                .when(recipientService).verifyLetterPassword(letterSeq, wrongPasscode); // eq() 제거
 
         String requestBody = "{\"letterPasscode\":\"" + wrongPasscode + "\"}";
 
@@ -174,13 +174,11 @@ public class RecipientControllerTest {
                         .content(requestBody))
                 .andExpect(status().isUnauthorized()) // 401 Unauthorized 상태 검증
                 .andExpect(jsonPath("$.success").value(false)) // success 필드가 false인지 검증
-                // RecipientInvalidPasscodeException의 getMessage()가 inputData == null일 때 반환하는 메시지로 변경
                 .andExpect(jsonPath("$.message").value(String.format("[비밀번호 불일치] 리소스 ID=%d", letterSeq)))
-                // 실패 시 data 필드가 반환되지 않으므로, data.letterPasscode 검증 라인 제거
                 .andExpect(jsonPath("$.data").doesNotExist()); // data 필드가 존재하지 않음을 검증
 
         // recipientService.verifyLetterPassword가 올바른 인자로 1번 호출되었는지 검증
-        verify(recipientService, times(1)).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode)); // 세 번째 인자 제거
+        verify(recipientService, times(1)).verifyLetterPassword(letterSeq, wrongPasscode); // eq() 제거
     }
 
 

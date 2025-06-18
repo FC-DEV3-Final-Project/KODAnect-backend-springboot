@@ -103,12 +103,6 @@ public class RecipientController {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        // RecipientRequestDto를 생성하여 비밀번호 정보를 담고, 서비스 및 예외에 전달
-        // 실제 수정 시 사용될 DTO가 아니므로, 비밀번호 필드만 채웁니다.
-        RecipientRequestDto authRequestDto = RecipientRequestDto.builder()
-                .letterPasscode(letterPasscode)
-                .build();
-
         try {
             // 서비스 계층에서 비밀번호 검증 수행.
             // requestDto를 inputData로 전달
