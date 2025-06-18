@@ -55,22 +55,23 @@ public class ImageFileUploadController {
             throw new BadRequestException(msg.getMessage("error.wrong.path"));
         }
 
-        // 4) 파일명 생성 (timestamp + 확장자)
+        // 4) 파일명 생성 (timestamp + 랜덤숫자 +  확장자)
         String rawName   = Optional.ofNullable(file.getOriginalFilename()).orElse("unknown.jpg");
         String safeName  = Paths.get(rawName).getFileName().toString();
         String ext       = safeName.contains(".")
                 ? safeName.substring(safeName.lastIndexOf("."))
                 : ".jpg";
-        String ts        = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String ts        = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = new Random().nextInt(900) + 100; //100~999사이의 숫자
 
         if (ext.length() > EXT_LENGTH || ext.contains("/") || ext.contains("\\")) {
             throw new BadRequestException("error.wrong.ext");
         }
-        String storedFileName = ts + ext;
+        String storedFileName = ts + "_" + randomNum + ext;
 
         // 5) 실제 저장 경로 결정
         String storePath = Optional.ofNullable(env.getProperty("Globals.fileStorePath"))   // prod
-                .orElse(env.getProperty("globals.file-store-path", "./uploads"));         // dev
+                .orElse(env.getProperty("globals.file-store-path", "./uploads"));  // dev
         String absStore  = Paths.get(storePath).toAbsolutePath().normalize().toString();
         Path target      = Paths.get(absStore, "upload_img", category, storedFileName);
         Files.createDirectories(target.getParent());

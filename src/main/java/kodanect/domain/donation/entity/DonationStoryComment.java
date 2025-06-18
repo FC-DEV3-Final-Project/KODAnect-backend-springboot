@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor(access= AccessLevel.PROTECTED)
 @Builder
+@ToString(exclude={"story", "commentPasscode"})
 @EntityListeners(AuditingEntityListener.class)
 public class DonationStoryComment {
 

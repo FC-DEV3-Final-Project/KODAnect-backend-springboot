@@ -1,5 +1,6 @@
 package kodanect.domain.donation.service.impl;
 
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.CursorFormatter;
@@ -14,6 +15,7 @@ import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
+import kodanect.domain.recipient.service.impl.RecipientServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -30,8 +32,10 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class DonationServiceImpl implements DonationService {
+
+    // 로거 선언
+    private static final SecureLogger logger = SecureLogger.getLogger(RecipientServiceImpl.class);
 
     /** Cursor 기반 기본 Size */
     private static final int DEFAULT_SIZE = 3;
@@ -42,17 +46,25 @@ public class DonationServiceImpl implements DonationService {
     private final MessageResolver messageResolver;
     private final DonationCommentService commentService;
 
+    /* 스토리 목록 조회 */
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size) {
+        logger.debug(">>> findStoriesWithCursor() 호출");
+        logger.info("스토리 목록 조회 - cursor : {}, size : {}", cursor, size);
         Pageable pageable = PageRequest.of(0, size + 1);
         List<DonationStoryListDto> results = donationRepository.findByCursor(cursor, pageable);
+        logger.debug("스토리 목록 조회 결과 수: {}", results.size());
 
         long totalCount = donationRepository.countAll();
+        logger.debug("게시글 총 개수 : {}", totalCount);
         return CursorFormatter.cursorFormat(results, size, totalCount); // 이 한 줄이면 충분
     }
 
+    /* 스토리 검색 */
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size) {
+        logger.debug(">>> findSearchStoriesWithCursor() 호출");
+        logger.info("스토리 검색 - type : {}, keyword : {}, cursor : {}, size : {}", type,keyword,cursor,size);
         Pageable pageable = PageRequest.of(0, size + 1); // size+1개 조회해서 hasNext 판단
 
         List<DonationStoryListDto> results;
@@ -68,21 +80,30 @@ public class DonationServiceImpl implements DonationService {
             results = donationRepository.findByTitleOrContentsCursor(keyword, cursor, pageable);
             totalCount = donationRepository.countByTitleAndContents(keyword);
         }
+        logger.debug("스토리 목록 조회 결과 수: {}", results.size());
 
         return CursorFormatter.cursorFormat(results, size, totalCount);
     }
 
-    /** 스토리 작성 폼 데이터 반환 */
-    public DonationStoryWriteFormDto loadDonationStoryFormData() {
-        List<AreaCode> areas = List.of(AreaCode.AREA100, AreaCode.AREA200, AreaCode.AREA300);
-        if (areas.isEmpty()) {
-            throw new NotFoundAreaCode(messageResolver.get("donation.error.area.unavailable"));
-        }
-        return DonationStoryWriteFormDto.builder().areaOptions(areas).build();
-    }
+
 
     /** 스토리 등록 처리 */
     public void createDonationStory(DonationStoryCreateRequestDto requestDto) {
+        logger.debug(">>> createDonationStory() 호출");
+
+        //본문 일부만 로그 출력(최대 100자)
+        String contents = requestDto.getStoryContents();
+        String preview = (contents != null && contents.length() > 100)
+                ?contents.substring(0, 100) + "..."
+                :contents;
+
+        logger.info("스토리 등록 처리 - areaCode: {}, title: {}, writer: {}, contentsPreview: {}",
+                requestDto.getAreaCode(),
+                requestDto.getStoryTitle(),
+                requestDto.getStoryWriter(),
+                preview
+        );
+
         validateStoryRequest(requestDto.getAreaCode(), requestDto.getStoryTitle(), requestDto.getStoryPasscode());
 
         // 이미지가 여러개 저장될 수 도 있음.
@@ -101,6 +122,8 @@ public class DonationServiceImpl implements DonationService {
                 .build();
 
         donationRepository.save(story);
+        logger.info("스토리 등록 완료 - storySeq: {}, title: {}, writer: {}",
+                story.getStorySeq(), story.getStoryTitle(), story.getStoryWriter());
     }
 
     private String[] imgParsing(String storyContents) {
@@ -110,13 +133,10 @@ public class DonationServiceImpl implements DonationService {
         if (storyContents == null || storyContents.isBlank()) { //null 체크
             return new String[]{"", ""};
         }
-        log.info("==== storyContents ====");
-        log.info(storyContents);
 
         Document doc = Jsoup.parse(storyContents);
         Elements imgTags = doc.select("img");
 
-        log.info("총 이미지 수: " + imgTags.size());
 
         for (Element img : imgTags) {
             String src = img.attr("src");  // 또는 "data-cke-saved-src"
@@ -140,8 +160,11 @@ public class DonationServiceImpl implements DonationService {
         };
     }
 
+    /* 스토리 상세 조회 */
     @Override
     public DonationStoryDetailDto findDonationStoryWithStoryId(Long storySeq) {
+        logger.debug(">>> findDonationStoryWithStoryId() 호출");
+        logger.info("스토리 상세 조회 - storySeq : {}", storySeq);
         // 1) 스토리 로드 + 조회수 증가
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(DONATION_ERROR_NOTFOUND));
@@ -151,6 +174,7 @@ public class DonationServiceImpl implements DonationService {
         var pageable = PageRequest.of(0, DEFAULT_SIZE + 1);  // +1로 hasNext 체크
         List<DonationStoryCommentDto> latest = commentRepository.findLatestComments(storySeq, pageable);
 
+        logger.debug("조회된 댓글 수 : {}", latest.size());
         // 3) 커서 포맷팅
         long total = commentRepository.countAllByStorySeq(storySeq);
         CursorCommentPaginationResponse<DonationStoryCommentDto, Long> commentsPage =
@@ -179,8 +203,22 @@ public class DonationServiceImpl implements DonationService {
     }
     /** 스토리 수정 */
     public void  updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
-        log.info("===== updateDonationStory 호출됨 =====");
+        logger.debug(">>> updateDonationStory() 호출");
 
+        //본문 일부만 로그 출력(최대 100자)
+        String contents = requestDto.getStoryContents();
+        String preview = (contents != null && contents.length() > 100)
+                ?contents.substring(0, 100) + "..."
+                :contents;
+
+
+        logger.info("스토리 수정 처리 - storySeq : {}, areaCode: {}, title: {}, writer: {}, contentsPreview: {}",
+                storySeq,
+                requestDto.getAreaCode(),
+                requestDto.getStoryTitle(),
+                requestDto.getStoryWriter(),
+                preview
+        );
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
@@ -191,6 +229,9 @@ public class DonationServiceImpl implements DonationService {
 
     /** 스토리 삭제 */
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
+        logger.debug(">>> deleteDonationStory() 호출");
+        logger.info("스토리 삭제 - storySeq : {}", storySeq);
+
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
@@ -201,6 +242,7 @@ public class DonationServiceImpl implements DonationService {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
         donationRepository.delete(story);
+        logger.info("스토리 삭제 완료 - storySeq : {}" , storySeq);
     }
 
     /** 비밀번호 유효성 검증 */
