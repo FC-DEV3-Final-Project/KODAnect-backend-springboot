@@ -10,6 +10,7 @@ import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
+import kodanect.domain.heaven.service.FileService;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +42,8 @@ public class HeavenServiceImplTest {
     private HeavenCommentService heavenCommentService;
     @Mock
     private HeavenFinder heavenFinder;
+    @Mock
+    private FileService fileService;
 
     @Test
     @DisplayName("게시물 전체 조회 테스트")
