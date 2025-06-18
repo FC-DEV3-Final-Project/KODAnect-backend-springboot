@@ -69,7 +69,7 @@ public class RecipientServiceImpl implements RecipientService {
 
     // 게시물 비밀번호 확인
     @Override
-    public void verifyLetterPassword(Integer letterSeq, String letterPasscode) {
+    public void verifyLetterPassword(Integer letterSeq, String letterPasscode, RecipientRequestDto requestDto) {
 
         // 게시물 조회 (삭제되지 않은 게시물만 조회)
         RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
@@ -78,7 +78,7 @@ public class RecipientServiceImpl implements RecipientService {
 
         // 비밀번호 불일치 (엔티티의 checkPasscode 메서드 활용)
         if (!recipientEntityold.checkPasscode(letterPasscode)) {
-            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.");
+            throw new RecipientInvalidPasscodeException("비밀번호가 일치하지 않습니다.", requestDto);
         }
     }
 

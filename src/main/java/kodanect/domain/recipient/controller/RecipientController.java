@@ -4,10 +4,12 @@ import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.recipient.dto.*;
+import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -94,7 +96,7 @@ public class RecipientController {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        recipientService.verifyLetterPassword(letterSeq, letterPasscode);
+        recipientService.verifyLetterPassword(letterSeq, letterPasscode, null);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인"));
     }
 
@@ -106,14 +108,46 @@ public class RecipientController {
             **응답:** `ApiResponse<RecipientDetailResponseDto>`
             */
     @PatchMapping(value = "/{letterSeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<RecipientDetailResponseDto>> edit(@PathVariable("letterSeq") Integer letterSeq,
-                                                                        @ModelAttribute @Valid RecipientRequestDto recipientRequestDto) {
+    public ResponseEntity<ApiResponse<?>> edit(@PathVariable("letterSeq") Integer letterSeq,
+                                               @ModelAttribute @Valid RecipientRequestDto recipientRequestDto,
+                                               BindingResult bindingResult // @Valid 에 대한 에러를 처리하기 위함
+    ) {
         logger.info("게시물 수정 요청: letterSeq={}, title={}", letterSeq, recipientRequestDto.getLetterTitle());
-        RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
-                letterSeq,
-                recipientRequestDto
-        );
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "게시물이 성공적으로 수정되었습니다.", updatedRecipient));
+
+        // @Valid 유효성 검사 실패 시
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            // 유효성 검사 실패 시에도 사용자가 입력한 데이터를 반환
+            return ResponseEntity.badRequest().body(ApiResponse.fail(HttpStatus.BAD_REQUEST, errorMessage, recipientRequestDto));
+        }
+
+        try {
+            // 1. 비밀번호 확인: RecipientRequestDto에 담긴 비밀번호로 확인
+            recipientService.verifyLetterPassword(letterSeq, recipientRequestDto.getLetterPasscode(), recipientRequestDto);
+
+            // 2. 비밀번호 확인 성공 시 게시물 수정 진행
+            RecipientDetailResponseDto updatedRecipient = recipientService.updateRecipient(
+                    letterSeq,
+                    recipientRequestDto
+            );
+            return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,"게시물이 성공적으로 수정되었습니다.", updatedRecipient));
+
+        } catch (RecipientInvalidPasscodeException e) {
+            // 비밀번호 불일치 예외 처리
+            // 응답 형식은 ApiResponse를 유지하며, data 필드에 RecipientRequestDto를 담아 반환
+            // HTTP 상태 코드는 UNAUTHORIZED (401) 또는 BAD_REQUEST (400) 중 적절한 것을 선택
+            // 여기서는 비밀번호 불일치이므로 UNAUTHORIZED가 더 적합하다고 볼 수 있음.
+            logger.warn("비밀번호 불일치: letterSeq={}", letterSeq);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail(HttpStatus.UNAUTHORIZED, e.getMessage(), e.getRequestDto())); // 에러 메시지와 함께 requestDto 반환
+
+        } catch (Exception e) {
+            // 기타 예외 처리 (예: RecipientNotFoundException 등)
+            logger.error("게시물 수정 중 오류 발생: letterSeq={}, error={}", letterSeq, e.getMessage(), e);
+            // 일반적인 에러 응답. 이 경우 사용자가 입력한 데이터를 다시 반환할 필요는 없다고 판단
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR,"게시물 수정 중 오류가 발생했습니다."));
+        }
     }
 
     /** ## 게시물 삭제
