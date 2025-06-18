@@ -6,7 +6,6 @@ import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
 import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
 import kodanect.domain.donation.dto.response.DonationStoryListDto;
-import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
 
 public interface DonationService {
 

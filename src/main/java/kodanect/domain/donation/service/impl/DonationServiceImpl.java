@@ -17,7 +17,6 @@ import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import kodanect.domain.recipient.service.impl.RecipientServiceImpl;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -40,6 +39,7 @@ public class DonationServiceImpl implements DonationService {
     /** Cursor 기반 기본 Size */
     private static final int DEFAULT_SIZE = 3;
     private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
+    private static final int LIMIT_CONTENTS_LENGTH = 100;
 
     private final DonationRepository donationRepository;
     private final DonationCommentRepository commentRepository;
@@ -93,8 +93,8 @@ public class DonationServiceImpl implements DonationService {
 
         //본문 일부만 로그 출력(최대 100자)
         String contents = requestDto.getStoryContents();
-        String preview = (contents != null && contents.length() > 100)
-                ?contents.substring(0, 100) + "..."
+        String preview = (contents != null && contents.length() > LIMIT_CONTENTS_LENGTH)
+                ?contents.substring(0, LIMIT_CONTENTS_LENGTH) + "..."
                 :contents;
 
         logger.info("스토리 등록 처리 - areaCode: {}, title: {}, writer: {}, contentsPreview: {}",
@@ -207,8 +207,8 @@ public class DonationServiceImpl implements DonationService {
 
         //본문 일부만 로그 출력(최대 100자)
         String contents = requestDto.getStoryContents();
-        String preview = (contents != null && contents.length() > 100)
-                ?contents.substring(0, 100) + "..."
+        String preview = (contents != null && contents.length() > LIMIT_CONTENTS_LENGTH)
+                ?contents.substring(0, LIMIT_CONTENTS_LENGTH) + "..."
                 :contents;
 
 
@@ -255,7 +255,7 @@ public class DonationServiceImpl implements DonationService {
         if (areaCode == null) {
             throw new BadRequestException(messageResolver.get("donation.error.required.area"));
         }
-        if(!(areaCode.equals("AREA100") || areaCode.equals("AREA200") || areaCode.equals("AREA300"))){
+        if (!(areaCode == AreaCode.AREA100 || areaCode == AreaCode.AREA200 || areaCode == AreaCode.AREA300)) {
             throw new BadRequestException(messageResolver.get("donation.error.invalid.area"));
         }
         if (title == null || title.isBlank()) {

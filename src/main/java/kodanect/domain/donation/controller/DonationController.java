@@ -141,8 +141,8 @@ public class  DonationController {
     @GetMapping("/{storySeq}/comments")
     public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryCommentDto, Long>>> getAllDonationCommentList(
             @PathVariable("storySeq") Long storySeq,
-            @RequestParam(value = "commentCursor", required = false) Long cursor,
-            @RequestParam(value="commentSize", defaultValue = "3", required=false) int size
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "3", required=false) int size
     ){
         logger.info("스토리 더보기 댓글 조회 컨트롤러 호출");
         CursorPaginationResponse<DonationStoryCommentDto, Long> response = donationCommentService.findCommentsWithCursor(storySeq, cursor, size);
