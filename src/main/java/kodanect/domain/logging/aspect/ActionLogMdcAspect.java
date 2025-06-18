@@ -3,6 +3,7 @@ package kodanect.domain.logging.aspect;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.bitwalker.useragentutils.*;
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.domain.logging.constant.MdcKey;
 import kodanect.domain.logging.exception.ActionLogJsonSerializationException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ActionLogMdcAspect {
 
+    private static final SecureLogger log = SecureLogger.getLogger(ActionLogMdcAspect.class);
     private final ObjectMapper objectMapper;
 
     /**
@@ -63,26 +65,36 @@ public class ActionLogMdcAspect {
         }
 
         try {
+            String ipAddress = orUnknown(extractClientIp(request));
+            String httpMethod = orUnknown(request.getMethod());
+            String endpoint = orUnknown(request.getRequestURI());
+            String controllerClassName = joinPoint.getSignature().getDeclaringTypeName();
+            String controllerSimpleName = joinPoint.getSignature().getDeclaringType().getSimpleName();
+            String methodName = joinPoint.getSignature().getName();
+            Map<String, Object> params = extractParameters(joinPoint);
+            String parametersJson = objectMapper.writeValueAsString(params);
             String userAgentString = request.getHeader("User-Agent");
             UserAgent userAgent = UserAgent.parseUserAgentString(userAgentString);
             Version browserVersion = userAgent.getBrowserVersion();
             OperatingSystem os = userAgent.getOperatingSystem();
+            String locale = orUnknown(request.getLocale().toLanguageTag());
 
-            Map<String, Object> params = extractParameters(joinPoint);
-
-            MDC.put(MdcKey.IP_ADDRESS, orUnknown(extractClientIp(request)));
+            MDC.put(MdcKey.IP_ADDRESS, ipAddress);
             MDC.put(MdcKey.SESSION_ID, sessionId);
-            MDC.put(MdcKey.HTTP_METHOD, orUnknown(request.getMethod()));
-            MDC.put(MdcKey.ENDPOINT, orUnknown(request.getRequestURI()));
-            MDC.put(MdcKey.CONTROLLER, orUnknown(joinPoint.getSignature().getDeclaringTypeName()));
-            MDC.put(MdcKey.METHOD, orUnknown(joinPoint.getSignature().getName()));
-            MDC.put(MdcKey.PARAMETERS, objectMapper.writeValueAsString(params));
+            MDC.put(MdcKey.HTTP_METHOD, httpMethod);
+            MDC.put(MdcKey.ENDPOINT, endpoint);
+            MDC.put(MdcKey.CONTROLLER, controllerClassName);
+            MDC.put(MdcKey.METHOD, methodName);
+            MDC.put(MdcKey.PARAMETERS, parametersJson);
             MDC.put(MdcKey.TIMESTAMP, Instant.now().toString());
             MDC.put(MdcKey.BROWSER_NAME, orUnknown(userAgent.getBrowser().getName()));
             MDC.put(MdcKey.BROWSER_VERSION, orUnknown(browserVersion != null ? browserVersion.getVersion() : null));
             MDC.put(MdcKey.OPERATING_SYSTEM, orUnknown(os != null ? os.getName() : null));
             MDC.put(MdcKey.DEVICE, orUnknown(os != null ? os.getDeviceType().getName() : null));
-            MDC.put(MdcKey.LOCALE, orUnknown(request.getLocale().toLanguageTag()));
+            MDC.put(MdcKey.LOCALE, locale);
+
+            log.info("[{}] {}.{} 호출 (세션: {}, IP: {}, 파라미터: {})",
+                    httpMethod, controllerSimpleName, methodName, sessionId, ipAddress, parametersJson);
 
             return joinPoint.proceed();
         } catch (JsonProcessingException e) {
