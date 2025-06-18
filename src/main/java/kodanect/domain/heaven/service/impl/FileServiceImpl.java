@@ -1,5 +1,8 @@
 package kodanect.domain.heaven.service.impl;
 
+import kodanect.domain.heaven.exception.FileDeleteFailException;
+import kodanect.domain.heaven.exception.FileNotFoundException;
+import kodanect.domain.heaven.exception.FileSaveFailException;
 import kodanect.domain.heaven.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,7 +40,7 @@ public class FileServiceImpl implements FileService {
                 Files.createDirectories(filePath.getParent());
                 file.transferTo(filePath.toFile());
             } catch (IOException e) {
-                throw new RuntimeException("파일 저장 실패: " + e.getMessage(), e);
+                throw new FileSaveFailException(fileName);
             }
         }
 
@@ -49,13 +52,13 @@ public class FileServiceImpl implements FileService {
         Path filePath = Paths.get(FILE_STORE_PATH).resolve(fileName).normalize();
 
         if (!Files.exists(filePath)) {
-            throw new RuntimeException("삭제하려는 파일이 존재하지 않습니다.");
+            throw new FileNotFoundException(fileName);
         }
 
         try {
             Files.delete(filePath);
         } catch (IOException e) {
-            throw new RuntimeException("파일 삭제 중 에러가 발생 했습니다.");
+            throw new FileDeleteFailException(fileName);
         }
     }
 

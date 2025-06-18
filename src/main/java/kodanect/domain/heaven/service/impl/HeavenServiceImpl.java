@@ -14,7 +14,6 @@ import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
 import kodanect.domain.heaven.entity.Heaven;
-import kodanect.domain.heaven.exception.FileStorageException;
 import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
@@ -27,13 +26,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -42,7 +36,6 @@ public class HeavenServiceImpl implements HeavenService {
 
     /* 기본값 */
     private static final int COMMENT_SIZE = 3;
-    private static final String FILE_PATH = "/app/uploads";
     private static final String FILE_NAME_KEY = "fileName";
     private static final String ORG_FILE_NAME_KEY = "orgFileName";
 
