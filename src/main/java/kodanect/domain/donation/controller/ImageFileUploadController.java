@@ -13,6 +13,7 @@ import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.security.SecureRandom;
 
 @RestController
 @RequestMapping("/app/upload")
@@ -29,6 +30,7 @@ public class ImageFileUploadController {
 
     private final MessageSourceAccessor msg;
     private final GlobalsProperties globals;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @PostMapping("/upload_img/{category}")
     public ResponseEntity<Map<String, String>> uploadImage(
@@ -64,7 +66,7 @@ public class ImageFileUploadController {
                 ? safeName.substring(safeName.lastIndexOf("."))
                 : ".jpg";
         String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        int randomNum = new Random().nextInt(RANDOM_BOUND) + RANDOM_MIN; //100 ~ 999까지의 수자
+        int randomNum = SECURE_RANDOM.nextInt(RANDOM_BOUND) + RANDOM_MIN; //100 ~ 999까지의 수자
 
         if (ext.length() > EXT_LENGTH || ext.contains("/") || ext.contains("\\")) {
             throw new BadRequestException("error.wrong.ext");
