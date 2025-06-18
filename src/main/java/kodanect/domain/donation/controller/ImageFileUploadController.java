@@ -25,12 +25,13 @@ public class ImageFileUploadController {
     private static final Integer EXT_LENGTH = 10;
     private static final Long POSSIBLE_MAX_SIZE = 5242880L;
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int RANDOM_MIN = 100;
     private static final int RANDOM_BOUND = 900;
 
     private final MessageSourceAccessor msg;
     private final GlobalsProperties globals;
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
 
     @PostMapping("/upload_img/{category}")
     public ResponseEntity<Map<String, String>> uploadImage(
