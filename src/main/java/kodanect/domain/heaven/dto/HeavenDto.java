@@ -11,29 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class HeavenDto {
 
-    private int letterSeq;
-
-    private Integer donateSeq;
-
-    private String letterTitle;
-
-    /* 기증자 명 */
-    private String donorName;
-
-    /* 기증자 익명 여부 */
-    @JsonIgnore
-    private String memorialAnonymityFlag;
-
-    /* 편지 작성자 */
-    private String letterWriter;
-
-    /* 작성자 익명 여부 */
-    @JsonIgnore
-    private String heavenAnonymityFlag;
-
-    private Integer readCount;
-
-    private String letterContents;
+    private HeavenCommonDto heavenCommonDto;
 
     private String fileName;
 

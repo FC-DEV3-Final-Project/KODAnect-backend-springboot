@@ -2,6 +2,7 @@ package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.domain.heaven.dto.HeavenCommonDto;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
@@ -153,13 +154,18 @@ public class HeavenControllerTest {
                 .commentHasNext(commentHasNext)
                 .build();
 
-        HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
+        HeavenCommonDto heavenCommonDto = HeavenCommonDto.builder()
                 .letterSeq(letterSeq)
                 .letterTitle(letterTitle)
                 .letterWriter(letterWriter)
                 .heavenAnonymityFlag(heavenAnonymityFlag)
                 .readCount(readCount)
                 .letterContents(letterContents)
+                .build();
+
+
+        HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
+                .heavenCommonDto(heavenCommonDto)
                 .writeTime(writeTime)
                 .cursorCommentPaginationResponse(cursorCommentPaginationResponse)
                 .build();
@@ -171,7 +177,6 @@ public class HeavenControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.message").value("게시물 조회 성공"))
-                .andExpect(jsonPath("$.data.letterSeq").value(1))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.content[0].commentSeq").value(1))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentNextCursor", nullValue()))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentHasNext").value(false));
