@@ -4,6 +4,7 @@ import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.recipient.dto.*;
+import kodanect.domain.recipient.exception.RecipientInvalidPasscodeException;
 import kodanect.domain.recipient.service.RecipientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -98,12 +99,33 @@ public class RecipientController {
             */
     @PostMapping("/{letterSeq}/verifyPwd")
     public ResponseEntity<ApiResponse<Boolean>> verifyPassword(@PathVariable("letterSeq") Integer letterSeq,
-                                                               @RequestBody Map<String, String> requestBody) {
+                                                              @RequestBody Map<String, String> requestBody) {
         String letterPasscode = requestBody.get("letterPasscode");
         logger.info("게시물 비밀번호 확인 요청: letterSeq={}", letterSeq);
 
-        recipientService.verifyLetterPassword(letterSeq, letterPasscode, null);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인"));
+        // RecipientRequestDto를 생성하여 비밀번호 정보를 담고, 서비스 및 예외에 전달
+        // 실제 수정 시 사용될 DTO가 아니므로, 비밀번호 필드만 채웁니다.
+        RecipientRequestDto authRequestDto = RecipientRequestDto.builder()
+                .letterPasscode(letterPasscode)
+                .build();
+
+        try {
+            // 서비스 계층에서 비밀번호 검증 수행.
+            // requestDto를 inputData로 전달
+            recipientService.verifyLetterPassword(letterSeq, letterPasscode);
+
+            // 성공 시, data 필드에 true를 반환
+            return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "비밀번호 확인", null));
+        } catch (RecipientInvalidPasscodeException e) {
+            logger.warn("게시물 비밀번호 확인 실패: letterSeq={}, error={}", letterSeq, e.getMessage());
+            // 비밀번호 확인 실패 시, inputData를 반환하지 않음
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.fail(HttpStatus.UNAUTHORIZED, e.getMessage())); // data 필드 없음
+        } catch (Exception e) {
+            logger.error("게시물 비밀번호 확인 중 오류 발생: letterSeq={}, error={}", letterSeq, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR, "비밀번호 확인 중 오류가 발생했습니다."));
+        }
     }
 
     /** ## 게시물 수정
@@ -114,7 +136,7 @@ public class RecipientController {
             **응답:** `ApiResponse<RecipientDetailResponseDto>`
             */
     @PatchMapping(value = "/{letterSeq}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<?>> edit(@PathVariable("letterSeq") Integer letterSeq,
+    public ResponseEntity<ApiResponse<Object>> edit(@PathVariable("letterSeq") Integer letterSeq,
                                                @ModelAttribute @Valid RecipientRequestDto recipientRequestDto,
                                                BindingResult bindingResult // @Valid 에 대한 에러를 처리하기 위함
     ) {

@@ -8,7 +8,7 @@ import static kodanect.common.exception.config.MessageKeys.RECIPIENT_INVALID_PAS
 public class RecipientInvalidPasscodeException extends AbstractCustomException {
 
     private final Integer commentId;
-    private final Object inputData;  // RecipientRequestDto 또는 RecipientCommentUpdateRequestDto를 담을 수 있도록 Object로 변경
+    private final transient Object inputData;  // RecipientRequestDto 또는 RecipientCommentUpdateRequestDto를 담을 수 있도록 Object로 변경
 
     /**
      * 비밀번호 불일치 예외 생성자 (주로 비밀번호 검증 API에서 사용되며, 입력 데이터 반환이 필요 없을 때)

@@ -22,13 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
-import org.springframework.web.util.NestedServletException;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -161,33 +158,29 @@ public class RecipientControllerTest {
 
     @Test
     @DisplayName("게시물 비밀번호 확인 실패 테스트 - verifyPwd API")
-    public void testVerifyPassword_Fail() {
+    public void testVerifyPassword_Fail() throws Exception {
         Integer letterSeq = 1;
         String wrongPasscode = "wrongpwd";
 
         // 서비스 메서드가 예외를 던지도록 Mock 설정
-        doThrow(new RecipientInvalidPasscodeException(letterSeq))
-                .when(recipientService).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode), isNull());
+        // RecipientInvalidPasscodeException 생성자에 letterSeq만 전달 (inputData 없음)
+        doThrow(new RecipientInvalidPasscodeException(letterSeq)) // letterSeq만 전달
+                .when(recipientService).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode)); // 세 번째 인자 제거
 
         String requestBody = "{\"letterPasscode\":\"" + wrongPasscode + "\"}";
 
-        // MockMvc.perform이 NestedServletException을 던질 것을 예상하고,
-        // 그 내부에 RecipientInvalidPasscodeException이 포함되어 있는지 확인합니다.
-        Exception exception = assertThrows(NestedServletException.class, () ->
-                        mockMvc.perform(MockMvcRequestBuilders.post("/recipientLetters/{letterSeq}/verifyPwd", letterSeq)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
-        );
+        mockMvc.perform(MockMvcRequestBuilders.post("/recipientLetters/{letterSeq}/verifyPwd", letterSeq)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isUnauthorized()) // 401 Unauthorized 상태 검증
+                .andExpect(jsonPath("$.success").value(false)) // success 필드가 false인지 검증
+                // RecipientInvalidPasscodeException의 getMessage()가 inputData == null일 때 반환하는 메시지로 변경
+                .andExpect(jsonPath("$.message").value(String.format("[비밀번호 불일치] 리소스 ID=%d", letterSeq)))
+                // 실패 시 data 필드가 반환되지 않으므로, data.letterPasscode 검증 라인 제거
+                .andExpect(jsonPath("$.data").doesNotExist()); // data 필드가 존재하지 않음을 검증
 
-        // NestedServletException의 getCause()가 RecipientInvalidPasscodeException인지 확인
-        assertTrue(exception.getCause() instanceof RecipientInvalidPasscodeException);
-        RecipientInvalidPasscodeException causeException = (RecipientInvalidPasscodeException) exception.getCause();
-
-        // 예외 메시지가 예상과 일치하는지 확인 (선택 사항)
-        assertTrue(causeException.getMessage().contains(String.format("[비밀번호 불일치] 리소스 ID=%d", letterSeq)));
-
-
-        verify(recipientService, times(1)).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode), isNull());
+        // recipientService.verifyLetterPassword가 올바른 인자로 1번 호출되었는지 검증
+        verify(recipientService, times(1)).verifyLetterPassword(eq(letterSeq), eq(wrongPasscode)); // 세 번째 인자 제거
     }
 
 

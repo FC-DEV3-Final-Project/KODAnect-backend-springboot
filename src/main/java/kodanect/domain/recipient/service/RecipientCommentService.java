@@ -9,7 +9,7 @@ public interface RecipientCommentService {
     // 댓글 작성
     RecipientCommentResponseDto insertComment(Integer letterSeq, RecipientCommentRequestDto requestDto);
 
-    boolean authenticateComment(Integer commentSeq, String inputPasscode);
+    void authenticateComment(Integer commentSeq, String inputPasscode);
 
     // 댓글 수정
     RecipientCommentResponseDto updateComment(Integer commentSeq, RecipientCommentUpdateRequestDto requestDto);

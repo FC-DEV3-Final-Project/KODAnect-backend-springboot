@@ -132,24 +132,23 @@ public class RecipientCommentServiceImpl implements RecipientCommentService {
 
     /**
      * 댓글 비밀번호를 검증합니다.
+     * @param commentSeq 댓글 시퀀스
      * @param inputPasscode 사용자 입력 비밀번호
      * @throws RecipientInvalidPasscodeException 비밀번호가 일치하지 않는 경우
      */
     @Override
-    public boolean authenticateComment(Integer commentSeq, String inputPasscode) {
+    public void authenticateComment(Integer commentSeq, String inputPasscode) {
         logger.info("댓글 인증 요청 시작: commentSeq={}", commentSeq);
 
         // 1. 삭제되지 않은 기존 댓글 조회
         RecipientCommentEntity existingComment = getActiveComment(commentSeq);
 
-        // 2. 비밀번호 검증 (validateCommentPasscode 로직을 여기에 통합)
+        // 2. 비밀번호 불일치 (엔티티의 checkPasscode 메서드 활용)
         if (!existingComment.checkPasscode(inputPasscode)) {
-            logger.warn("댓글 비밀번호 불일치: commentSeq={}", existingComment.getCommentSeq());
+            logger.warn("댓글 비밀번호 불일치: commentSeq={}", commentSeq);
+            // 비밀번호 불일치 시 예외를 발생시키면서 commentSeq만 전달
             throw new RecipientInvalidPasscodeException(commentSeq);
         }
-
-        logger.info("댓글 인증 성공: commentSeq={}", commentSeq);
-        return true; // 인증 성공
     }
 
     // 댓글 수정
