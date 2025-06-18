@@ -149,25 +149,14 @@ public class HeavenServiceImplTest {
                 .writeTime(now)
                 .build();
 
-        Heaven heaven = Heaven.builder()
-                .letterSeq(letterSeq)
-                .letterTitle("사랑하는 가족에게")
-                .letterWriter("작성자")
-                .anonymityFlag("N")
-                .readCount(0)
-                .letterContents("이 편지는 하늘로 보냅니다.")
-                .writeTime(now)
-                .build();
-
         List<HeavenCommentResponse> heavenCommentResponseList = new ArrayList<>();
         for (int i = 1; i <= commentCount; i++) {
             heavenCommentResponseList.add(new HeavenCommentResponse(i, "댓글 작성자"+i, "댓글 내용"+i, now));
         }
 
-        when(heavenRepository.findAnonymizedById(letterSeq)).thenReturn(heavenDto);
-        when(heavenFinder.findByIdOrThrow(letterSeq)).thenReturn(heaven);
+        when(heavenFinder.findAnonymizedByIdOrThrow(letterSeq)).thenReturn(heavenDto);
         when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize + 1)).thenReturn(heavenCommentResponseList);
-        when(heavenCommentRepository.countByHeaven(heaven)).thenReturn(commentCount);
+        when(heavenCommentRepository.countByLetterSeq(letterSeq)).thenReturn(commentCount);
 
         /* when */
         HeavenDetailResponse heavenDetailResponse = heavenServiceImpl.getHeavenDetail(letterSeq);

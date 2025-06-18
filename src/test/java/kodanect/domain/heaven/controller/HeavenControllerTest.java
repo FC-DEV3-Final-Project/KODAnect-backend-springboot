@@ -40,9 +40,8 @@ public class HeavenControllerTest {
 
     @Before
     public void beforeEach() {
-        when(messageSourceAccessor.getMessage("heaven.list.get.success")).thenReturn("게시물 전체 조회 성공");
-        when(messageSourceAccessor.getMessage("heaven.list.search.success")).thenReturn("검색을 통한 게시물 전체 조회 성공");
-        when(messageSourceAccessor.getMessage("heaven.detail.get.success")).thenReturn("게시물 상세 조회 성공");
+        when(messageSourceAccessor.getMessage("board.read.success")).thenReturn("게시물 조회 성공");
+        when(messageSourceAccessor.getMessage("board.search.read.success")).thenReturn("검색을 통한 게시물 조회 성공");
     }
 
     @Test
@@ -80,7 +79,7 @@ public class HeavenControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("게시물 전체 조회 성공"))
+                .andExpect(jsonPath("$.message").value("게시물 조회 성공"))
                 .andExpect(jsonPath("$.data.content[29].letterSeq").value(30))
                 .andExpect(jsonPath("$.data.nextCursor").value(10))
                 .andExpect(jsonPath("$.data.hasNext").value(true))
@@ -122,7 +121,7 @@ public class HeavenControllerTest {
                     .param("size", "20"))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("검색을 통한 게시물 전체 조회 성공"))
+                .andExpect(jsonPath("$.message").value("검색을 통한 게시물 조회 성공"))
                 .andExpect(jsonPath("$.data.content[0].letterSeq").value(1))
                 .andExpect(jsonPath("$.data.nextCursor", nullValue()))
                 .andExpect(jsonPath("$.data.hasNext").value(hasNext))
@@ -171,7 +170,7 @@ public class HeavenControllerTest {
         mockMvc.perform(get("/heavenLetters/{letterSeq}", letterSeq))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("게시물 상세 조회 성공"))
+                .andExpect(jsonPath("$.message").value("게시물 조회 성공"))
                 .andExpect(jsonPath("$.data.letterSeq").value(1))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.content[0].commentSeq").value(1))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentNextCursor", nullValue()))

@@ -25,7 +25,7 @@ public class Heaven {
     private int letterSeq;
 
     /* 기증자 */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "donate_seq")
     private Memorial memorial;
 

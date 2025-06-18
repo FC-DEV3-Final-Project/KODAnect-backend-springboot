@@ -1,7 +1,6 @@
 package kodanect.domain.heaven.repository;
 
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
-import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.entity.HeavenComment;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -53,16 +52,16 @@ public interface HeavenCommentRepository extends JpaRepository<HeavenComment, In
     /**
      * 댓글 개수 전체 조회
      *
-     * @param heaven
+     * @param letterSeq
      * @return
      */
     @Query(
             value = """
             SELECT COUNT(*)
             FROM HeavenComment hc
-            WHERE hc.heaven = :heaven
+            WHERE hc.heaven.letterSeq = :letterSeq
             AND hc.delFlag = 'N'
         """
     )
-    long countByHeaven(@Param("heaven") Heaven heaven);
+    long countByLetterSeq(@Param("letterSeq") Integer letterSeq);
 }

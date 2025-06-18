@@ -25,7 +25,7 @@ public class HeavenComment {
     private int commentSeq;
 
     /* 편지 일련번호 */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "letter_seq")
     private Heaven heaven;
 

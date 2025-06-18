@@ -81,17 +81,16 @@ public class HeavenServiceImpl implements HeavenService {
     @Override
     public HeavenDetailResponse getHeavenDetail(Integer letterSeq) {
         /* 게시물 상세 조회 */
-        HeavenDto heavenDto = heavenRepository.findAnonymizedById(letterSeq);
-        Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
+        HeavenDto heavenDto = heavenFinder.findAnonymizedByIdOrThrow(letterSeq);
 
         /* 조회수 증가 */
-        heaven.addReadCount();
+        heavenRepository.updateReadCount(letterSeq);
 
         /* 댓글 리스트 조회 */
         List<HeavenCommentResponse> heavenCommentList = heavenCommentService.getHeavenCommentList(letterSeq, null, COMMENT_SIZE + 1);
 
         /* 댓글 개수 조회 */
-        long commentCount = heavenCommentRepository.countByHeaven(heaven);
+        long commentCount = heavenCommentRepository.countByLetterSeq(letterSeq);
 
         CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
                 CursorFormatter.cursorCommentCountFormat(heavenCommentList, COMMENT_SIZE, commentCount);

@@ -7,6 +7,7 @@ import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.remembrance.entity.Memorial;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -177,7 +178,7 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
             SELECT new kodanect.domain.heaven.dto.HeavenDto
                     (h.letterSeq, m.donateSeq, h.letterTitle,
                     CASE
-                            WHEN(h.memorial.anonymityFlag = 'Y') THEN
+                            WHEN(m.anonymityFlag = 'Y') THEN
                                     CONCAT(SUBSTRING(h.donorName, 1, 1), REPEAT('*', CHAR_LENGTH(h.donorName) - 1))
                             ELSE h.donorName
                     END AS donorName,
@@ -290,4 +291,20 @@ public interface HeavenRepository extends JpaRepository<Heaven, Integer> {
         """
     )
     long countByMemorial(@Param("memorial") Memorial memorial);
+
+    /**
+     * 조회수 증가
+     *
+     * @param letterSeq
+     */
+    @Modifying
+    @Query(
+            value = """
+            UPDATE Heaven h
+            SET h.readCount = h.readCount + 1
+            WHERE h.letterSeq = :letterSeq
+            AND h.delFlag = 'N'
+        """
+    )
+    void updateReadCount(@Param("letterSeq") Integer letterSeq);
 }
