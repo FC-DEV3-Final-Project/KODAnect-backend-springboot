@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.jsoup.Jsoup;
@@ -184,6 +185,7 @@ public class RecipientServiceImpl implements RecipientService {
     }
 
     // 특정 게시물 조회
+    @Transactional
     @Override
     public RecipientDetailResponseDto selectRecipient(Integer letterSeq) {
         // 1. 해당 게시물 조회 (삭제되지 않은 게시물만 조회하도록 필터링)
