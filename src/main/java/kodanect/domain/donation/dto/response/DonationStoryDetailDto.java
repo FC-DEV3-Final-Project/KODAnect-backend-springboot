@@ -17,7 +17,7 @@ public class DonationStoryDetailDto {
     private String title;
 
     private String storyWriter;
-    private String uploadDate;
+    private String writeTime;
 
     private AreaCode areaCode;
 
@@ -33,7 +33,7 @@ public class DonationStoryDetailDto {
                 .storySeq(story.getStorySeq())
                 .title(story.getStoryTitle())
                 .storyWriter(story.getStoryWriter())
-                .uploadDate(story.getWriteTime().toLocalDate().toString())
+                .writeTime(story.getWriteTime().toLocalDate().toString())
                 .areaCode(story.getAreaCode())
                 .readCount(story.getReadCount())
                 .storyContent(story.getStoryContents())
