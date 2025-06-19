@@ -14,7 +14,6 @@ import kodanect.domain.donation.exception.*;
 import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationCommentService;
-import kodanect.domain.recipient.service.impl.RecipientServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +27,7 @@ import java.util.List;
 public class DonationCommentServiceImpl implements DonationCommentService {
 
     // 로거 선언
-    private static final SecureLogger logger = SecureLogger.getLogger(RecipientServiceImpl.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(DonationCommentServiceImpl.class);
 
 
     private static final String DONATION_NOT_FOUND_MESSAGE = "donation.error.notfound";

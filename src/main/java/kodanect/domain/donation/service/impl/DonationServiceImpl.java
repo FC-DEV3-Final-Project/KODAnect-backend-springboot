@@ -15,7 +15,6 @@ import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
-import kodanect.domain.recipient.service.impl.RecipientServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -34,7 +33,7 @@ import java.util.UUID;
 public class DonationServiceImpl implements DonationService {
 
     // 로거 선언
-    private static final SecureLogger logger = SecureLogger.getLogger(RecipientServiceImpl.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(DonationServiceImpl.class);
 
     /** Cursor 기반 기본 Size */
     private static final int DEFAULT_SIZE = 3;

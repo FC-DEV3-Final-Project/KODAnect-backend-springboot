@@ -264,12 +264,7 @@ class DonationControllerTest {
     @Test
     @DisplayName("PATCH /donationLetters/{storySeq} - 성공")
     void modifyStory_success() throws Exception {
-        DonationStoryModifyRequestDto reqDto = DonationStoryModifyRequestDto.builder()
-                .areaCode(AreaCode.AREA100)
-                .storyTitle("수정제목")
-                .storyWriter("수정작가")
-                .storyContents("수정본문")
-                .build();
+
         given(messageSourceAccessor.getMessage("donation.update.success"))
                 .willReturn("수정 성공");
         doNothing().when(donationService).updateDonationStory(eq(1L), any(DonationStoryModifyRequestDto.class));

@@ -7,7 +7,6 @@ import kodanect.domain.donation.dto.request.*;
 import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
-import kodanect.domain.recipient.controller.RecipientController;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +23,7 @@ import java.util.Map;
 @RequestMapping("/donationLetters")
 public class  DonationController {
 
-    private static final SecureLogger logger = SecureLogger.getLogger(RecipientController.class);
+    private static final SecureLogger logger = SecureLogger.getLogger(DonationController.class);
 
     private final DonationService donationService;
     private final DonationCommentService donationCommentService;

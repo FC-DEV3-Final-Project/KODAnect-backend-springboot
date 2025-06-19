@@ -121,10 +121,6 @@ public class DonationServiceImplTest {
                 .storyContents("<p>내용</p>") // 이건 필수는 아님
                 .build();
 
-        given(messageResolver.get("donation.error.invalid.passcode.format"))
-                .willReturn("비밀번호 형식이 잘못되었습니다.");
-        given(messageResolver.get("donation.error.title.required"))
-                .willReturn("제목은 필수입니다.");
 
         donationService.createDonationStory(requestDto);
         then(donationRepository).should().save(any(DonationStory.class));
