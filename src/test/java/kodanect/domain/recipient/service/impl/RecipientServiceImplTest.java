@@ -94,9 +94,8 @@ public class RecipientServiceImplTest {
         recipientDto.setLetterContents("이미지 파일이 없는 게시물"); // 비어있지 않은 내용으로 설정
         recipientDto.setLetterPasscode("testPass1234");
 
-        // RequestDto에는 fileName, orgFileName setter가 없으므로 해당 라인 제거
-        // recipientDto.setFileName(null);
-        // recipientDto.setOrgFileName(null);
+        // RequestDto에는 fileName, orgFileName setter가 없으므로 해당 라인 제거 (SonarQube 지적사항 반영)
+
 
         // 서비스가 반환할 엔티티 Mocking (이미지 관련 필드는 null)
         RecipientEntity savedEntity = RecipientEntity.builder()
@@ -121,8 +120,7 @@ public class RecipientServiceImplTest {
         // When
         RecipientDetailResponseDto responseDto = recipientService.insertRecipient(recipientDto);
 
-        // Then
-        // recipientRepository.save()가 한 번 호출되었는지 확인
+        // Then _ recipientRepository.save()가 한 번 호출되었는지 확인
         verify(recipientRepository, times(1)).save(any(RecipientEntity.class));
 
         // responseDto의 값이 예상대로 설정되었는지 확인

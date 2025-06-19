@@ -400,19 +400,25 @@ public class RecipientServiceImpl implements RecipientService {
      * @param newFileNames 현재 게시물에 있는 이미지 파일명 리스트
      */
     private void handleImageFilesDeletion(List<String> oldFileNames, List<String> newFileNames) {
+        logger.info("handleImageFilesDeletion 시작 - 기존 파일: {}, 새 파일: {}", oldFileNames, newFileNames);
         if (oldFileNames == null || oldFileNames.isEmpty()) {
+            logger.info("기존 파일이 없어 삭제할 파일 없음.");
             return; // 이전 파일이 없으면 삭제할 것도 없음
         }
 
         // 이전 파일명 리스트에서 현재 파일명 리스트에 없는 파일들을 찾습니다.
         Set<String> newFileNamesSet = new HashSet<>(newFileNames);
+
         List<String> filesToDelete = oldFileNames.stream()
                 .filter(fileName -> !newFileNamesSet.contains(fileName))
-                .collect(Collectors.toList());
+                .toList(); // Java 16 이상에서 사용 가능
+
+        logger.info("삭제할 파일 목록: {}", filesToDelete);
 
         for (String fileName : filesToDelete) {
             deleteExistingFile(fileName);
         }
+        logger.info("handleImageFilesDeletion 종료.");
     }
 
     /**
@@ -440,7 +446,6 @@ public class RecipientServiceImpl implements RecipientService {
     private void deleteExistingFile(String fileName) {
         try {
             String storePath = globalsProperties.getFileStorePath();
-            String baseUrl = globalsProperties.getFileBaseUrl(); // 이 baseUrl은 실제 물리 경로와 연결된 URL 경로임
 
             Path filePath = Paths.get(storePath).toAbsolutePath().normalize();
 
