@@ -3,7 +3,6 @@ package kodanect.domain.recipient.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.dto.CommentDeleteRequestDto;
-import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import org.junit.jupiter.api.DisplayName;

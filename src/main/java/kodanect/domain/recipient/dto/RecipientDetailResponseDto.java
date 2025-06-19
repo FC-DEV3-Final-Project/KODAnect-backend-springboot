@@ -2,7 +2,6 @@ package kodanect.domain.recipient.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import kodanect.common.response.CursorCommentCountPaginationResponse;
-import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.entity.RecipientEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
