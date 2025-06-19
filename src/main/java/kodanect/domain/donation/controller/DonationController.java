@@ -38,7 +38,6 @@ public class  DonationController {
             @RequestParam(required = false) Long cursor,
             @RequestParam(required=false, defaultValue = "20") int size
     ) {
-        logger.info("스토리 전체 목록 조회(더보기 페이징 포함) 컨트롤러 호출");
         CursorPaginationResponse<DonationStoryListDto, Long> response = donationService.findStoriesWithCursor(cursor, size);
 
         String message = messageSourceAccessor.getMessage("board.list.get.success");
@@ -55,7 +54,6 @@ public class  DonationController {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20", required=false) int size
     ) {
-        logger.info("스토리 검색 컨트롤러 호출");
         CursorPaginationResponse<DonationStoryListDto, Long> response =
                 donationService.findSearchStoriesWithCursor(type, keyword, cursor, size);
 
@@ -68,7 +66,6 @@ public class  DonationController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createStory(@ModelAttribute @Valid DonationStoryCreateRequestDto requestDto) {
-        logger.info("스토리 등록 컨트롤러 호출");
         donationService.createDonationStory(requestDto);
         String message = messageSourceAccessor.getMessage("donation.create.success");
         
@@ -82,7 +79,6 @@ public class  DonationController {
      */
     @GetMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
-        logger.info("스토리 상세 조회 컨트롤러 호출");
         DonationStoryDetailDto detailDto = donationService.findDonationStoryWithStoryId(storySeq);
         String message = messageSourceAccessor.getMessage("board.read.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, detailDto));
@@ -95,7 +91,6 @@ public class  DonationController {
             @PathVariable Long storySeq,
             @RequestBody @Valid VerifyStoryPasscodeDto passCodeDto) {
 
-        logger.info("스토리 수정 인증 컨트롤러 호출");
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
 
         //입력된 값 가져오기
@@ -115,7 +110,6 @@ public class  DonationController {
             @PathVariable Long storySeq,
             @ModelAttribute @Valid DonationStoryModifyRequestDto requestDto) {
 
-        logger.info("스토리 수정 컨트롤러 호출");
         donationService.updateDonationStory(storySeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.update.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.CREATED, message));
@@ -129,7 +123,6 @@ public class  DonationController {
             @PathVariable Long storySeq,
             @RequestBody @Valid VerifyStoryPasscodeDto storyPasscodeDto) {
 
-        logger.info("스토리 삭제 컨트롤러 호출");
         donationService.deleteDonationStory(storySeq, storyPasscodeDto);
         String message = messageSourceAccessor.getMessage("donation.delete.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
@@ -144,7 +137,6 @@ public class  DonationController {
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "3", required=false) int size
     ){
-        logger.info("스토리 더보기 댓글 조회 컨트롤러 호출");
         CursorPaginationResponse<DonationStoryCommentDto, Long> response = donationCommentService.findCommentsWithCursor(storySeq, cursor, size);
 
         String message = messageSourceAccessor.getMessage("donation.commentSuccess");
@@ -160,7 +152,6 @@ public class  DonationController {
             @PathVariable Long storySeq,
             @RequestBody @Valid DonationCommentCreateRequestDto requestDto) {
 
-        logger.info("스토리 댓글 작성(등록) 컨트롤러 호출");
         donationCommentService.createDonationStoryComment(storySeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.comment.create.success");
         return ResponseEntity.ok(ApiResponse.success(
@@ -177,7 +168,6 @@ public class  DonationController {
             @PathVariable Long commentSeq,
             @RequestBody @Valid VerifyCommentPasscodeDto passCodeDto) {
 
-        logger.info("스토리 댓글 수정 인증 컨트롤러 호출");
         donationCommentService.verifyPasswordWithPassword(storySeq, commentSeq, passCodeDto);
         String message = messageSourceAccessor.getMessage("donation.password.match");
 
@@ -194,7 +184,6 @@ public class  DonationController {
             @PathVariable Long commentSeq,
             @RequestBody  @Valid DonationStoryCommentModifyRequestDto requestDto) {
 
-        logger.info("스토리 댓글 수정 컨트롤러 호출");
         donationCommentService.updateDonationComment(storySeq, commentSeq, requestDto);
         String message = messageSourceAccessor.getMessage("donation.comment.update.success");
 
@@ -210,7 +199,6 @@ public class  DonationController {
             @PathVariable Long commentSeq,
             @RequestBody @Valid VerifyCommentPasscodeDto commentPassword) {
 
-        logger.info("스토리 댓글 삭제 컨트롤러 호출");
         donationCommentService.deleteDonationComment(storySeq, commentSeq, commentPassword);
         String message = messageSourceAccessor.getMessage("donation.comment.delete.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK,message));

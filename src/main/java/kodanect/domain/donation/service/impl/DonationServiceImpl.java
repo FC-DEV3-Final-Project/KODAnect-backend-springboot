@@ -13,7 +13,6 @@ import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.*;
 import kodanect.domain.donation.repository.DonationCommentRepository;
 import kodanect.domain.donation.repository.DonationRepository;
-import kodanect.domain.donation.service.DonationCommentService;
 import kodanect.domain.donation.service.DonationService;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
@@ -38,18 +37,16 @@ public class DonationServiceImpl implements DonationService {
     /** Cursor 기반 기본 Size */
     private static final int DEFAULT_SIZE = 3;
     private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
-    private static final int LIMIT_CONTENTS_LENGTH = 100;
 
     private final DonationRepository donationRepository;
     private final DonationCommentRepository commentRepository;
     private final MessageResolver messageResolver;
-    private final DonationCommentService commentService;
 
     /* 스토리 목록 조회 */
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findStoriesWithCursor(Long cursor, int size) {
         logger.debug(">>> findStoriesWithCursor() 호출");
-        logger.info("스토리 목록 조회 - cursor : {}, size : {}", cursor, size);
+
         Pageable pageable = PageRequest.of(0, size + 1);
         List<DonationStoryListDto> results = donationRepository.findByCursor(cursor, pageable);
         logger.debug("스토리 목록 조회 결과 수: {}", results.size());
@@ -63,7 +60,6 @@ public class DonationServiceImpl implements DonationService {
     @Override
     public CursorPaginationResponse<DonationStoryListDto, Long> findSearchStoriesWithCursor(String type, String keyword, Long cursor, int size) {
         logger.debug(">>> findSearchStoriesWithCursor() 호출");
-        logger.info("스토리 검색 - type : {}, keyword : {}, cursor : {}, size : {}", type,keyword,cursor,size);
         Pageable pageable = PageRequest.of(0, size + 1); // size+1개 조회해서 hasNext 판단
 
         List<DonationStoryListDto> results;
@@ -90,19 +86,6 @@ public class DonationServiceImpl implements DonationService {
     public void createDonationStory(DonationStoryCreateRequestDto requestDto) {
         logger.debug(">>> createDonationStory() 호출");
 
-        //본문 일부만 로그 출력(최대 100자)
-        String contents = requestDto.getStoryContents();
-        String preview = (contents != null && contents.length() > LIMIT_CONTENTS_LENGTH)
-                ?contents.substring(0, LIMIT_CONTENTS_LENGTH) + "..."
-                :contents;
-
-        logger.info("스토리 등록 처리 - areaCode: {}, title: {}, writer: {}, contentsPreview: {}",
-                requestDto.getAreaCode(),
-                requestDto.getStoryTitle(),
-                requestDto.getStoryWriter(),
-                preview
-        );
-
         validateStoryRequest(requestDto.getAreaCode(), requestDto.getStoryTitle(), requestDto.getStoryPasscode());
 
         // 이미지가 여러개 저장될 수 도 있음.
@@ -121,8 +104,6 @@ public class DonationServiceImpl implements DonationService {
                 .build();
 
         donationRepository.save(story);
-        logger.info("스토리 등록 완료 - storySeq: {}, title: {}, writer: {}",
-                story.getStorySeq(), story.getStoryTitle(), story.getStoryWriter());
     }
 
     private String[] imgParsing(String storyContents) {
@@ -163,7 +144,6 @@ public class DonationServiceImpl implements DonationService {
     @Override
     public DonationStoryDetailDto findDonationStoryWithStoryId(Long storySeq) {
         logger.debug(">>> findDonationStoryWithStoryId() 호출");
-        logger.info("스토리 상세 조회 - storySeq : {}", storySeq);
         // 1) 스토리 로드 + 조회수 증가
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(DONATION_ERROR_NOTFOUND));
@@ -204,20 +184,6 @@ public class DonationServiceImpl implements DonationService {
     public void  updateDonationStory(Long storySeq, DonationStoryModifyRequestDto requestDto) {
         logger.debug(">>> updateDonationStory() 호출");
 
-        //본문 일부만 로그 출력(최대 100자)
-        String contents = requestDto.getStoryContents();
-        String preview = (contents != null && contents.length() > LIMIT_CONTENTS_LENGTH)
-                ?contents.substring(0, LIMIT_CONTENTS_LENGTH) + "..."
-                :contents;
-
-
-        logger.info("스토리 수정 처리 - storySeq : {}, areaCode: {}, title: {}, writer: {}, contentsPreview: {}",
-                storySeq,
-                requestDto.getAreaCode(),
-                requestDto.getStoryTitle(),
-                requestDto.getStoryWriter(),
-                preview
-        );
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
 
@@ -229,7 +195,6 @@ public class DonationServiceImpl implements DonationService {
     /** 스토리 삭제 */
     public void deleteDonationStory(Long storySeq, VerifyStoryPasscodeDto storyPasscodeDto) {
         logger.debug(">>> deleteDonationStory() 호출");
-        logger.info("스토리 삭제 - storySeq : {}", storySeq);
 
         DonationStory story = donationRepository.findStoryOnlyById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_ERROR_NOTFOUND)));
@@ -241,7 +206,6 @@ public class DonationServiceImpl implements DonationService {
             throw new PasscodeMismatchException(messageResolver.get("donation.error.delete.password_mismatch"));
         }
         donationRepository.delete(story);
-        logger.info("스토리 삭제 완료 - storySeq : {}" , storySeq);
     }
 
     /** 비밀번호 유효성 검증 */
