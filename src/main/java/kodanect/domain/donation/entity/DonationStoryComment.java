@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import kodanect.domain.donation.dto.request.DonationStoryCommentModifyRequestDto;
 import lombok.*;
+import org.hibernate.annotations.Where;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access= AccessLevel.PROTECTED)
 @Builder
 @EntityListeners(AuditingEntityListener.class)
+@Where(clause = "del_flag ='N'")
 public class DonationStoryComment {
 
     @Id
@@ -52,6 +54,10 @@ public class DonationStoryComment {
 
     public void setStory(DonationStory story){ //연관관계 편의 메서드에서 호출
         this.story = story;
+    }
+
+    public void softDelete(){
+        this.delFlag = "Y";
     }
 
     public void modifyDonationStoryComment(DonationStoryCommentModifyRequestDto requestDto) {

@@ -26,6 +26,8 @@ public class DonationStoryDetailDto {
     private String fileName;        // 저장된 파일 이름 (서버 파일명)
     private String orgFileName;
 
+    private String imageUrl; //파일 주소
+
     private CursorCommentPaginationResponse<DonationStoryCommentDto, Long> comments;
 
     public static DonationStoryDetailDto fromEntity(DonationStory story){
@@ -44,5 +46,9 @@ public class DonationStoryDetailDto {
 
     public void setComments(CursorCommentPaginationResponse<DonationStoryCommentDto, Long> comments) {
         this.comments = comments;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
