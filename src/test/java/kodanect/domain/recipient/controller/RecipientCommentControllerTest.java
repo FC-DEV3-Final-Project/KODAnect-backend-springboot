@@ -55,9 +55,9 @@ class RecipientCommentControllerTest {
         comment.setCommentSeq(1);
         comment.setContents("테스트 댓글"); // DTO 필드는 contents 입니다.
         comment.setWriteTime(LocalDateTime.now());
-        comment.setModifyTime(LocalDateTime.now());
-        // 필요한 필드 셋팅 추가 (예: letterSeq, commentWriter 등)
-        comment.setLetterSeq(1); // 댓글이 속한 게시물 ID
+//        comment.setModifyTime(LocalDateTime.now());
+//        // 필요한 필드 셋팅 추가 (예: letterSeq, commentWriter 등)
+//        comment.setLetterSeq(1); // 댓글이 속한 게시물 ID
         comment.setCommentWriter("테스트 작성자"); // 댓글 작성자
 
         CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> pageResponse =
