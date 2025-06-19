@@ -1,7 +1,7 @@
 package kodanect.domain.recipient.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import kodanect.common.response.CursorCommentPaginationResponse;
+import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.domain.recipient.entity.RecipientEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -26,17 +29,16 @@ public class RecipientDetailResponseDto {
     private String anonymityFlag;
     private int readCount;
     private String letterContents;
-    private String fileName;
-    private String orgFileName;
+    private List<String> fileNames;
+    private List<String> orgFileNames;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime writeTime;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime modifyTime;
     private String delFlag;
-    private int commentCount;        // 댓글 수는 조회 시 필요한 정보이므로 DTO에 포함
-    private String imageUrl;         // 게시물에 등록된 이미지의 URL
+    private List<String> imageUrls;         // 게시물에 등록된 이미지의 URL
     // 게시물 조회 시 초기 댓글 데이터를 CursorReplyPaginationResponse 형태로 포함
-    private CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
+    private CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String anonymousWriterValue) {
@@ -53,20 +55,23 @@ public class RecipientDetailResponseDto {
                 .anonymityFlag(entity.getAnonymityFlag())
                 .readCount(entity.getReadCount())
                 .letterContents(entity.getLetterContents())
-                .fileName(entity.getFileName())
-                .orgFileName(entity.getOrgFileName())
+                // 콤마로 구분된 문자열을 List<String>으로 파싱
+                .fileNames(entity.getFileName() != null && !entity.getFileName().isEmpty() ?
+                        Arrays.stream(entity.getFileName().split(",")).map(String::trim).collect(Collectors.toList()) : null)
+                .orgFileNames(entity.getOrgFileName() != null && !entity.getOrgFileName().isEmpty() ?
+                        Arrays.stream(entity.getOrgFileName().split(",")).map(String::trim).collect(Collectors.toList()) : null)
+                .imageUrls(entity.getImageUrl() != null && !entity.getImageUrl().isEmpty() ?
+                        Arrays.stream(entity.getImageUrl().split(",")).map(String::trim).collect(Collectors.toList()) : null)
                 .writeTime(entity.getWriteTime())
                 .modifyTime(entity.getModifyTime())
                 .delFlag(entity.getDelFlag())
-                .commentCount(0)
-                .imageUrl(entity.getImageUrl())
                 // 초기에는 댓글 데이터를 비워두고, 서비스 계층에서 설정
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
                 .build();
     }
 
     // 서비스 계층에서 초기 댓글 데이터를 설정하기 위한 setter
-    public void setInitialCommentData(CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
+    public void setInitialCommentData(CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
         this.initialCommentData = initialCommentData;
     }
 
