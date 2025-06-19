@@ -106,9 +106,6 @@ public class RecipientServiceImplTest {
                 .letterWriter(ANONYMOUS_WRITER_VALUE) // 익명 처리 로직 반영
                 .anonymityFlag(recipientDto.getAnonymityFlag())
                 .letterContents(recipientDto.getLetterContents())
-                .imageUrl(null) // 서비스에서 파싱 후 null로 설정될 것
-                .fileName(null) // 서비스에서 파싱 후 null로 설정될 것
-                .orgFileName(null) // 서비스에서 파싱 후 null로 설정될 것
                 .writeTime(LocalDateTime.now())
                 .build();
 
