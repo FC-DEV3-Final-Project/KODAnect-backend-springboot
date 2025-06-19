@@ -11,10 +11,13 @@ import java.time.LocalDateTime;
 @Builder
 public class HeavenDto {
 
+    /* 편지 일련번호 */
     private int letterSeq;
 
+    /* 기증자 일련번호 */
     private Integer donateSeq;
 
+    /* 편지 제목 */
     private String letterTitle;
 
     /* 기증자 명 */
@@ -31,13 +34,20 @@ public class HeavenDto {
     @JsonIgnore
     private String heavenAnonymityFlag;
 
+    /* 조회 건수 */
     private Integer readCount;
 
+    /* 편지 내용 */
     private String letterContents;
 
+    /* 이미지 파일 명 */
+    @JsonIgnore
     private String fileName;
 
+    /* 이미지 원본 파일 명 */
+    @JsonIgnore
     private String orgFileName;
 
+    /* 생성 일시 */
     private LocalDateTime writeTime;
 }

@@ -2,6 +2,7 @@ package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.domain.heaven.dto.HeavenDto;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
@@ -153,7 +154,7 @@ public class HeavenControllerTest {
                 .commentHasNext(commentHasNext)
                 .build();
 
-        HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
+        HeavenDto heavenDto = HeavenDto.builder()
                 .letterSeq(letterSeq)
                 .letterTitle(letterTitle)
                 .letterWriter(letterWriter)
@@ -161,6 +162,11 @@ public class HeavenControllerTest {
                 .readCount(readCount)
                 .letterContents(letterContents)
                 .writeTime(writeTime)
+                .build();
+
+
+        HeavenDetailResponse heavenDetailResponse = HeavenDetailResponse.builder()
+                .heavenDto(heavenDto)
                 .cursorCommentPaginationResponse(cursorCommentPaginationResponse)
                 .build();
 

@@ -7,7 +7,6 @@ import kodanect.domain.heaven.dto.HeavenDto;
 import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
-import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
 import kodanect.domain.heaven.service.FileService;
@@ -172,10 +171,10 @@ public class HeavenServiceImplTest {
         assertEquals(Integer.valueOf(3), cursorCommentPaginationResponse.getCommentNextCursor());
         assertTrue(cursorCommentPaginationResponse.isCommentHasNext());
 
-        assertEquals(letterSeq, heavenDetailResponse.getLetterSeq());
-        assertEquals("사랑하는 가족에게", heavenDetailResponse.getLetterTitle());
-        assertEquals("작성자", heavenDetailResponse.getLetterWriter());
-        assertEquals("이 편지는 하늘로 보냅니다.", heavenDetailResponse.getLetterContents());
+        assertEquals(letterSeq, heavenDetailResponse.getHeavenDto().getLetterSeq());
+        assertEquals("사랑하는 가족에게", heavenDetailResponse.getHeavenDto().getLetterTitle());
+        assertEquals("작성자", heavenDetailResponse.getHeavenDto().getLetterWriter());
+        assertEquals("이 편지는 하늘로 보냅니다.", heavenDetailResponse.getHeavenDto().getLetterContents());
         assertEquals(now.toLocalDate().toString(), heavenDetailResponse.getWriteTime());
 
         assertEquals(1, firstHeavenCommentResponse.getCommentSeq());
