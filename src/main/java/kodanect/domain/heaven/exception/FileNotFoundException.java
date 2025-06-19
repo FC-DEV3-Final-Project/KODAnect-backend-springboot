@@ -7,7 +7,11 @@ import static kodanect.common.exception.config.MessageKeys.FILE_NOT_FOUND;
 
 public class FileNotFoundException extends AbstractCustomException {
 
-    private final String fileName;
+    private String fileName;
+
+    public FileNotFoundException() {
+        super(FILE_NOT_FOUND);
+    }
 
     public FileNotFoundException(String fileName) {
         super(FILE_NOT_FOUND);
