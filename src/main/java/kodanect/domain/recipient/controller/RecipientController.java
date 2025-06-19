@@ -87,7 +87,7 @@ public class RecipientController {
             **파라미터:** `letterSeq` (Path Variable)
             **응답:** `ApiResponse<RecipientDetailResponseDto>`
             */
-    @GetMapping("/{letterSeq:\\d+}")
+    @GetMapping("/{letterSeq}")
     public ResponseEntity<ApiResponse<RecipientDetailResponseDto>> view(@PathVariable("letterSeq") Integer letterSeq){
         logger.info("게시물 상세 조회 요청: letterSeq={}", letterSeq);
         RecipientDetailResponseDto recipientDto = recipientService.selectRecipient(letterSeq);

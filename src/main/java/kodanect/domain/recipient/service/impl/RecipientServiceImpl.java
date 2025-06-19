@@ -14,6 +14,9 @@ import kodanect.domain.recipient.entity.RecipientEntity;
 import kodanect.domain.recipient.repository.RecipientCommentRepository;
 import kodanect.domain.recipient.repository.RecipientRepository;
 import kodanect.domain.recipient.service.RecipientService;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 
@@ -88,26 +92,39 @@ public class RecipientServiceImpl implements RecipientService {
     public RecipientDetailResponseDto updateRecipient(Integer letterSeq, RecipientRequestDto requestDto) {
 
         // 1. 게시물 조회 (삭제되지 않은 게시물만 조회)
-        RecipientEntity recipientEntityold = recipientRepository.findById(letterSeq)
+        RecipientEntity recipientEntityOld = recipientRepository.findById(letterSeq)
                 .filter(entity -> "N".equalsIgnoreCase(entity.getDelFlag()))
                 .orElseThrow(() -> new RecipientNotFoundException(RECIPIENT_NOT_FOUND, letterSeq));
 
+        String oldContents = recipientEntityOld.getLetterContents(); // 이전 내용
+        String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
+        requestDto.setLetterContents(validatedAndCleanedContents);
+
+        // 기존 이미지 정보 파싱
+        ImageInfo oldImageInfo = parseImagesFromContents(oldContents);
+        // 새로운 이미지 정보 파싱
+        ImageInfo newImageInfo = parseImagesFromContents(requestDto.getLetterContents());
+
         // 엔티티 필드 업데이트 (비밀번호 일치 시에만 진행)
-        recipientEntityold.setOrganCode(requestDto.getOrganCode());
-        recipientEntityold.setOrganEtc(requestDto.getOrganEtc());
-        recipientEntityold.setLetterTitle(requestDto.getLetterTitle());
-        recipientEntityold.setRecipientYear(requestDto.getRecipientYear());
+        recipientEntityOld.setOrganCode(requestDto.getOrganCode());
+        recipientEntityOld.setOrganEtc(requestDto.getOrganEtc());
+        recipientEntityOld.setLetterTitle(requestDto.getLetterTitle());
+        recipientEntityOld.setRecipientYear(requestDto.getRecipientYear());
+        recipientEntityOld.setLetterContents(validatedAndCleanedContents);
 
-        // 내용(HTML) 필터링 및 유효성 검사
-        recipientEntityold.setLetterContents(cleanAndValidateContents(requestDto.getLetterContents()));
-
-        // 파일 업로드/교체/삭제 처리 로직 분리
-        handleImageUpdate(recipientEntityold, requestDto); // 별도 메서드로 분리
+        // 이미지 필드 업데이트
+        recipientEntityOld.setImageUrl(String.join(",", newImageInfo.imageUrls));
+        recipientEntityOld.setFileName(String.join(",", newImageInfo.fileNames));
+        recipientEntityOld.setOrgFileName(String.join(",", newImageInfo.orgFileNames));
 
         // organCode 및 organEtc 로직 분리
-        handleOrganCodeAndEtc(recipientEntityold, requestDto); // 별도 메서드로 분리
+        handleOrganCodeAndEtc(recipientEntityOld, requestDto); // 별도 메서드로 분리
 
-        RecipientEntity updatedEntity = recipientRepository.save(recipientEntityold); // 변경사항 저장
+        RecipientEntity updatedEntity = recipientRepository.save(recipientEntityOld); // 변경사항 저장
+
+        // 변경된 이미지 파일 처리: 삭제된 이미지 파일은 물리적으로 삭제
+        handleImageFilesDeletion(oldImageInfo.fileNames, newImageInfo.fileNames);
+
         logger.info("게시물 성공적으로 수정됨: letterSeq={}", updatedEntity.getLetterSeq());
         return RecipientDetailResponseDto.fromEntity(updatedEntity, globalsProperties.getFileBaseUrl()); // DTO로 변환하여 반환
     }
@@ -146,26 +163,23 @@ public class RecipientServiceImpl implements RecipientService {
     }
 
     // 게시물 등록
-    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
     @Override
     public RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto) {
 
-        // DTO의 letterContents를 먼저 정제하고 유효성 검사 (이렇게 하면 toEntity() 전에 문제가 되는 내용을 걸러낼 수 있습니다)
         String validatedAndCleanedContents = cleanAndValidateContents(requestDto.getLetterContents());
-        requestDto.setLetterContents(validatedAndCleanedContents); // 정제된 내용을 DTO에 다시 설정
+        requestDto.setLetterContents(validatedAndCleanedContents);
 
-        RecipientEntity recipientEntityRequest = requestDto.toEntity(); // DTO를 Entity로 변환
+        // 이미지 정보 파싱
+        ImageInfo parsedImageInfo = parseImagesFromContents(requestDto.getLetterContents());
 
-        // 파일 업로드/교체/삭제 처리 로직 분리
-        handleImageUpdate(recipientEntityRequest, requestDto); // 별도 메서드로 분리
+        RecipientEntity recipientEntityRequest = requestDto.toEntity();
+        recipientEntityRequest.setImageUrl(String.join(",", parsedImageInfo.imageUrls));
+        recipientEntityRequest.setFileName(String.join(",", parsedImageInfo.fileNames));
+        recipientEntityRequest.setOrgFileName(String.join(",", parsedImageInfo.orgFileNames));
 
-        // organCode 및 organEtc 로직 분리
-        handleOrganCodeAndEtc(recipientEntityRequest, requestDto); // 별도 메서드로 분리
+        handleOrganCodeAndEtc(recipientEntityRequest, requestDto);
 
-        // RecipientEntity 저장
         RecipientEntity savedEntity = recipientRepository.save(recipientEntityRequest);
-
-        // 상세 DTO로 변환하여 반환
         return RecipientDetailResponseDto.fromEntity(savedEntity, globalsProperties.getFileBaseUrl());
     }
 
@@ -319,7 +333,9 @@ public class RecipientServiceImpl implements RecipientService {
             throw new RecipientInvalidDataException("게시물 내용은 필수 입력 항목입니다.");
         }
         // 2. Jsoup을 사용하여 HTML 필터링
-        Safelist safelist = Safelist.relaxed();
+        Safelist safelist = Safelist.relaxed()
+                .addTags("img")
+                .addAttributes("img", "src", "data-cke-saved-src", "style", "width", "height");
         String cleanContents = Jsoup.clean(originalContents, safelist);
         // 3. 필터링된 HTML에서 순수 텍스트 추출 후 최종 유효성 검사
         String pureTextContents = Jsoup.parse(cleanContents).text();
@@ -332,39 +348,71 @@ public class RecipientServiceImpl implements RecipientService {
     }
 
     /**
-     * 이미지 파일 업로드/교체/삭제 로직을 처리합니다.
-     * @param entity 기존 게시물 엔티티
-     * @param requestDto 업데이트 요청 DTO
+     * CKEditor 내용에서 이미지 URL, 파일명, 원본 파일명을 파싱합니다.
+     * @param contents 게시물 내용 (HTML)
+     * @return 파싱된 이미지 정보 (URL, 파일명, 원본 파일명 리스트)
      */
-    private void handleImageUpdate(RecipientEntity entity, RecipientRequestDto requestDto) {
-        String newImageUrl = requestDto.getImageUrl();
-        String newFileName = requestDto.getFileName();
-        String newOrgFileName = requestDto.getOrgFileName();
+    private ImageInfo parseImagesFromContents(String contents) {
+        List<String> imageUrls = new ArrayList<>();
+        List<String> fileNames = new ArrayList<>();
+        List<String> orgFileNames = new ArrayList<>();
 
-        String oldImageUrl = entity.getImageUrl();
-        String oldFileName = entity.getFileName();
+        if (contents == null || contents.isBlank()) {
+            return new ImageInfo(imageUrls, fileNames, orgFileNames);
+        }
 
-        // Case 1: 새로운 이미지가 전송되었거나, 기존 이미지가 다른 이미지로 변경된 경우
-        if (newImageUrl != null && !newImageUrl.isEmpty() && !newImageUrl.equals(oldImageUrl)) {
-            if (oldFileName != null && !oldFileName.isEmpty()) {
-                deleteExistingFile(oldFileName); // 기존 물리 파일 삭제
+        Document doc = Jsoup.parse(contents);
+        Elements imgTags = doc.body().select("img[src], img[data-cke-saved-src]");
+
+        for (Element img : imgTags) {
+            String src = img.attr("src");
+            String dataCkeSavedSrc = img.attr("data-cke-saved-src");
+            String finalSrc = StringUtils.hasText(dataCkeSavedSrc) ? dataCkeSavedSrc : src;
+
+            if (StringUtils.hasText(finalSrc)) {
+                imageUrls.add(finalSrc);
+
+                // URL에서 파일명 추출 (도메인/경로 제거 후)
+                String fileNameWithExt = finalSrc.substring(finalSrc.lastIndexOf("/") + 1);
+                fileNames.add(fileNameWithExt);
+                orgFileNames.add(fileNameWithExt);
             }
-            entity.setImageUrl(newImageUrl);
-            entity.setFileName(newFileName);
-            entity.setOrgFileName(newOrgFileName);
-            logger.info("게시물 이미지 변경됨: oldImageUrl={}, newImageUrl={}", oldImageUrl, newImageUrl);
         }
-        // Case 2: 기존 이미지가 명시적으로 삭제된 경우
-        else if ((newImageUrl == null || newImageUrl.isEmpty()) && (oldImageUrl != null && !oldImageUrl.isEmpty())) {
-            if (oldFileName != null && !oldFileName.isEmpty()) {
-                deleteExistingFile(oldFileName); // 기존 물리 파일 삭제
-            }
-            entity.setImageUrl(null);
-            entity.setFileName(null);
-            entity.setOrgFileName(null);
-            logger.info("게시물 이미지 삭제됨: oldImageUrl={}", oldImageUrl);
+        return new ImageInfo(imageUrls, fileNames, orgFileNames);
+    }
+
+    // 이미지 정보 저장을 위한 내부 클래스
+    private static class ImageInfo {
+        List<String> imageUrls;
+        List<String> fileNames;
+        List<String> orgFileNames;
+
+        public ImageInfo(List<String> imageUrls, List<String> fileNames, List<String> orgFileNames) {
+            this.imageUrls = imageUrls;
+            this.fileNames = fileNames;
+            this.orgFileNames = orgFileNames;
         }
-        // Case 3: 파일 변경이 없는 경우 (기존 값 유지) - 별도 처리 없음
+    }
+
+    /**
+     * 이전 콘텐츠에 있었으나 현재 콘텐츠에 없는 이미지 파일을 물리적으로 삭제합니다.
+     * @param oldFileNames 이전 게시물에 있었던 이미지 파일명 리스트
+     * @param newFileNames 현재 게시물에 있는 이미지 파일명 리스트
+     */
+    private void handleImageFilesDeletion(List<String> oldFileNames, List<String> newFileNames) {
+        if (oldFileNames == null || oldFileNames.isEmpty()) {
+            return; // 이전 파일이 없으면 삭제할 것도 없음
+        }
+
+        // 이전 파일명 리스트에서 현재 파일명 리스트에 없는 파일들을 찾습니다.
+        Set<String> newFileNamesSet = new HashSet<>(newFileNames);
+        List<String> filesToDelete = oldFileNames.stream()
+                .filter(fileName -> !newFileNamesSet.contains(fileName))
+                .collect(Collectors.toList());
+
+        for (String fileName : filesToDelete) {
+            deleteExistingFile(fileName);
+        }
     }
 
     /**
@@ -386,24 +434,27 @@ public class RecipientServiceImpl implements RecipientService {
     }
 
     /**
-     * 기존 파일을 물리적으로 삭제하는 공통 메서드.
-     * @param fileUrl 삭제할 파일의 URL.
+     * 물리 파일을 삭제합니다.
+     * @param fileName 삭제할 파일명
      */
-    private void deleteExistingFile(String fileUrl) {
-        if (fileUrl != null && !fileUrl.isEmpty()) {
-            try {
-                // URL에서 파일명만 추출하여 물리적 경로 구성
-                String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-                Path filePath = Paths.get(globalsProperties.getFileStorePath(), fileName).toAbsolutePath().normalize();
-                Files.deleteIfExists(filePath);
-                // 로깅 레벨 확인 및 .toString() 호출 제거
-                if (logger.isInfoEnabled()) {
-                    logger.info("기존 이미지 파일 삭제 성공: {}", filePath);
-                }
-            } catch (IOException e) {
-                logger.warn("기존 이미지 파일 삭제 실패 (파일 없음 또는 권한 문제): {}", fileUrl, e);
-                // 삭제 실패해도 진행은 가능하도록 (치명적 오류는 아님)
+    private void deleteExistingFile(String fileName) {
+        try {
+            String storePath = globalsProperties.getFileStorePath();
+            String baseUrl = globalsProperties.getFileBaseUrl(); // 이 baseUrl은 실제 물리 경로와 연결된 URL 경로임
+
+            Path filePath = Paths.get(storePath).toAbsolutePath().normalize();
+
+            String category = "recipientletters"; // 수혜자 편지용
+            Path fullPath = filePath.resolve("upload_img").resolve(category).resolve(fileName);
+
+            if (Files.exists(fullPath)) {
+                Files.delete(fullPath);
+                logger.info("기존 이미지 파일 삭제 성공: {}", fullPath);
+            } else {
+                logger.warn("삭제하려는 파일이 존재하지 않습니다: {}", fullPath);
             }
+        } catch (IOException e) {
+            logger.error("기존 이미지 파일 삭제 중 오류 발생: {}", fileName, e);
         }
     }
 
