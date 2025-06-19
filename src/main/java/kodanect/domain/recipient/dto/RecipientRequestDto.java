@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
-import java.util.List;
 
 // 게시물 생성 및 수정 요청에 사용될 DTO
 @RecipientConditionalValidation(
