@@ -66,7 +66,6 @@ public class RecipientDetailResponseDto {
                 .writeTime(entity.getWriteTime())
                 .modifyTime(entity.getModifyTime())
                 .delFlag(entity.getDelFlag())
-                .commentCount(0)
                 // 초기에는 댓글 데이터를 비워두고, 서비스 계층에서 설정
                 .initialCommentData(null) // 초기화 시 null 또는 기본 빈 객체
                 .build();

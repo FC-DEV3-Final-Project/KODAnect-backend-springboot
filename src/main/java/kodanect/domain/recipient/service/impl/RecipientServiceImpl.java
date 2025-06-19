@@ -202,7 +202,7 @@ public class RecipientServiceImpl implements RecipientService {
         // 4. 상위 INITIAL_COMMENT_LOAD_LIMIT 개 댓글 조회
         // lastCommentId는 첫 조회이므로 0 (또는 null), size는 INITIAL_COMMENT_LOAD_LIMIT + 1 (다음 커서 확인용)
         Pageable commentPageable = PageRequest.of(0, INITIAL_COMMENT_LOAD_LIMIT + 1, // +1 하여 다음 커서 존재 여부 확인
-                Sort.by(Sort.Direction.ASC, COMMENT_SEQ)); // COMMENT_SEQ 상수가 정의되어 있다고 가정
+                Sort.by(Sort.Direction.DESC, COMMENT_SEQ)); // COMMENT_SEQ 상수가 정의되어 있다고 가정
 
         List<RecipientCommentEntity> initialComments = recipientCommentRepository.findPaginatedComments(
                 recipientEntity, // letterSeq 대신 RecipientEntity 객체를 전달 (RecipientCommentRepository 확인)
@@ -223,6 +223,10 @@ public class RecipientServiceImpl implements RecipientService {
 
         // 7. DTO에 댓글 관련 데이터 설정
         responseDto.setInitialCommentData(commentPaginationResponse);
+
+        // 8. 게시물 전체 댓글 수 설정 <--- 이 부분이 제대로 실행되어야 합니다.
+        long totalCommentCount = recipientCommentRepository.countActiveCommentsByLetterSeq(letterSeq);
+        responseDto.setCommentCount((int) totalCommentCount);
 
         return responseDto;
     }
