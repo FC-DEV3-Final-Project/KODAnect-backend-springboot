@@ -34,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static kodanect.common.exception.config.MessageKeys.RECIPIENT_NOT_FOUND;
 
