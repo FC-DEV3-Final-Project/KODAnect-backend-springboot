@@ -42,6 +42,7 @@ public class HeavenControllerTest {
     @Before
     public void beforeEach() {
         when(messageSourceAccessor.getMessage("board.read.success")).thenReturn("게시물 조회 성공");
+        when(messageSourceAccessor.getMessage("board.list.read.success")).thenReturn("게시물 리스트 조회 성공");
         when(messageSourceAccessor.getMessage("board.search.read.success")).thenReturn("검색을 통한 게시물 조회 성공");
     }
 
@@ -80,7 +81,7 @@ public class HeavenControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
-                .andExpect(jsonPath("$.message").value("게시물 조회 성공"))
+                .andExpect(jsonPath("$.message").value("게시물 리스트 조회 성공"))
                 .andExpect(jsonPath("$.data.content[29].letterSeq").value(30))
                 .andExpect(jsonPath("$.data.nextCursor").value(10))
                 .andExpect(jsonPath("$.data.hasNext").value(true))

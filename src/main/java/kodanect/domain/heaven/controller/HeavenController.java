@@ -32,7 +32,7 @@ public class HeavenController {
     ) {
         CursorPaginationResponse<HeavenResponse, Integer> heavenList = heavenService.getHeavenList(cursor, size);
 
-        String message = messageSourceAccessor.getMessage("board.read.success");
+        String message = messageSourceAccessor.getMessage("board.list.read.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, heavenList));
     }
@@ -73,7 +73,7 @@ public class HeavenController {
     ) {
         CursorPaginationResponse<MemorialHeavenResponse, Integer> memorialHeavenList = heavenService.getMemorialHeavenList(donateSeq, cursor, size);
 
-        String message = messageSourceAccessor.getMessage("board.read.success");
+        String message = messageSourceAccessor.getMessage("board.list.read.success");
 
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, memorialHeavenList));
     }
