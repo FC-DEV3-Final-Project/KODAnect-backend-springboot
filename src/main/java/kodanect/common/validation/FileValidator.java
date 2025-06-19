@@ -18,14 +18,14 @@ public class FileValidator {
     /* 파일 존재 여부 (파일로 확인) */
     public static void validateEmptyFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new FileNotFoundException();
+            throw new FileNotFoundException(file);
         }
     }
 
     /* 파일 존재 여부 (파일 경로로 확인) */
     public static void validateEmptyFile(Path filePath) {
         if (!Files.exists(filePath)) {
-            throw new FileNotFoundException(filePath.getFileName().toString());
+            throw new FileNotFoundException(filePath.toFile());
         }
     }
 
