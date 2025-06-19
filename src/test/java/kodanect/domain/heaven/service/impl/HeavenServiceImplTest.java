@@ -175,7 +175,7 @@ public class HeavenServiceImplTest {
         assertEquals("사랑하는 가족에게", heavenDetailResponse.getHeavenDto().getLetterTitle());
         assertEquals("작성자", heavenDetailResponse.getHeavenDto().getLetterWriter());
         assertEquals("이 편지는 하늘로 보냅니다.", heavenDetailResponse.getHeavenDto().getLetterContents());
-        assertEquals(now.toLocalDate().toString(), heavenDetailResponse.getWriteTime());
+        assertEquals(now.toLocalDate().toString(), heavenDetailResponse.getHeavenDto().getWriteTime());
 
         assertEquals(1, firstHeavenCommentResponse.getCommentSeq());
         assertEquals("댓글 작성자1", firstHeavenCommentResponse.getCommentWriter());
