@@ -1,6 +1,7 @@
 package kodanect.domain.recipient.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.entity.RecipientEntity;
 import lombok.AllArgsConstructor;
@@ -36,10 +37,9 @@ public class RecipientDetailResponseDto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime modifyTime;
     private String delFlag;
-    private int commentCount;        // 댓글 수는 조회 시 필요한 정보이므로 DTO에 포함
     private List<String> imageUrls;         // 게시물에 등록된 이미지의 URL
     // 게시물 조회 시 초기 댓글 데이터를 CursorReplyPaginationResponse 형태로 포함
-    private CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
+    private CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
 
     // Entity -> DTO 변환 메서드 (정적 팩토리 메서드)
     public static RecipientDetailResponseDto fromEntity(RecipientEntity entity, String anonymousWriterValue) {
@@ -72,7 +72,7 @@ public class RecipientDetailResponseDto {
     }
 
     // 서비스 계층에서 초기 댓글 데이터를 설정하기 위한 setter
-    public void setInitialCommentData(CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
+    public void setInitialCommentData(CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData) {
         this.initialCommentData = initialCommentData;
     }
 

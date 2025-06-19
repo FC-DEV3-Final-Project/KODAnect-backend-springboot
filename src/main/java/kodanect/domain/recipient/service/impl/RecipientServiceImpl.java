@@ -2,6 +2,7 @@ package kodanect.domain.recipient.service.impl;
 
 import kodanect.common.config.GlobalsProperties;
 import kodanect.common.exception.config.SecureLogger;
+import kodanect.common.response.CursorCommentCountPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.util.CursorFormatter;
@@ -217,16 +218,17 @@ public class RecipientServiceImpl implements RecipientService {
                 .map(RecipientCommentResponseDto::fromEntity)
                 .toList();
 
+        // 8. 게시물 전체 댓글 수 설정 <--- 이 부분이 제대로 실행되어야 합니다.
+        long totalCommentCount = recipientCommentRepository.countActiveCommentsByLetterSeq(letterSeq);
+
         // 6. CursorFormatter를 사용하여 댓글 응답 포맷 생성
-        CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> commentPaginationResponse =
-                CursorFormatter.cursorCommentFormat(initialCommentDtos, INITIAL_COMMENT_LOAD_LIMIT); // 실제 클라이언트 요청 size는 INITIAL_COMMENT_LOAD_LIMIT
+        CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> commentPaginationResponse =
+                CursorFormatter.cursorCommentCountFormat(initialCommentDtos, INITIAL_COMMENT_LOAD_LIMIT, totalCommentCount); // 실제 클라이언트 요청 size는 INITIAL_COMMENT_LOAD_LIMIT
 
         // 7. DTO에 댓글 관련 데이터 설정
         responseDto.setInitialCommentData(commentPaginationResponse);
 
-        // 8. 게시물 전체 댓글 수 설정 <--- 이 부분이 제대로 실행되어야 합니다.
-        long totalCommentCount = recipientCommentRepository.countActiveCommentsByLetterSeq(letterSeq);
-        responseDto.setCommentCount((int) totalCommentCount);
+
 
         return responseDto;
     }

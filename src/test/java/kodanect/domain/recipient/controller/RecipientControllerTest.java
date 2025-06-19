@@ -201,7 +201,6 @@ public class RecipientControllerTest {
         updatedDto.setWriteTime(LocalDateTime.now().minusDays(1));
         updatedDto.setModifyTime(LocalDateTime.now());
         updatedDto.setDelFlag("N");
-        updatedDto.setCommentCount(0);
 
 
         // recipientService.updateRecipient 호출 시 updatedDto 반환하도록 스터빙
