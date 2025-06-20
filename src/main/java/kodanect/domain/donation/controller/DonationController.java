@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,6 +78,7 @@ public class  DonationController {
     /**
      * 스토리 상세 조회
      */
+    @Transactional
     @GetMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
         DonationStoryDetailDto detailDto = donationService.findDonationStoryWithStoryId(storySeq);
@@ -193,6 +195,7 @@ public class  DonationController {
     /**
      * 스토리 댓글 삭제
      */
+    @Transactional
     @DeleteMapping("/{storySeq}/comments/{commentSeq}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long storySeq,
