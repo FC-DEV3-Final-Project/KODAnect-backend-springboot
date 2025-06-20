@@ -71,6 +71,7 @@ public class DonationCommentServiceImpl implements DonationCommentService {
         logger.info("댓글 등록 - storySeq : {}, requestDto : {}" , storySeq, requestDto);
         DonationStory story = storyRepository.findById(storySeq)
                 .orElseThrow(() -> new DonationNotFoundException(messageResolver.get(DONATION_NOT_FOUND_MESSAGE)));
+
         // 작성자 필수 검증
         if (requestDto.getCommentWriter() == null || requestDto.getCommentWriter().isBlank()) {
             throw new BadRequestException(messageResolver.get("donation.error.required.writer"));

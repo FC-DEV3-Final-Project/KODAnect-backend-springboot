@@ -17,7 +17,7 @@ import kodanect.domain.heaven.entity.Heaven;
 import kodanect.domain.heaven.exception.InvalidTypeException;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
-import kodanect.domain.heaven.service.FileService;
+import kodanect.common.imageupload.service.FileService;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import kodanect.domain.heaven.service.HeavenService;
 import kodanect.domain.remembrance.entity.Memorial;
