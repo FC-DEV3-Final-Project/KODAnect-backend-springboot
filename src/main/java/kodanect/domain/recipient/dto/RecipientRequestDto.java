@@ -7,9 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.*;
+
 // 게시물 생성 및 수정 요청에 사용될 DTO
 @RecipientConditionalValidation(
         conditionalProperty = "organCode",
@@ -55,8 +55,10 @@ public class RecipientRequestDto {
     @NotBlank(message = "내용은 필수 입력 항목입니다.")
     private String letterContents;
 
-    // 첨부파일 (MultipartFile 형태로 직접 파일을 받습니다.)
-    private MultipartFile imageFile;
+    // 게시물 비밀번호 (영문, 숫자 포함 8자 이상)
+    @Size(min = 8, max = 20, message = "비밀번호는 8자 이상 20자 이하여야 합니다.")
+    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*\\d).{8,}$", message = "비밀번호는 영문, 숫자를 포함하여 8자 이상이어야 합니다.")
+    private String letterPasscode;
 
     // RequestDto를 Entity로 변환하는 헬퍼 메서드 (등록 시)
     public RecipientEntity toEntity() {
@@ -68,7 +70,11 @@ public class RecipientRequestDto {
                 .letterWriter(this.letterWriter)
                 .anonymityFlag(this.anonymityFlag)
                 .letterContents(this.letterContents)
+                .letterPasscode(this.letterPasscode)
                 // writerId, modifierId, delFlag, readCount 등은 서비스 계층에서 처리
+                .fileName(null)
+                .orgFileName(null)
+                .imageUrl(null)
                 .build();
     }
 }

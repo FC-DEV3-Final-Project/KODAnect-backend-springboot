@@ -5,10 +5,7 @@ import kodanect.common.util.MessageResolver;
 import kodanect.domain.donation.dto.request.DonationStoryCreateRequestDto;
 import kodanect.domain.donation.dto.request.DonationStoryModifyRequestDto;
 import kodanect.domain.donation.dto.request.VerifyStoryPasscodeDto;
-import kodanect.domain.donation.dto.response.DonationStoryCommentDto;
-import kodanect.domain.donation.dto.response.DonationStoryDetailDto;
-import kodanect.domain.donation.dto.response.DonationStoryListDto;
-import kodanect.domain.donation.dto.response.DonationStoryWriteFormDto;
+import kodanect.domain.donation.dto.response.*;
 import kodanect.domain.donation.entity.DonationStory;
 import kodanect.domain.donation.exception.BadRequestException;
 import kodanect.domain.donation.exception.DonationNotFoundException;
@@ -22,6 +19,9 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class DonationServiceImplTest {
@@ -109,26 +110,19 @@ public class DonationServiceImplTest {
         assertThat(resp.getContent()).isEmpty();
     }
 
-    // --- 폼 데이터 로드 ---
-    @Test
-    public void loadDonationStoryFormData_ShouldContainAllAreaCodes() {
-        DonationStoryWriteFormDto form = donationService.loadDonationStoryFormData();
-        assertThat(form.getAreaOptions())
-                .containsExactlyInAnyOrder(
-                        kodanect.domain.donation.dto.response.AreaCode.AREA100,
-                        kodanect.domain.donation.dto.response.AreaCode.AREA200,
-                        kodanect.domain.donation.dto.response.AreaCode.AREA300
-                );
-    }
-
     // --- 스토리 생성 ---
     @Test
     public void createDonationStory_ValidDto_ShouldSave() {
-        var dto = new DonationStoryCreateRequestDto(
-                kodanect.domain.donation.dto.response.AreaCode.AREA100,
-                "Title", "Abcd1234", "Writer", "<p><img src=\"/u/foo.png\"></p>"
-        );
-        donationService.createDonationStory(dto);
+        DonationStoryCreateRequestDto requestDto = DonationStoryCreateRequestDto.builder()
+                .areaCode(AreaCode.AREA100) // 올바른 enum 또는 문자열
+                .storyTitle("테스트 제목")
+                .storyWriter("작성자")
+                .storyPasscode("pass1234")  // 영문+숫자 8~16자
+                .storyContents("<p>내용</p>") // 이건 필수는 아님
+                .build();
+
+
+        donationService.createDonationStory(requestDto);
         then(donationRepository).should().save(any(DonationStory.class));
     }
 
@@ -140,32 +134,6 @@ public class DonationServiceImplTest {
         );
         given(messageResolver.get("donation.error.invalid.passcode.format")).willReturn("Bad");
         donationService.createDonationStory(dto);
-    }
-
-    // --- private imgParsing 검증 via Reflection ---
-    @Test
-    public void imgParsing_ShouldExtractFilenames() {
-        String html = "<div><img src=\"/path/orig.jpg\"/></div>"
-                + "<div><img src=\"/another/a.png\"/></div>";
-        String[] result = (String[]) ReflectionTestUtils.invokeMethod(
-                donationService, "imgParsing", html
-        );
-        assertThat(result).hasSize(2);
-        // orgFileNames
-        assertThat(result[0]).contains("orig.jpg").contains("a.png");
-        // fileNames: 대문자 알파벳+숫자 (UUID 형태)
-        String[] uuids = result[1].split(",");
-        for (String u : uuids) {
-            assertThat(u).matches("^[A-Z0-9]{32}$");
-        }
-    }
-
-    // --- UUID 포맷 검증 ---
-    @Test
-    public void makeStoredFileName_ShouldBe32CharUpperHex() {
-        String fname = donationService.makeStoredFileName();
-        assertThat(fname).hasSize(32);
-        assertThat(Pattern.matches("^[A-Z0-9]{32}$", fname)).isTrue();
     }
 
     // --- 비밀번호 검증 ---
@@ -280,7 +248,9 @@ public class DonationServiceImplTest {
         given(donationRepository.findStoryOnlyById(3L)).willReturn(Optional.of(s));
 
         donationService.deleteDonationStory(3L, new VerifyStoryPasscodeDto("Abcd1234"));
-        then(donationRepository).should().delete(s);
+        assertThat(s.getDelFlag()).isEqualTo("Y");
+
+        then(donationRepository).should().save(s);
     }
 
     @Test(expected = PasscodeMismatchException.class)

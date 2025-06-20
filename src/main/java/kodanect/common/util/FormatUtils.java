@@ -22,6 +22,9 @@ public class FormatUtils {
 
     public static String formatDate(String startDate) {
         /* 날짜 포매팅 */
+        if(startDate == null || startDate.isEmpty()) {
+            return startDate;
+        }
         return startDate.replace("-", "");
     }
 
@@ -34,5 +37,22 @@ public class FormatUtils {
         return donateDate.substring(YEAR_START, YEAR_END) + "-"
                 + donateDate.substring(YEAR_END, MONTH_END) + "-"
                 + donateDate.substring(MONTH_END, DATE_LENGTH);
+    }
+
+    public static String formatDateForDisplay(String donateDate) {
+        /* donateDate 포매팅 */
+
+        if(donateDate == null || donateDate.isBlank()) {
+            return donateDate;
+        }
+
+        if (donateDate.length() != DATE_LENGTH) {
+            donateDate = formatDate(donateDate);
+        }
+
+        return donateDate.substring(YEAR_START, YEAR_END) + "년 "
+                + donateDate.substring(YEAR_END, MONTH_END) + "월 "
+                + donateDate.substring(MONTH_END, DATE_LENGTH) + "일";
+
     }
 }

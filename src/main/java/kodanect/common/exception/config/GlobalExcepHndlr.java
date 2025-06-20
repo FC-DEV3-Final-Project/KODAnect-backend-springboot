@@ -58,7 +58,6 @@ public class GlobalExcepHndlr {
         this.messageSourceAccessor = messageSourceAccessor;
     }
 
-
     /**
      * 403 예외 처리
      * <p>
@@ -353,7 +352,5 @@ public class GlobalExcepHndlr {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.fail(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다."));
     }
-
-
 
 }

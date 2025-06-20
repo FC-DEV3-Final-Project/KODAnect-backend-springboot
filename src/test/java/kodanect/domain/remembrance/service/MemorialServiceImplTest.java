@@ -1,7 +1,14 @@
 package kodanect.domain.remembrance.service;
 
 import kodanect.common.response.CursorPaginationResponse;
+import kodanect.common.util.FormatUtils;
 import kodanect.common.util.MemorialFinder;
+import kodanect.common.util.MemorialHtmlNormalizer;
+import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
+import kodanect.domain.heaven.service.HeavenService;
+import kodanect.domain.remembrance.TestHeavenMemorialResponse;
+import kodanect.domain.remembrance.TestMemorialResponse;
+import kodanect.domain.remembrance.dto.HeavenMemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialDetailResponse;
 import kodanect.domain.remembrance.dto.MemorialResponse;
 import kodanect.domain.remembrance.dto.MemorialCommentResponse;
@@ -14,6 +21,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
@@ -40,9 +50,15 @@ public class MemorialServiceImplTest {
     @Mock
     private MemorialFinder memorialFinder;
 
+    @Mock
+    private HeavenService heavenService;
+
+    @Mock
+    private MemorialHtmlNormalizer memorialHtmlNormalizer;
+
     @Test
     @DisplayName("추모관 이모지 카운팅")
-    public void 추모관_이모지_카운팅() throws Exception {
+    public void 추모관_이모지_카운팅() {
         /* emotionCountUpdate */
 
         Integer donateSeq = 1;
@@ -110,7 +126,7 @@ public class MemorialServiceImplTest {
 
     @Test
     @DisplayName("추모관 게시글 검색 조회")
-    public void 추모관_게시글_검색_조회() throws Exception {
+    public void 추모관_게시글_검색_조회() {
         /* getSearchMemorialList */
         MemorialNextCursor nextCursor = new MemorialNextCursor(null, null);
         int size = 20;
@@ -119,8 +135,8 @@ public class MemorialServiceImplTest {
         String searchWord = "홍길동";
 
         List<MemorialResponse> content = List.of(
-                new MemorialResponse(2, "홍길동", "N", "2023-01-02", "M", 40, 5),
-                new MemorialResponse(3, "홍길동", "N", "2023-01-03", "M", 42, 3)
+                new TestMemorialResponse(2, "홍길동", "2023-01-02", "M", 40, 5, 3),
+                new TestMemorialResponse(3, "홍길동", "2023-01-03", "M", 42, 3, 3)
         );
 
         when(memorialRepository.findSearchByCursor(
@@ -144,25 +160,66 @@ public class MemorialServiceImplTest {
 
         MemorialResponse item = result.getContent().get(0);
         assertEquals("홍길동", item.getDonorName());
-        assertEquals("N", item.getAnonymityFlag());
         assertEquals("2023-01-02", item.getDonateDate());
         assertEquals("M", item.getGenderFlag());
         assertEquals(Integer.valueOf(40), item.getDonateAge());
         assertEquals(5, item.getCommentCount());
     }
 
+    @Test
+    @DisplayName("추모관 게시글 하늘나라 팝업 검색 조회")
+    public void 추모관_게시글_하늘나라_팝업_검색_조회() {
+        /* getSearchMemorialList */
+        Integer page = 1;
+        int size = 20;
+        String startDate = "2023-01-01";
+        String endDate = "2024-01-01";
+        String searchWord = "홍길동";
+
+        List<HeavenMemorialResponse> content = List.of(
+                new TestHeavenMemorialResponse(2, "홍길동", "2023-01-02", "M", 40),
+                new TestHeavenMemorialResponse(3, "홍길동", "2023-01-03", "M", 42)
+        );
+
+        Page<HeavenMemorialResponse> result = new PageImpl<>(
+                content,
+                PageRequest.of(0,20),
+                100
+        );
+
+        when(memorialRepository.findSearchByPage(
+                any(Pageable.class),
+                eq("20230101"),       // startDateStr
+                eq("20240101"),       // endDateStr
+                eq("%홍길동%")       // keyWord
+        )).thenReturn(result);
+
+        Page<HeavenMemorialResponse> response = memorialService.getSearchHeavenMemorialList(
+                startDate, endDate, searchWord, page, size
+                );
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+
+        HeavenMemorialResponse item = response.getContent().get(0);
+        assertEquals("홍길동", item.getDonorName());
+        assertEquals("2023-01-02", item.getDonateDate());
+        assertEquals("M", item.getGenderFlag());
+        assertEquals(Integer.valueOf(40), item.getDonateAge());
+    }
+
 
     @Test
     @DisplayName("추모관 게시글 리스트 조회")
-    public void 추모관_게시글_리스트_조회() throws Exception {
+    public void 추모관_게시글_리스트_조회() {
         /* getMemorialList */
 
         MemorialNextCursor nextCursor = new MemorialNextCursor(null, null);
         int size = 20;
 
         List<MemorialResponse> content = List.of(
-                new MemorialResponse(1, "홍길동", "N", "20230101", "M", 40, 5),
-                new MemorialResponse(2, "김길동", "Y", "20230102", "F", 20, 2)
+                new TestMemorialResponse(1, "홍길동", "20230101", "M", 40, 5, 3),
+                new TestMemorialResponse(2, "김길동", "20230102", "F", 20, 2, 3)
         );
 
         when(memorialRepository.findByCursor(eq(nextCursor.getCursor()), eq(nextCursor.getDate()), any(Pageable.class))).thenReturn(content);
@@ -175,7 +232,6 @@ public class MemorialServiceImplTest {
         MemorialResponse dto1 = page.getContent().get(0);
         assertEquals(Integer.valueOf(1), dto1.getDonateSeq());
         assertEquals("홍길동", dto1.getDonorName());
-        assertEquals("N", dto1.getAnonymityFlag());
         assertEquals("2023-01-01", dto1.getDonateDate());
         assertEquals("M", dto1.getGenderFlag());
         assertEquals(Integer.valueOf(40), dto1.getDonateAge());
@@ -184,7 +240,6 @@ public class MemorialServiceImplTest {
         MemorialResponse dto2 = page.getContent().get(1);
         assertEquals(Integer.valueOf(2), dto2.getDonateSeq());
         assertEquals("김길동", dto2.getDonorName());
-        assertEquals("Y", dto2.getAnonymityFlag());
         assertEquals("2023-01-02", dto2.getDonateDate());
         assertEquals("F", dto2.getGenderFlag());
         assertEquals(Integer.valueOf(20), dto2.getDonateAge());
@@ -194,7 +249,7 @@ public class MemorialServiceImplTest {
 
     @Test
     @DisplayName("추모관 게시글 상세 조회")
-    public void 추모관_게시글_상세_조회() throws Exception {
+    public void 추모관_게시글_상세_조회() {
         /* getMemorialByDonateSeq */
 
         Integer donateSeq = 1;
@@ -236,17 +291,34 @@ public class MemorialServiceImplTest {
                         .build()
         );
 
+        CursorPaginationResponse<MemorialHeavenResponse, Integer> letters =
+                CursorPaginationResponse.<MemorialHeavenResponse, Integer>builder()
+                        .content(List.of(
+                                MemorialHeavenResponse.builder()
+                                        .letterSeq(1)
+                                        .letterTitle("하늘나라에 보낸 편지")
+                                        .readCount(10)
+                                        .writeTime(LocalDateTime.of(2024, 1, 1, 15, 0))
+                                        .build()
+                        ))
+                        .nextCursor(null)
+                        .hasNext(false)
+                        .build();
+
+
         when(memorialFinder.findByIdOrThrow(donateSeq)).thenReturn(memorial);
-        when(memorialCommentService.getMemorialCommentList(donateSeq, null, size+1)).thenReturn(page);
+        when(memorialCommentService.getMemorialCommentList(eq(donateSeq), eq(null), anyInt())).thenReturn(page);
+        when(heavenService.getMemorialHeavenList(eq(donateSeq), eq(null), anyInt())).thenReturn(letters);
 
         MemorialDetailResponse result = memorialService.getMemorialByDonateSeq(donateSeq);
+
+        String content = MemorialHtmlNormalizer.contentsFormat(1, "홍길동", "M", 40,"20240101");
 
         assertNotNull(result);
         assertEquals(Integer.valueOf(1), result.getDonateSeq());
         assertEquals("홍길동", result.getDonorName());
-        assertEquals("N", result.getAnonymityFlag());
         assertEquals("기억합니다", result.getDonateTitle());
-        assertEquals("내용입니다", result.getContents());
+        assertEquals(content, result.getContents());
         assertEquals("2024-01-01", result.getDonateDate());
         assertEquals("M", result.getGenderFlag());
         assertEquals(Integer.valueOf(40), result.getDonateAge());
@@ -258,6 +330,7 @@ public class MemorialServiceImplTest {
         assertEquals(6, result.getHardCount());
         assertEquals(7, result.getSadCount());
         assertEquals("2024-01-01", result.getWriteTime());
+        assertEquals(1, result.getHeavenLetterResponses().getContent().get(0).getLetterSeq());
     }
 
 }

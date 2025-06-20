@@ -26,14 +26,14 @@ public class RecipientCommentRequestDto {
     private String commentPasscode;
 
     @NotBlank(message = "댓글 내용은 필수 입력 항목입니다.")
-    private String commentContents;
+    private String contents;
 
     // DTO를 Entity로 변환하는 메서드
     public RecipientCommentEntity toEntity() {
         return RecipientCommentEntity.builder()
                 .commentWriter(this.commentWriter)
                 .commentPasscode(this.commentPasscode)
-                .commentContents(this.commentContents)
+                .contents(this.contents)
                 .build();
     }
 }

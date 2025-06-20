@@ -1,5 +1,6 @@
 package kodanect.domain.donation.controller;
 
+import kodanect.common.exception.config.SecureLogger;
 import kodanect.common.response.ApiResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.domain.donation.dto.request.*;
@@ -22,19 +23,19 @@ import java.util.Map;
 @RequestMapping("/donationLetters")
 public class  DonationController {
 
-    private static final String DEFAULT_STRING = "result";
+    private static final SecureLogger logger = SecureLogger.getLogger(DonationController.class);
 
     private final DonationService donationService;
     private final DonationCommentService donationCommentService;
     private final MessageSourceAccessor messageSourceAccessor;
 
     /**
-     * 기증 스토리 전체 목록 조회 (더보기 방식 페이징 포함)
+     * 스토리 전체 목록 조회 (더보기 방식 페이징 포함)
      */
     @GetMapping
     public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryListDto, Long>>> getAllDonationList(
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(required=false, defaultValue = "20") int size
     ) {
         CursorPaginationResponse<DonationStoryListDto, Long> response = donationService.findStoriesWithCursor(cursor, size);
 
@@ -48,9 +49,9 @@ public class  DonationController {
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryListDto, Long>>> searchDonationStories(
             @RequestParam("type") String type,
-            @RequestParam("keyword") String keyword,
+            @RequestParam("keyWord") String keyword,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20", required=false) int size
     ) {
         CursorPaginationResponse<DonationStoryListDto, Long> response =
                 donationService.findSearchStoriesWithCursor(type, keyword, cursor, size);
@@ -58,17 +59,9 @@ public class  DonationController {
         String message = messageSourceAccessor.getMessage("donation.search.success");
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, response));
     }
-    /**
-     * 기증 스토리 작성 폼에 필요한 데이터 반환
-     */
-    @GetMapping("/new")
-    public ResponseEntity<ApiResponse<DonationStoryWriteFormDto>> getDonationWriteForm() {
-        DonationStoryWriteFormDto formDto = donationService.loadDonationStoryFormData();
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "폼 데이터 로드 성공", formDto));
-    }
 
     /**
-     * 기증 스토리 등록
+     * 스토리 등록
      */
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createStory(@ModelAttribute @Valid DonationStoryCreateRequestDto requestDto) {
@@ -81,7 +74,7 @@ public class  DonationController {
     }
 
     /**
-     * 특정 기증 스토리 상세 조회
+     * 스토리 상세 조회
      */
     @GetMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<DonationStoryDetailDto>> getDonationStoryDetail(@PathVariable Long storySeq) {
@@ -90,22 +83,26 @@ public class  DonationController {
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, detailDto));
     }
     /**
-     * 기증 스토리 수정 인증
+     * 스토리 수정 인증
      */
     @PostMapping("/{storySeq}/verifyPwd")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> verifyStoryPassword(
+    public ResponseEntity<ApiResponse<DonationStoryModifyDto>> verifyStoryPassword(
             @PathVariable Long storySeq,
             @RequestBody @Valid VerifyStoryPasscodeDto passCodeDto) {
 
         donationService.verifyPasswordWithPassword(storySeq, passCodeDto);
 
+        //입력된 값 가져오기
+        DonationStoryDetailDto detailDto = donationService.findDonationStoryWithStoryId(storySeq);
+        DonationStoryModifyDto modifyDto = DonationStoryModifyDto.fromEntity(detailDto);
+
         String message = messageSourceAccessor.getMessage("donation.password.match");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, modifyDto));
     }
 
 
     /**
-     * 기증 스토리 수정
+     * 스토리 수정
      */
     @PatchMapping(value = "/{storySeq}")
     public ResponseEntity<ApiResponse<Void>> modifyStory(
@@ -118,7 +115,7 @@ public class  DonationController {
     }
 
     /**
-     * 기증 스토리 삭제
+     * 스토리 삭제
      */
     @DeleteMapping("/{storySeq}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> deleteStory(
@@ -127,17 +124,17 @@ public class  DonationController {
 
         donationService.deleteDonationStory(storySeq, storyPasscodeDto);
         String message = messageSourceAccessor.getMessage("donation.delete.success");
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
     /**
-     * 상세 페이지 더보기 댓글 조회
+     * 스토리 더보기 댓글 조회
      */
     @GetMapping("/{storySeq}/comments")
     public ResponseEntity<ApiResponse<CursorPaginationResponse<DonationStoryCommentDto, Long>>> getAllDonationCommentList(
             @PathVariable("storySeq") Long storySeq,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "3", required=false) int size
     ){
         CursorPaginationResponse<DonationStoryCommentDto, Long> response = donationCommentService.findCommentsWithCursor(storySeq, cursor, size);
 
@@ -147,7 +144,7 @@ public class  DonationController {
 
 
     /**
-     * 댓글 작성(등록)
+     * 스토리 댓글 작성(등록)
      */
     @PostMapping("/{storySeq}/comments")
     public ResponseEntity<ApiResponse<Void>> createComment(
@@ -162,7 +159,7 @@ public class  DonationController {
     }
 
     /**
-     * 댓글 수정 인증
+     * 스토리 댓글 수정 인증
      */
     @PostMapping("/{storySeq}/comments/{commentSeq}/verifyPwd")
     public ResponseEntity<ApiResponse<Map<String, Object>>> verifyCommentPassword(
@@ -173,14 +170,14 @@ public class  DonationController {
         donationCommentService.verifyPasswordWithPassword(storySeq, commentSeq, passCodeDto);
         String message = messageSourceAccessor.getMessage("donation.password.match");
 
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message, Map.of(DEFAULT_STRING, 1)));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, message));
     }
 
 
     /**
-     * 댓글 수정
+     * 스토리 댓글 수정
      */
-    @PatchMapping("/{storySeq}/comments/{commentSeq}")
+    @PutMapping("/{storySeq}/comments/{commentSeq}")
     public ResponseEntity<ApiResponse<Void>> modifyComment(
             @PathVariable Long storySeq,
             @PathVariable Long commentSeq,
@@ -193,7 +190,7 @@ public class  DonationController {
     }
 
     /**
-     * 댓글 삭제
+     * 스토리 댓글 삭제
      */
     @DeleteMapping("/{storySeq}/comments/{commentSeq}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(

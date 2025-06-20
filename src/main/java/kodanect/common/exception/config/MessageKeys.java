@@ -26,6 +26,7 @@ public final class MessageKeys {
     public static final String DONATE_NOT_FOUND = "error.donate.notFound";
     public static final String DONATE_INVALID = "error.donate.invalid";
     public static final String EMOTION_INVALID = "error.emotion.invalid";
+    public static final String CONTENTS_INVALID = "error.contents.invalid";
     public static final String PAGINATION_INVALID = "error.pagination.invalid";
     public static final String SEARCH_DATE_FORMAT_INVALID = "error.search.date.format.invalid";
     public static final String SEARCH_DATE_RANGE_INVALID = "error.search.date.range.invalid";
@@ -39,6 +40,23 @@ public final class MessageKeys {
     public static final String COMMENT_PASSWORD_EMPTY = "error.comment.password.empty";
     public static final String COMMENT_PASSWORD_INVALID = "error.comment.password.invalid";
     public static final String COMMENT_CONTENTS_EMPTY = "error.comment.contents.empty";
+
+    // 하늘나라 편지 관련
+    public static final String HEAVEN_DONOR_INFORM_MISMATCH = "heaven.donor.mismatch.error";
+    public static final String HEAVEN_PASSWORD_MISMATCH = "heaven.password.mismatch.error";
+    public static final String HEAVEN_TYPE_INVALID = "heaven.type.invalid.error";
+    public static final String HEAVEN_FILE_SAVE_FAIL = "heaven.file.save.error";
+    public static final String HEAVEN_NOT_FOUND = "heaven.notFound.error";
+    public static final String HEAVEN_COMMENT_NOT_FOUND = "heaven.comment.notFound.error";
+    public static final String HEAVEN_COMMENT_INFORM_MISMATCH = "heaven.comment.mismatch.error";
+    public static final String FILE_DELETE_FAIL = "file.delete.fail.error";
+    public static final String FILE_SAVE_FAIL = "file.save.fail.error";
+    public static final String FILE_UNSUPPORTED_TYPE = "file.unsupported.type.error";
+    public static final String FILE_SIZE_EXCEED = "file.size.exceed.error";
+
+    // 액션 로그 관련
+    public static final String ACTION_LOG_JSON_SERIALIZATION_FAIL = "error.actionlog.json.serialization";
+    public static final String FRONTEND_LOG_LIST_EMPTY = "error.frontend.log.empty";
 
     private MessageKeys() {}
 

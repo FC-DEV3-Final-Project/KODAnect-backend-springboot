@@ -8,7 +8,7 @@ import kodanect.domain.recipient.dto.RecipientSearchCondition;
 
 public interface RecipientService {
     // 게시물 비밀번호 확인
-    boolean verifyLetterPassword(Integer letterSeq, String letterPasscode);
+    void verifyLetterPassword(Integer letterSeq, String letterPasscode);
 
     // 게시물 수정
     RecipientDetailResponseDto updateRecipient(Integer letterSeq, RecipientRequestDto requestDto);
@@ -18,7 +18,7 @@ public interface RecipientService {
     void deleteRecipient(Integer letterSeq, String letterPasscode);
 
     // 게시물 등록
-    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상, 캡챠 인증
+    // 조건 : letter_writer 한영자 10자 제한, letter_passcode 영숫자 8자 이상
     RecipientDetailResponseDto insertRecipient(RecipientRequestDto requestDto);
 
     // 특정 게시물 조회
@@ -26,7 +26,7 @@ public interface RecipientService {
 
     CursorPaginationResponse<RecipientListResponseDto, Integer> selectRecipientList(
             RecipientSearchCondition searchCondition,
-            Integer lastId,
+            Integer cursor,
             int size);
 
     int selectRecipientListTotCnt(RecipientSearchCondition searchCondition);
