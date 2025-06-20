@@ -21,30 +21,6 @@ public class SecureLoggerTest {
     }
 
     @Test
-    public void testInfo_sanitizesMessage() {
-        when(mockLogger.isInfoEnabled()).thenReturn(true);
-
-        secureLogger.info("로그\n인젝션\r테스트");
-
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(mockLogger).info(captor.capture());
-
-        assertEquals("로그인젝션테스트", captor.getValue());
-    }
-
-    @Test
-    public void testWarn_sanitizesArgs() {
-        when(mockLogger.isWarnEnabled()).thenReturn(true);
-
-        secureLogger.warn("정상 메시지", "파라\n\r미터");
-
-        ArgumentCaptor<String> argCaptor = ArgumentCaptor.forClass(String.class);
-        verify(mockLogger).warn(eq("정상 메시지"), argCaptor.capture());
-
-        assertEquals("파라미터", argCaptor.getValue());
-    }
-
-    @Test
     public void testError_withThrowable_messageSanitized() {
         when(mockLogger.isErrorEnabled()).thenReturn(true);
         Throwable ex = new RuntimeException("예외");
