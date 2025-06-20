@@ -54,6 +54,10 @@ public final class MessageKeys {
     public static final String FILE_UNSUPPORTED_TYPE = "file.unsupported.type.error";
     public static final String FILE_SIZE_EXCEED = "file.size.exceed.error";
 
+    // 액션 로그 관련
+    public static final String ACTION_LOG_JSON_SERIALIZATION_FAIL = "error.actionlog.json.serialization";
+    public static final String FRONTEND_LOG_LIST_EMPTY = "error.frontend.log.empty";
+
     private MessageKeys() {}
 
 }

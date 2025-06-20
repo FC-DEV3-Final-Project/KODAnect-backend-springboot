@@ -169,7 +169,8 @@ public class DonationCommentServiceImpl implements DonationCommentService {
             story.removeComment(storyComment);
         }
 
-        commentRepository.delete(storyComment);
+        storyComment.softDelete();
+        commentRepository.save(storyComment);
         logger.info("댓글 삭제 완료 - comment : {}", storyComment);
     }
 

@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.controller;
+package kodanect.common.imageupload;
 
 import kodanect.common.response.ApiResponse;
 import kodanect.domain.heaven.service.FileService;
