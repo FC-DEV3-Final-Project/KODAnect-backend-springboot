@@ -460,8 +460,7 @@ public class RecipientServiceImpl implements RecipientService {
 
             Path filePath = Paths.get(storePath).toAbsolutePath().normalize();
 
-            String category = "recipientletters"; // 수혜자 편지용
-            Path fullPath = filePath.resolve("upload_img").resolve(category).resolve(fileName);
+            Path fullPath = filePath.resolve("upload_img").resolve(fileName);
 
             if (Files.exists(fullPath)) {
                 Files.delete(fullPath);
