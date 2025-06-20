@@ -10,9 +10,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -29,14 +26,14 @@ public class RecipientDetailResponseDto {
     private String anonymityFlag;
     private int readCount;
     private String letterContents;
-    private List<String> fileNames;
-    private List<String> orgFileNames;
+    private String fileNames;
+    private String orgFileNames;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime writeTime;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime modifyTime;
     private String delFlag;
-    private List<String> imageUrls;         // 게시물에 등록된 이미지의 URL
+    private String imageUrls;
     // 게시물 조회 시 초기 댓글 데이터를 CursorReplyPaginationResponse 형태로 포함
     private CursorCommentCountPaginationResponse<RecipientCommentResponseDto, Integer> initialCommentData;
 
@@ -55,13 +52,10 @@ public class RecipientDetailResponseDto {
                 .anonymityFlag(entity.getAnonymityFlag())
                 .readCount(entity.getReadCount())
                 .letterContents(entity.getLetterContents())
-                // 콤마로 구분된 문자열을 List<String>으로 파싱
-                .fileNames(entity.getFileName() != null && !entity.getFileName().isEmpty() ?
-                        Arrays.stream(entity.getFileName().split(",")).map(String::trim).collect(Collectors.toList()) : null)
-                .orgFileNames(entity.getOrgFileName() != null && !entity.getOrgFileName().isEmpty() ?
-                        Arrays.stream(entity.getOrgFileName().split(",")).map(String::trim).collect(Collectors.toList()) : null)
-                .imageUrls(entity.getImageUrl() != null && !entity.getImageUrl().isEmpty() ?
-                        Arrays.stream(entity.getImageUrl().split(",")).map(String::trim).collect(Collectors.toList()) : null)
+                // DB에서 String 형태로 저장된 값을 그대로 DTO에 전달
+                .fileNames(entity.getFileName())
+                .orgFileNames(entity.getOrgFileName())
+                .imageUrls(entity.getImageUrl())
                 .writeTime(entity.getWriteTime())
                 .modifyTime(entity.getModifyTime())
                 .delFlag(entity.getDelFlag())

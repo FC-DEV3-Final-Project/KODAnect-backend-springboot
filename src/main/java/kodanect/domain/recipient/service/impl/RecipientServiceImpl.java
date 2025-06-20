@@ -338,11 +338,16 @@ public class RecipientServiceImpl implements RecipientService {
             logger.warn("게시물 내용이 비어있거나 null입니다.");
             throw new RecipientInvalidDataException("게시물 내용은 필수 입력 항목입니다.");
         }
+
+        // Jsoup 필터링 전에 불필요한 이스케이프 문자(\\)를 제거
+        String processedContents = originalContents.replace("\\\"", "\"");
+
         // 2. Jsoup을 사용하여 HTML 필터링
         Safelist safelist = Safelist.relaxed()
                 .addTags("img")
                 .addAttributes("img", "src", "data-cke-saved-src", "style", "width", "height");
-        String cleanContents = Jsoup.clean(originalContents, safelist);
+        String cleanContents = Jsoup.clean(processedContents, safelist);
+
         // 3. 필터링된 HTML에서 순수 텍스트 추출 후 최종 유효성 검사
         String pureTextContents = Jsoup.parse(cleanContents).text();
         if (pureTextContents.trim().isEmpty()) {
@@ -455,8 +460,7 @@ public class RecipientServiceImpl implements RecipientService {
 
             Path filePath = Paths.get(storePath).toAbsolutePath().normalize();
 
-            String category = "recipientletters"; // 수혜자 편지용
-            Path fullPath = filePath.resolve("upload_img").resolve(category).resolve(fileName);
+            Path fullPath = filePath.resolve("upload_img").resolve(fileName);
 
             if (Files.exists(fullPath)) {
                 Files.delete(fullPath);

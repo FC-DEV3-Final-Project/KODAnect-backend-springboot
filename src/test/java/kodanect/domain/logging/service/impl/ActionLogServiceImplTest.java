@@ -47,6 +47,8 @@ public class ActionLogServiceImplTest {
     public void saveFrontendLog_shouldDelegateToBuffer() {
         String sessionId = "session-123";
 
+        MDC.put("sessionId", sessionId);
+
         List<FrontendLogDto> logs = List.of(
                 FrontendLogDto.builder().eventType("clickButton").build()
         );
@@ -65,6 +67,7 @@ public class ActionLogServiceImplTest {
     public void saveBackendLog_shouldExtractFromMdcAndStore() {
         String sessionId = "session-456";
 
+        MDC.put("sessionId", sessionId);
         MDC.put("httpMethod", "POST");
         MDC.put("endpoint", "/api/test");
         MDC.put("controller", "TestController");
@@ -93,6 +96,7 @@ public class ActionLogServiceImplTest {
     public void saveSystemInfo_shouldExtractFromMdcAndStore() {
         String sessionId = "session-789";
 
+        MDC.put("sessionId", sessionId);
         MDC.put("browserName", "Chrome");
         MDC.put("browserVersion", "114.0");
         MDC.put("operatingSystem", "Mac OS");
