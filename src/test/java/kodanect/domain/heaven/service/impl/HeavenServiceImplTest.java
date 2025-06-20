@@ -9,7 +9,7 @@ import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.repository.HeavenCommentRepository;
 import kodanect.domain.heaven.repository.HeavenRepository;
-import kodanect.domain.heaven.service.FileService;
+import kodanect.common.imageupload.service.FileService;
 import kodanect.domain.heaven.service.HeavenCommentService;
 import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;

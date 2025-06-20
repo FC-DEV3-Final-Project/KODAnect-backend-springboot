@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.service;
+package kodanect.common.imageupload.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

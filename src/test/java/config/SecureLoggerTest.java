@@ -27,7 +27,7 @@ public class SecureLoggerTest {
         secureLogger.info("로그\n인젝션\r테스트");
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(mockLogger).info(captor.capture(), eq(new Object[]{}));
+        verify(mockLogger).info(captor.capture());
 
         assertEquals("로그인젝션테스트", captor.getValue());
     }
@@ -38,11 +38,10 @@ public class SecureLoggerTest {
 
         secureLogger.warn("정상 메시지", "파라\n\r미터");
 
-        ArgumentCaptor<Object[]> argsCaptor = ArgumentCaptor.forClass(Object[].class);
-        verify(mockLogger).warn(eq("정상 메시지"), argsCaptor.capture());
+        ArgumentCaptor<String> argCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockLogger).warn(eq("정상 메시지"), argCaptor.capture());
 
-        Object[] sanitizedArgs = argsCaptor.getValue();
-        assertEquals("파라미터", sanitizedArgs[0]);
+        assertEquals("파라미터", argCaptor.getValue());
     }
 
     @Test

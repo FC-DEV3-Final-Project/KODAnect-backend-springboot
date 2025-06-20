@@ -1,10 +1,10 @@
-package kodanect.common.imageupload;
+package kodanect.common.imageupload.service.impl;
 
 import kodanect.common.config.GlobalsProperties;
+import kodanect.common.imageupload.service.FileService;
 import kodanect.common.validation.FileValidator;
 import kodanect.domain.heaven.exception.FileDeleteFailException;
 import kodanect.domain.heaven.exception.FileSaveFailException;
-import kodanect.domain.heaven.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

@@ -1,7 +1,7 @@
-package kodanect.common.imageupload;
+package kodanect.common.imageupload.controller;
 
+import kodanect.common.imageupload.service.FileService;
 import kodanect.common.response.ApiResponse;
-import kodanect.domain.heaven.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
