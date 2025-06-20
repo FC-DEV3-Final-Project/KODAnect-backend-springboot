@@ -286,7 +286,7 @@ public class DonationCommentServiceImplTest {
     @Test(expected = DonationNotFoundException.class)
     public void updateDonationComment_스토리_없음_예외() {
         when(storyRepository.findById(anyLong())).thenReturn(Optional.empty());
-        service.updateDonationComment(1L, 2L, new DonationStoryCommentModifyRequestDto("w","c","p"));
+        service.updateDonationComment(1L, 2L, new DonationStoryCommentModifyRequestDto("w","c"));
     }
 
     @Test(expected = DonationCommentNotFoundException.class)
@@ -294,7 +294,7 @@ public class DonationCommentServiceImplTest {
         Long storySeq = 1L;
         when(storyRepository.findById(storySeq)).thenReturn(Optional.of(DonationStory.builder().storySeq(storySeq).build()));
         when(commentRepository.findById(anyLong())).thenReturn(Optional.empty());
-        service.updateDonationComment(storySeq, 99L, new DonationStoryCommentModifyRequestDto("w","c","p"));
+        service.updateDonationComment(storySeq, 99L, new DonationStoryCommentModifyRequestDto("w","c"));
     }
 
     @Test(expected = BadRequestException.class)
