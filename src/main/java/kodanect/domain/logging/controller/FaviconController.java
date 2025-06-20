@@ -1,7 +1,10 @@
 package kodanect.domain.logging.controller;
 
 import kodanect.common.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -9,25 +12,30 @@ import org.springframework.web.bind.annotation.RestController;
  * FaviconController
  *
  * 역할:
- * - 브라우저가 자동 요청하는 "/favicon.ico" 경로를 무시 처리
- * - 불필요한 로그 발생 및 에러 추적 방지를 위한 컨트롤러
+ * - 브라우저가 자동으로 요청하는 "/favicon.ico" 경로를 무시 처리합니다.
+ * - 불필요한 서버 로그 발생 및 에러 추적 혼선을 방지하기 위한 컨트롤러입니다.
  *
  * 설명:
- * - favicon.ico 요청은 HTML head에 명시되지 않으면 브라우저가 기본적으로 백엔드에 요청
- * - 해당 요청을 수신하되, 특별한 처리 없이 204 No Content 응답을 반환함
- * - 모든 응답은 공통 ApiResponse 포맷을 따름
+ * - HTML 문서에 명시적으로 favicon 링크가 없으면 브라우저는 기본적으로 "/favicon.ico"를 요청합니다.
+ * - 해당 요청을 별도의 리소스 없이 수신하고, 204 No Content 상태로 응답합니다.
+ * - 응답은 공통 응답 포맷인 {@link ApiResponse} 형식을 따릅니다.
  */
 @RestController
+@RequiredArgsConstructor
 public class FaviconController {
 
+    private final MessageSourceAccessor messageSource;
+
     /**
-     * /favicon.ico 요청 무시 엔드포인트
+     * "/favicon.ico" 요청을 무시하고 204 응답을 반환하는 엔드포인트입니다.
      *
-     * @return 성공 응답 (204 No Content), 데이터 없음
+     * @return 공통 응답 포맷 {@link ApiResponse} - 상태 코드 204(No Content), 본문 데이터 없음
      */
     @GetMapping("/favicon.ico")
-    public ApiResponse<Void> ignoreFavicon() {
-        return ApiResponse.success(HttpStatus.NO_CONTENT, "Favicon 요청 무시됨");
+    public ResponseEntity<ApiResponse<Void>> ignoreFavicon() {
+        String message = messageSource.getMessage("log.favicon.ignored", new Object[]{});
+        ApiResponse<Void> response = ApiResponse.success(HttpStatus.NO_CONTENT, message);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
     }
 
 }
