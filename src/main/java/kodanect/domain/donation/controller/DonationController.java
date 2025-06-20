@@ -29,7 +29,6 @@ public class  DonationController {
     private final DonationCommentService donationCommentService;
     private final MessageSourceAccessor messageSourceAccessor;
 
-
     /**
      * 스토리 전체 목록 조회 (더보기 방식 페이징 포함)
      */
