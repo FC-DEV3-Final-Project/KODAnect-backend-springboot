@@ -36,7 +36,6 @@ public class DonationServiceImpl implements DonationService {
     private static final SecureLogger logger = SecureLogger.getLogger(DonationServiceImpl.class);
 
     /** Cursor 기반 기본 Size */
-    private static final SecureLogger log = SecureLogger.getLogger(DonationServiceImpl.class);
     private static final int DEFAULT_SIZE = 3;
     private static final String DONATION_ERROR_NOTFOUND = "donation.error.notfound";
 
