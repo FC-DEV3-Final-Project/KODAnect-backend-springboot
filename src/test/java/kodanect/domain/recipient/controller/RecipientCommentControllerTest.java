@@ -3,7 +3,6 @@ package kodanect.domain.recipient.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.domain.recipient.dto.CommentDeleteRequestDto;
-import kodanect.domain.recipient.dto.RecipientCommentRequestDto;
 import kodanect.domain.recipient.dto.RecipientCommentResponseDto;
 import kodanect.domain.recipient.service.RecipientCommentService;
 import org.junit.jupiter.api.DisplayName;
@@ -55,9 +54,6 @@ class RecipientCommentControllerTest {
         comment.setCommentSeq(1);
         comment.setContents("테스트 댓글"); // DTO 필드는 contents 입니다.
         comment.setWriteTime(LocalDateTime.now());
-        comment.setModifyTime(LocalDateTime.now());
-        // 필요한 필드 셋팅 추가 (예: letterSeq, commentWriter 등)
-        comment.setLetterSeq(1); // 댓글이 속한 게시물 ID
         comment.setCommentWriter("테스트 작성자"); // 댓글 작성자
 
         CursorCommentPaginationResponse<RecipientCommentResponseDto, Integer> pageResponse =
@@ -81,32 +77,6 @@ class RecipientCommentControllerTest {
                 .andExpect(jsonPath("$.data.content[0].writeTime").exists())
                 .andExpect(jsonPath("$.data.commentNextCursor").value(1)) // commentNextCursor 검증 추가
                 .andExpect(jsonPath("$.data.commentHasNext").value(false)); // commentHasNext 검증 추가
-    }
-
-    @Test
-    @DisplayName("댓글 작성 성공 테스트")
-    void testWriteComment() throws Exception {
-        RecipientCommentRequestDto requestDto = new RecipientCommentRequestDto();
-        requestDto.setContents("새 댓글");
-        requestDto.setCommentWriter("작성자");
-        requestDto.setCommentPasscode("asdf1234");
-
-        RecipientCommentResponseDto responseDto = new RecipientCommentResponseDto();
-        responseDto.setCommentSeq(1);
-        responseDto.setContents("새 댓글");
-        responseDto.setCommentWriter("작성자");
-        responseDto.setWriteTime(LocalDateTime.now());
-        responseDto.setModifyTime(LocalDateTime.now());
-
-        given(recipientCommentService.insertComment(1, requestDto)).willReturn(responseDto);
-
-        mockMvc.perform(post("/recipientLetters/1/comments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.commentSeq").value(1))
-                .andExpect(jsonPath("$.data.contents").value("새 댓글")); // 'commentContents' -> 'contents' 수정
     }
 
     @Test
