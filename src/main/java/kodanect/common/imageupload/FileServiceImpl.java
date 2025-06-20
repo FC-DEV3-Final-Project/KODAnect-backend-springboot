@@ -1,4 +1,4 @@
-package kodanect.domain.heaven.service.impl;
+package kodanect.common.imageupload;
 
 import kodanect.common.config.GlobalsProperties;
 import kodanect.common.validation.FileValidator;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -26,7 +27,12 @@ import java.util.*;
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int RANDOM_MIN = 100;
+    private static final int RANDOM_BOUND = 900;
+
     private final GlobalsProperties globalsProperties;
+
 
     /* 파일 서버에 업로드 */
     public String uploadFile(MultipartFile file) {
@@ -43,8 +49,9 @@ public class FileServiceImpl implements FileService {
         /* 파일 설정 */
         String orgFileName = file.getOriginalFilename();
         String extension = Objects.requireNonNull(orgFileName).substring(orgFileName.lastIndexOf("."));
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String storedFileName = timestamp + extension;
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = SECURE_RANDOM.nextInt(RANDOM_BOUND) + RANDOM_MIN; //100 ~ 999까지의 수자
+        String storedFileName = timestamp + "_" + randomNum + extension;
 
         /* 저장 경로 설정 */
         String storePath = Paths.get(fileStorePath).toAbsolutePath().normalize().toString();
