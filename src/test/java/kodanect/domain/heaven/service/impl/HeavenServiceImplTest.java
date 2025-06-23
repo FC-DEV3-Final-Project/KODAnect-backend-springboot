@@ -1,8 +1,6 @@
 package kodanect.domain.heaven.service.impl;
 
 import kodanect.common.imageupload.service.FileService;
-import kodanect.common.response.CursorCommentCountPaginationResponse;
-import kodanect.common.response.CursorCommentPaginationResponse;
 import kodanect.common.response.CursorPaginationResponse;
 import kodanect.common.util.HeavenFinder;
 import kodanect.common.util.MemorialFinder;
@@ -10,7 +8,6 @@ import kodanect.common.util.ViewTracker;
 import kodanect.domain.heaven.dto.HeavenDto;
 import kodanect.domain.heaven.dto.request.HeavenCreateRequest;
 import kodanect.domain.heaven.dto.request.HeavenUpdateRequest;
-import kodanect.domain.heaven.dto.response.HeavenCommentResponse;
 import kodanect.domain.heaven.dto.response.HeavenDetailResponse;
 import kodanect.domain.heaven.dto.response.HeavenResponse;
 import kodanect.domain.heaven.dto.response.MemorialHeavenResponse;
@@ -166,16 +163,7 @@ public class HeavenServiceImplTest {
         LocalDateTime writeTime = LocalDateTime.now();
 
         // heavenCommentResponse 값 설정
-        String commentWriter = "댓글 작성자";
-        String contents = "댓글 내용";
-
-        // heavenCommentRepository.countByLetterSeq() 값 미리 설정
         int totalCommentCount = 30;
-        int size = 20;
-
-        // CursorCommentCountPaginationResponse 값 설정
-        Integer commentNextCursor = totalCommentCount - size + 1;
-        boolean commentHasNext = true;
 
         // heavenFinder.findAnonymizedByIdOrThrow() 값 미리 설정
         HeavenDto heavenDto = HeavenDto.builder()
@@ -188,20 +176,6 @@ public class HeavenServiceImplTest {
                 .writeTime(writeTime)
                 .build();
 
-        // heavenCommentService.getHeavenCommentList 값 미리 설정
-        List<HeavenCommentResponse> heavenCommentResponseList = new ArrayList<>();
-        for (int i = totalCommentCount; i >= 1; i--) {
-            heavenCommentResponseList.add(new HeavenCommentResponse(i, commentWriter, contents, writeTime));
-        }
-
-        CursorCommentCountPaginationResponse<HeavenCommentResponse, Integer> cursorCommentCountPaginationResponse =
-                CursorCommentCountPaginationResponse.<HeavenCommentResponse, Integer>builder()
-                        .content(heavenCommentResponseList)
-                        .commentNextCursor(commentNextCursor)
-                        .commentHasNext(commentHasNext)
-                        .totalCommentCount((long) totalCommentCount)
-                        .build();
-
         when(heavenFinder.findAnonymizedByIdOrThrow(letterSeq)).thenReturn(heavenDto);
         when(viewTracker.shouldIncreaseView(letterSeq, clientIp)).thenReturn(true);
         when(heavenCommentRepository.countByLetterSeq(letterSeq)).thenReturn((long) totalCommentCount);
@@ -209,7 +183,6 @@ public class HeavenServiceImplTest {
         /* when */
         HeavenDetailResponse heavenDetail = heavenServiceImpl.getHeavenDetail(letterSeq, clientIp);
         HeavenDto resultHeavenDto = heavenDetail.getHeavenDto();
-        CursorCommentPaginationResponse<HeavenCommentResponse, Integer> resultCursorCommentPaginationResponse = heavenDetail.getCursorCommentPaginationResponse();
 
         /* then */
         assertNotNull(heavenDetail);
@@ -243,7 +216,6 @@ public class HeavenServiceImplTest {
 
         // heavenRepository.findMemorialHeavenResponseById() 결과 미리 설정
         int memorialHeavenSize = 5;
-        int letterSeq = 29;
         String letterTitle = "편지 제목";
         Integer readCount = 2;
         LocalDateTime writeTime = LocalDateTime.now();
@@ -251,9 +223,6 @@ public class HeavenServiceImplTest {
         for (int i = memorialHeavenSize; i >= 1; i--) {
             memorialHeavenResponseList.add(new MemorialHeavenResponse(i, letterTitle, readCount ,writeTime));
         }
-
-        // 결과 값 설정
-        boolean hasNext = false;
 
         when(memorialFinder.findByIdOrThrow(donateSeq)).thenReturn(memorial);
         when(heavenRepository.findMemorialHeavenResponseById(eq(memorial), eq(null), any(Pageable.class))).thenReturn(memorialHeavenResponseList);

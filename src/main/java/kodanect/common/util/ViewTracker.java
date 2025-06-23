@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ViewTracker {
 
+    private static final long EXPIRATION_TIME = 1000 * 60 * 30L; // 30분
     private final ConcurrentHashMap<String, Long> viewMap = new ConcurrentHashMap<>();
-    private final long EXPIRATION_TIME = 1000 * 60 * 30; // 30분
 
     /* IP를 통한 조회 수 증가 여부 확인 */
     public boolean shouldIncreaseView(Integer postId, String clientIp) {
