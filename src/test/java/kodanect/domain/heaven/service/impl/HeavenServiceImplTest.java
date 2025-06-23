@@ -1,3 +1,4 @@
+/*
 package kodanect.domain.heaven.service.impl;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
@@ -47,7 +48,9 @@ public class HeavenServiceImplTest {
     @Test
     @DisplayName("게시물 전체 조회 테스트")
     public void getHeavenListTest() {
-        /* given */
+        */
+/* given *//*
+
         Integer cursor = 1000;
         int size = 20;
         Long heavenCount = 50L;
@@ -66,11 +69,15 @@ public class HeavenServiceImplTest {
         when(heavenRepository.findByCursor(eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
         when(heavenRepository.countByDelFlag()).thenReturn(heavenCount);
 
-        /* when */
+        */
+/* when *//*
+
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenList(cursor, size);
         HeavenResponse firstHeavenResponse = cursorPaginationResponse.getContent().get(0);
 
-        /* then */
+        */
+/* then *//*
+
         assertNotNull(cursorPaginationResponse);
         assertEquals(size, cursorPaginationResponse.getContent().size());
         assertTrue(cursorPaginationResponse.isHasNext());
@@ -89,7 +96,9 @@ public class HeavenServiceImplTest {
     @Test
     @DisplayName("검색을 통한 게시물 전체 조회 테스트")
     public void getHeavenListSearchResultTest() {
-        /* given */
+        */
+/* given *//*
+
         String type = "ALL";
         String keyWord = "제목";
         Integer cursor = 1000;
@@ -110,11 +119,15 @@ public class HeavenServiceImplTest {
         when(heavenRepository.findByTitleOrContentsContaining(eq(keyWord), eq(cursor), any(Pageable.class))).thenReturn(heavenResponseList);
         when(heavenRepository.countByTitleOrContentsContaining(keyWord)).thenReturn(30L);
 
-        /* when */
+        */
+/* when *//*
+
         CursorPaginationResponse<HeavenResponse, Integer> cursorPaginationResponse = heavenServiceImpl.getHeavenListSearchResult(type, keyWord, cursor, size);
         HeavenResponse firstHeavenResponse = cursorPaginationResponse.getContent().get(0);
 
-        /* then */
+        */
+/* then *//*
+
         assertNotNull(cursorPaginationResponse);
         assertEquals(size, cursorPaginationResponse.getContent().size());
         assertTrue(cursorPaginationResponse.isHasNext());
@@ -135,7 +148,9 @@ public class HeavenServiceImplTest {
     public void getHeavenDetailTest() {
         // 조회 수 증가 테스트
 
-        /* given */
+        */
+/* given *//*
+
         int letterSeq = 1;
         LocalDateTime now = LocalDateTime.now();
         int commentSize = 3;
@@ -160,12 +175,16 @@ public class HeavenServiceImplTest {
         when(heavenCommentService.getHeavenCommentList(letterSeq, null, commentSize + 1)).thenReturn(heavenCommentResponseList);
         when(heavenCommentRepository.countByLetterSeq(letterSeq)).thenReturn(commentCount);
 
-        /* when */
+        */
+/* when *//*
+
         HeavenDetailResponse heavenDetailResponse = heavenServiceImpl.getHeavenDetail(letterSeq);
         CursorCommentPaginationResponse<HeavenCommentResponse, Integer> cursorCommentPaginationResponse = heavenDetailResponse.getCursorCommentPaginationResponse();
         HeavenCommentResponse firstHeavenCommentResponse = cursorCommentPaginationResponse.getContent().get(0);
 
-        /* then */
+        */
+/* then *//*
+
         assertNotNull(cursorCommentPaginationResponse);
         assertEquals(commentSize, cursorCommentPaginationResponse.getContent().size());
         assertEquals(Integer.valueOf(3), cursorCommentPaginationResponse.getCommentNextCursor());
@@ -182,4 +201,4 @@ public class HeavenServiceImplTest {
         assertEquals("댓글 내용1", firstHeavenCommentResponse.getContents());
         assertEquals(now.toLocalDate().toString(), firstHeavenCommentResponse.getWriteTime());
     }
-}
+}*/

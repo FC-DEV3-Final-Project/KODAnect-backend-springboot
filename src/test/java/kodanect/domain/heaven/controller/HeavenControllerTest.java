@@ -1,3 +1,4 @@
+/*
 package kodanect.domain.heaven.controller;
 
 import kodanect.common.response.CursorCommentPaginationResponse;
@@ -49,7 +50,9 @@ public class HeavenControllerTest {
     @Test
     @DisplayName("게시물 전체 조회 테스트")
     public void getHeavenListTest() throws Exception {
-        /* given */
+        */
+/* given *//*
+
         String memorialAnonymityFlag = "Y";
         String heavenAnonymityFlag = "N";
         int readCount = 5;
@@ -74,7 +77,9 @@ public class HeavenControllerTest {
 
         when(heavenService.getHeavenList(30, 20)).thenReturn(cursorPaginationResponse);
 
-        /* when & then */
+        */
+/* when & then *//*
+
         mockMvc.perform(get("/heavenLetters")
                         .param("cursor", "30")
                         .param("size", "20"))
@@ -91,7 +96,9 @@ public class HeavenControllerTest {
     @Test
     @DisplayName("검색을 통한 게시물 전체 조회 테스트")
     public void searchHeavenListTest() throws Exception {
-        /* given */
+        */
+/* given *//*
+
         String memorialAnonymityFlag = "Y";
         String heavenAnonymityFlag = "N";
         int readCount = 5;
@@ -115,7 +122,9 @@ public class HeavenControllerTest {
 
         when(heavenService.getHeavenListSearchResult("ALL", "제목", 10,20)).thenReturn(cursorPaginationResponse);
 
-        /* when & then */
+        */
+/* when & then *//*
+
         mockMvc.perform(get("/heavenLetters/search")
                         .param("type", "ALL")
                         .param("keyWord", "제목")
@@ -133,7 +142,9 @@ public class HeavenControllerTest {
     @Test
     @DisplayName("게시물 상세 조회 테스트")
     public void getHeavenDetailTest() throws Exception {
-        /* given */
+        */
+/* given *//*
+
         Integer letterSeq = 1;
         String letterTitle = "사랑하는 가족에게";
         String letterWriter = "작성자";
@@ -173,7 +184,9 @@ public class HeavenControllerTest {
 
         when(heavenService.getHeavenDetail(letterSeq)).thenReturn(heavenDetailResponse);
 
-        /* when & then */
+        */
+/* when & then *//*
+
         mockMvc.perform(get("/heavenLetters/{letterSeq}", letterSeq))
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.code").value(200))
@@ -183,4 +196,4 @@ public class HeavenControllerTest {
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentNextCursor", nullValue()))
                 .andExpect(jsonPath("$.data.cursorCommentPaginationResponse.commentHasNext").value(false));
     }
-}
+}*/

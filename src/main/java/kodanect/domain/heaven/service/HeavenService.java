@@ -16,7 +16,7 @@ public interface HeavenService {
     CursorPaginationResponse<HeavenResponse, Integer> getHeavenListSearchResult(String type, String keyWord, Integer cursor, int size);
 
     /* 게시물 상세 조회 */
-    HeavenDetailResponse getHeavenDetail(Integer letterSeq);
+    HeavenDetailResponse getHeavenDetail(Integer letterSeq, String clientIp);
 
     /* 기증자 추모관 상세 조회 시 하늘나라 편지 전체 조회 */
     CursorPaginationResponse<MemorialHeavenResponse, Integer> getMemorialHeavenList(Integer donateSeq, Integer cursor, int size);
