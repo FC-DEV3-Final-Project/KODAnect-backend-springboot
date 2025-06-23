@@ -151,7 +151,7 @@ public class HeavenServiceImpl implements HeavenService {
 
     /* 게시물 수정 */
     @Override
-    public void updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
+    public Heaven updateHeaven(Integer letterSeq, HeavenUpdateRequest heavenUpdateRequest) {
         Heaven heaven = heavenFinder.findByIdOrThrow(letterSeq);
         Memorial memorial = memorialRepository.findById(heavenUpdateRequest.getDonateSeq()).orElse(null);
 
@@ -161,6 +161,8 @@ public class HeavenServiceImpl implements HeavenService {
         Map<String, String> fileMap = fileService.updateFile(heavenUpdateRequest.getLetterContents(), heaven.getOrgFileName());
 
         heaven.updateHeaven(heavenUpdateRequest, memorial, fileMap);
+
+        return heaven;
     }
 
     /* 게시물 삭제 */
