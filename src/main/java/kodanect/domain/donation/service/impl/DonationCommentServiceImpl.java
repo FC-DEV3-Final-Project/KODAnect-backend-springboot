@@ -195,10 +195,10 @@ public class DonationCommentServiceImpl implements DonationCommentService {
 
     // 작성자 닉네임 유효성 추가( 한글, 영어, 공백 1~30 글자 가능, 특수 문자,숫자 불가능)
     private void validateWriter(String writer){
-        if(writer != null && writer.matches("^[a-zA-Z가-힣\\s]{1,30}$")){
+        // 한글, 영어, 공백만 허용 (1~30자), 숫자와 특수문자는 불가
+        if(writer == null || !writer.matches("^[a-zA-Z가-힣\\s]{1,30}$")){
             throw new InvalidWriterException(messageResolver.get("donation.writer.invalid"));
         }
     }
-
 
 }
